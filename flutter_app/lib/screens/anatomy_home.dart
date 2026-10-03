@@ -148,6 +148,7 @@ class _AnatomyViewer extends StatelessWidget {
             controller: controller,
             modelUrl: model.url,
             defaultZoom: 1.15,
+            enableCache: true,
             selectionColor: const [0.1, 0.55, 1.0, 1.0],
             backgroundColor: Colors.black,
             solidBackgroundColor: const [0.025, 0.035, 0.055, 1.0],
