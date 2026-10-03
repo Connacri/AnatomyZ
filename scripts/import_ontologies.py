@@ -82,6 +82,16 @@ RELATION_NAMES = {
     "derives_from": "derives_from",
     "connected_to": "connected_to",
     "regional_part_of": "regional_part_of",
+    "BFO_0000050": "part_of",
+    "BFO_0000051": "has_part",
+    "RO_0002202": "develops_from",
+    "RO_0002170": "connected_to",
+    "RO_0002005": "innervated_by",
+    "RO_0002178": "supplies",
+    "RO_0002179": "drains",
+    "RO_0002215": "capable_of",
+    "RO_0002150": "continuous_with",
+    "RO_0002569": "has_branching_part",
 }
 
 
