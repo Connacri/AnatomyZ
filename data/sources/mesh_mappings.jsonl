@@ -1,0 +1,6 @@
+# AnatomyZ verified mesh mapping registry
+# One JSON object per line. Add a row only when the concept -> mesh semantic
+# correspondence has been reviewed. Physical node existence is verified by
+# scripts/verify_mesh_mappings.py; semantic review remains a separate claim.
+# Schema:
+# {"concept_id":"FMA:...","sex":"male","mesh_file":"...","node":"...","match_type":"manual_verified","confidence":1.0,"semantic_status":"expert_verified","provenance":"..."}
