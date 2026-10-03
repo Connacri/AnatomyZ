@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/anatomy_role.dart';
+import 'academic_dashboard.dart';
 import 'anatomy_home.dart';
 import 'professor_exam_editor.dart';
 import 'student_exam_list.dart';
@@ -27,6 +28,15 @@ class RoleHomePage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
+          FilledButton.icon(
+            icon: Icon(role == AnatomyRole.professor ? Icons.dashboard : Icons.school),
+            label: Text(role == AnatomyRole.professor ? 'Espace professeur' : 'Mon espace étudiant'),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => AcademicDashboardPage(role: role)),
+            ),
+          ),
+          const SizedBox(height: 8),
           if (role == AnatomyRole.professor) ...[
             FilledButton.icon(
               icon: const Icon(Icons.add_task),
