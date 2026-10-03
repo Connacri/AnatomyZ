@@ -197,7 +197,7 @@ class _AnatomyHomePageState extends State<AnatomyHomePage> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
                   child: Text(
-                    _remoteError! + ' • résultats locaux conservés',
+                    '$_remoteError • résultats locaux conservés',
                     style: TextStyle(color: Theme.of(context).colorScheme.error),
                   ),
                 ),
