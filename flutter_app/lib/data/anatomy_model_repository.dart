@@ -4,9 +4,6 @@ class AnatomyModelRepository {
   static const _base =
       'https://raw.githubusercontent.com/Connacri/Anatria-3D/main/public/anatomy';
 
-  // Only combinations known to have a 3D asset are exposed to the viewer.
-  // Other anatomical concepts can later be represented in the catalog layer
-  // without pretending that a mesh exists.
   static const Map<AnatomySex, Set<AnatomySystem>> _available = {
     AnatomySex.male: {
       AnatomySystem.skeletal,
