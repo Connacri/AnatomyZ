@@ -42,6 +42,7 @@ def main() -> None:
     }
 
     systems = []
+    organs = []
     for system, sexes in SYSTEM_FILES.items():
         systems.append({
             "system": system,
@@ -55,6 +56,19 @@ def main() -> None:
             ],
         })
 
+    for sex, manifest in manifests.items():
+        for organ in manifest.get("organs", []):
+            organs.append({
+                "sex": sex,
+                "organ_id": organ.get("organ_id", ""),
+                "name_en": organ.get("name_en", ""),
+                "ta2_latin": organ.get("ta2_latin", ""),
+                "system": organ.get("system", ""),
+                "mesh_file": organ.get("mesh_file", ""),
+                "node": organ.get("node", ""),
+                "path": organ.get("path", []),
+            })
+
     result = {
         "version": 1,
         "source": "Connacri/Anatria-3D",
@@ -62,6 +76,7 @@ def main() -> None:
         "mesh_attribution": manifests["male"].get("attribution"),
         "license": manifests["male"].get("license"),
         "systems": systems,
+        "organs": organs,
         "organ_counts": {
             sex: [
                 {"system": item["system"], "count": item["organ_count"]}
