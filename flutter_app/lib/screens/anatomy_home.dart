@@ -392,9 +392,12 @@ class _AnatomyViewer extends StatelessWidget {
         ),
         Expanded(
           child: Interactive3d(
-            key: ValueKey(model.url),
+            key: ValueKey('${model.url}|${preselectedEntityName ?? ''}'),
             controller: controller,
             modelUrl: model.url,
+            preselectedEntities: preselectedEntityName == null
+                ? null
+                : [preselectedEntityName!],
             defaultZoom: 1.15,
             enableCache: true,
             selectionColor: const [0.1, 0.55, 1.0, 1.0],
