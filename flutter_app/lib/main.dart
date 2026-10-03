@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'screens/role_selection.dart';
+
 void main() {
   runApp(const AnatomyZApp());
 }
@@ -16,24 +18,7 @@ class AnatomyZApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
       ),
-      home: const AnatomyZHomePage(),
-    );
-  }
-}
-
-class AnatomyZHomePage extends StatelessWidget {
-  const AnatomyZHomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('AnatomyZ')),
-      body: const Center(
-        child: Text(
-          'AnatomyZ\n3D Human Anatomy Atlas',
-          textAlign: TextAlign.center,
-        ),
-      ),
+      home: const RoleSelectionPage(),
     );
   }
 }
