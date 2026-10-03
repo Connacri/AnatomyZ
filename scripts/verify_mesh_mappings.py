@@ -76,6 +76,7 @@ def main() -> None:
                     "node": node,
                     "match_type": variant.get("match_type", ""),
                     "confidence": variant.get("confidence", 0.0),
+                    "semantic_status": variant.get("semantic_status", "candidate"),
                     "node_verified": node_verified,
                     "verification": "glb_node_exists" if node_verified else "unverified",
                     "error": error,
@@ -93,7 +94,14 @@ def main() -> None:
     )
 
     verified = sum(1 for row in rows if row["node_verified"])
-    print(f"Verified {verified}/{len(rows)} mesh node mappings.")
+    expert = sum(
+        1 for row in rows
+        if row["node_verified"] and row["semantic_status"] == "expert_verified"
+    )
+    print(
+        f"Verified {verified}/{len(rows)} physical GLB node mappings; "
+        f"{expert} are expert-reviewed semantic mappings."
+    )
 
 
 if __name__ == "__main__":
