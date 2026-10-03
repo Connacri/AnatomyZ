@@ -8,6 +8,10 @@ on:
       - "docs/ANATOMY_CATALOG_PIPELINE.md"
       - ".github/workflows/anatomy-catalog.yml"
       - "site/**"
+      - "src/**"
+      - "index.html"
+      - "package.json"
+      - "vite.config.ts"
   workflow_dispatch:
   schedule:
     - cron: "0 3 * * 0"
@@ -25,6 +29,15 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Build web application with roles into site/
+        run: |
+          npm install
+          npm run build
 
       - uses: actions/setup-python@v5
         with:

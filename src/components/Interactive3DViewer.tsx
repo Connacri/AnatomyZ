@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { ChevronDown, ChevronUp, Layers, Search } from 'lucide-react';
 import { EntityData } from '../types';
 
 export interface Interactive3DControllerHandle {
@@ -30,7 +31,7 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
   selectionColor = [0.15, 0.65, 1.0, 1.0],
   onSelectionChanged,
   controllerRef,
-  heightClass = 'h-full min-h-[460px]',
+  heightClass = 'h-full min-h-[360px] sm:min-h-[480px]',
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -39,6 +40,7 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
   const [availableNodes, setAvailableNodes] = useState<string[]>([]);
   const [nodeFilter, setNodeFilter] = useState<string>('');
   const [activeNodeName, setActiveNodeName] = useState<string | null>(null);
+  const [nodesTrayOpen, setNodesTrayOpen] = useState<boolean>(false);
 
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -185,8 +187,8 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
     meshesMapRef.current.clear();
     originalMaterialsRef.current.clear();
 
-    const width = container.clientWidth || 800;
-    const height = container.clientHeight || 520;
+    const width = container.clientWidth || 360;
+    const height = container.clientHeight || 420;
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x06090e);
@@ -195,7 +197,7 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
     const camera = new THREE.PerspectiveCamera(40, width / height, 0.01, 2000);
     cameraRef.current = camera;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -203,14 +205,22 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
     renderer.toneMappingExposure = 1.15;
 
     container.innerHTML = '';
+    renderer.domElement.style.touchAction = 'none';
     container.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.06;
+    controls.rotateSpeed = 0.85;
+    controls.zoomSpeed = 1.1;
+    controls.panSpeed = 0.8;
+    controls.touches = {
+      ONE: THREE.TOUCH.ROTATE,
+      TWO: THREE.TOUCH.DOLLY_PAN,
+    };
     controlsRef.current = controls;
 
-    // Balanced anatomical lighting
+    // Three-point studio anatomical lighting
     const hemiLight = new THREE.HemisphereLight(0xffffff, 0x1e293b, 1.35);
     scene.add(hemiLight);
 
@@ -228,7 +238,6 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
 
     let isDisposed = false;
 
-    // Configure DRACOLoader for Anatria-3D KHR_draco_mesh_compression GLB assets
     const dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath(
       'https://www.gstatic.com/draco/versioned/decoders/1.5.7/'
@@ -245,7 +254,6 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
         const root = gltf.scene;
         scene.add(root);
 
-        // Compute bounding box of real GLB anatomy model and frame camera accurately
         const box = new THREE.Box3().setFromObject(root);
         const size = box.getSize(new THREE.Vector3());
         const center = box.getCenter(new THREE.Vector3());
@@ -253,7 +261,9 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
 
         controls.target.copy(center);
         const fovRad = (camera.fov * Math.PI) / 180;
-        const cameraDist = (maxDim / (2 * Math.tan(fovRad / 2))) * 1.15;
+        const aspect = (container.clientWidth || 360) / (container.clientHeight || 420);
+        const fitMultiplier = aspect < 0.8 ? 1.35 : 1.15;
+        const cameraDist = (maxDim / (2 * Math.tan(fovRad / 2))) * fitMultiplier;
         camera.near = Math.max(0.001, maxDim / 1000);
         camera.far = maxDim * 100;
         camera.position.set(
@@ -272,7 +282,6 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
         root.traverse((child) => {
           if ((child as THREE.Mesh).isMesh) {
             const mesh = child as THREE.Mesh;
-            // Find the meaningful anatomical node name from mesh or parent hierarchy
             let curr: THREE.Object3D | null = mesh;
             let resolvedName = '';
             while (curr && curr !== root) {
@@ -352,7 +361,7 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
 
     const handlePointerUp = (e: PointerEvent) => {
       const dist = Math.hypot(e.clientX - downX, e.clientY - downY);
-      if (dist > 6) return;
+      if (dist > 8) return;
 
       const rect = renderer.domElement.getBoundingClientRect();
       pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -380,15 +389,20 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
     domElem.addEventListener('pointerdown', handlePointerDown);
     domElem.addEventListener('pointerup', handlePointerUp);
 
-    const handleResize = () => {
+    const updateDimensions = () => {
       if (!containerRef.current) return;
-      const w = containerRef.current.clientWidth || 800;
-      const h = containerRef.current.clientHeight || 520;
+      const w = containerRef.current.clientWidth || 360;
+      const h = containerRef.current.clientHeight || 420;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
     };
-    window.addEventListener('resize', handleResize);
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateDimensions();
+    });
+    resizeObserver.observe(container);
+    window.addEventListener('resize', updateDimensions);
 
     let animId = 0;
     const animate = () => {
@@ -401,7 +415,8 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
     return () => {
       isDisposed = true;
       cancelAnimationFrame(animId);
-      window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateDimensions);
       domElem.removeEventListener('pointerdown', handlePointerDown);
       domElem.removeEventListener('pointerup', handlePointerUp);
       dracoLoader.dispose();
@@ -418,22 +433,22 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
 
   return (
     <div
-      className={`relative w-full ${heightClass} bg-[#06090e] overflow-hidden`}
+      className={`relative w-full ${heightClass} bg-[#06090e] overflow-hidden select-none touch-none`}
     >
       <div
         ref={containerRef}
-        className="w-full h-full cursor-grab active:cursor-grabbing"
+        className="w-full h-full cursor-grab active:cursor-grabbing touch-none"
       />
 
       {loading && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#06090e]/85 backdrop-blur-xs z-10">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#06090e]/85 backdrop-blur-xs z-10 px-4">
           <div className="w-10 h-10 border-3 border-indigo-400 border-t-transparent rounded-full animate-spin mb-3" />
-          <p className="text-sm font-medium text-[#eef4ff]">
-            Chargement du modèle anatomique 3D GLB (Draco)…{' '}
+          <p className="text-sm font-medium text-[#eef4ff] text-center tabular-nums">
+            Chargement du modèle anatomique 3D…{' '}
             {loadProgress > 0 ? `${loadProgress}%` : ''}
           </p>
-          <p className="text-xs text-[#71839b] mt-1 max-w-md text-center px-4 truncate">
-            {modelUrl}
+          <p className="text-xs text-[#71839b] mt-1 max-w-xs sm:max-w-md text-center truncate">
+            {modelUrl.split('/').pop()}
           </p>
         </div>
       )}
@@ -450,34 +465,73 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
         </div>
       )}
 
+      {/* Collapsible mobile-friendly 3D node explorer HUD */}
       {!loading && !loadError && availableNodes.length > 0 && (
-        <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 py-1.5 px-3 bg-[#0d1a2b]/90 border border-[#203651] rounded-xl backdrop-blur-xs">
-          <input
-            type="text"
-            value={nodeFilter}
-            onChange={(e) => setNodeFilter(e.target.value)}
-            placeholder={`Filtrer ${availableNodes.length} nœuds GLB…`}
-            className="w-40 sm:w-48 px-2.5 py-1 rounded-lg bg-[#08111f] border border-[#2c4a70] text-xs text-[#eef4ff] placeholder-[#71839b] focus:outline-hidden focus:border-[#8fc5ff] shrink-0"
-          />
-          <div className="flex items-center gap-1.5 overflow-x-auto py-0.5">
-            {filteredNodes.slice(0, 25).map((nodeName) => {
-              const isSelected = activeNodeName === nodeName;
-              return (
+        <div className="absolute bottom-2.5 left-2.5 right-2.5 z-10 pointer-events-auto">
+          {!nodesTrayOpen ? (
+            <div className="flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => setNodesTrayOpen(true)}
+                className="min-h-[44px] px-3.5 py-2 rounded-xl bg-[#0d1a2b]/90 backdrop-blur-md border border-[#2c4a70] text-xs font-semibold text-[#eef4ff] inline-flex items-center gap-2 shadow-lg cursor-pointer"
+              >
+                <Layers className="w-4 h-4 text-[#8fc5ff]" />
+                <span className="tabular-nums">
+                  Structures du modèle ({availableNodes.length})
+                </span>
+                <ChevronUp className="w-4 h-4 text-[#8fc5ff]" />
+              </button>
+
+              {activeNodeName && (
+                <div className="min-h-[44px] px-3.5 py-2 rounded-xl bg-indigo-950/90 backdrop-blur-md border border-indigo-400/40 text-xs font-semibold text-[#eef4ff] flex items-center truncate max-w-[55%] shadow-lg">
+                  <span className="truncate">{activeNodeName}</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="p-3 rounded-2xl bg-[#0d1a2b]/95 backdrop-blur-md border border-[#2c4a70] shadow-2xl space-y-2.5">
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="w-3.5 h-3.5 text-[#8fc5ff] absolute left-3 top-3" />
+                  <input
+                    type="text"
+                    value={nodeFilter}
+                    onChange={(e) => setNodeFilter(e.target.value)}
+                    placeholder={`Filtrer parmi ${availableNodes.length} structures 3D…`}
+                    className="w-full min-h-[38px] pl-8 pr-3 py-1.5 rounded-xl bg-[#08111f] border border-[#203651] text-xs text-[#eef4ff] placeholder-[#71839b] focus:outline-hidden focus:border-[#8fc5ff]"
+                  />
+                </div>
                 <button
-                  key={nodeName}
                   type="button"
-                  onClick={() => selectNode(nodeName, true)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-medium shrink-0 transition cursor-pointer ${
-                    isSelected
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'bg-[#13253d] text-[#b8c7da] hover:bg-[#1c3454] hover:text-white'
-                  }`}
+                  onClick={() => setNodesTrayOpen(false)}
+                  className="min-h-[38px] min-w-[38px] px-2.5 rounded-xl bg-[#13253d] text-[#b8c7da] hover:text-white inline-flex items-center justify-center cursor-pointer"
+                  title="Réduire la liste"
                 >
-                  {nodeName}
+                  <ChevronDown className="w-4 h-4" />
                 </button>
-              );
-            })}
-          </div>
+              </div>
+
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                {filteredNodes.slice(0, 35).map((nodeName) => {
+                  const isSelected = activeNodeName === nodeName;
+                  return (
+                    <button
+                      key={nodeName}
+                      type="button"
+                      onClick={() => selectNode(nodeName, true)}
+                      className={`min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap shrink-0 transition cursor-pointer ${
+                        isSelected
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'bg-[#13253d] text-[#b8c7da] hover:bg-[#1c3454] hover:text-white'
+                      }`}
+                    >
+                      {nodeName}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

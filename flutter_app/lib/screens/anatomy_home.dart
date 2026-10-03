@@ -104,9 +104,10 @@ class _AnatomyHomePageState extends State<AnatomyHomePage> {
   void _showStructureSheet(AnatomyStructure structure) {
     showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       showDragHandle: true,
       builder: (context) => SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,

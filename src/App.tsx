@@ -12,7 +12,7 @@ import {
   FileText,
   GraduationCap,
   History,
-  Info,
+  Home,
   Layers,
   Lock,
   Menu,
@@ -58,11 +58,11 @@ import {
 type ScreenState =
   | { name: 'role_selection' }
   | { name: 'role_home'; role: AnatomyRole }
-  | { name: 'anatomy_home' }
+  | { name: 'anatomy_home'; role?: AnatomyRole }
   | { name: 'academic_dashboard'; role: AnatomyRole }
-  | { name: 'professor_exam_editor'; showExisting: boolean }
-  | { name: 'student_exam_list' }
-  | { name: 'student_exam'; exam: AnatomyExam };
+  | { name: 'professor_exam_editor'; role: AnatomyRole; showExisting: boolean }
+  | { name: 'student_exam_list'; role: AnatomyRole }
+  | { name: 'student_exam'; role: AnatomyRole; exam: AnatomyExam };
 
 export function App() {
   const [historyStack, setHistoryStack] = useState<ScreenState[]>([
@@ -75,62 +75,160 @@ export function App() {
     setHistoryStack((prev) => [...prev, next]);
   };
 
+  const replaceTopScreen = (next: ScreenState) => {
+    setHistoryStack((prev) => [...prev.slice(0, -1), next]);
+  };
+
   const popScreen = () => {
     setHistoryStack((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
   };
 
+  const activeRole: AnatomyRole | undefined =
+    'role' in currentScreen ? currentScreen.role : undefined;
+
+  const showMobileBottomNav =
+    activeRole !== undefined && currentScreen.name !== 'student_exam';
+
   return (
     <div className="min-h-screen bg-[#08111f] text-[#eef4ff] flex flex-col">
-      {currentScreen.name === 'role_selection' && (
-        <RoleSelectionScreen
-          onSelectRole={(role) => pushScreen({ name: 'role_home', role })}
-          onOpenAtlas={() => pushScreen({ name: 'anatomy_home' })}
-        />
-      )}
+      <div className={`flex-1 flex flex-col ${showMobileBottomNav ? 'pb-16 md:pb-0' : ''}`}>
+        {currentScreen.name === 'role_selection' && (
+          <RoleSelectionScreen
+            onSelectRole={(role) => pushScreen({ name: 'role_home', role })}
+            onOpenAtlas={() => pushScreen({ name: 'anatomy_home' })}
+          />
+        )}
 
-      {currentScreen.name === 'role_home' && (
-        <RoleHomeScreen
-          role={currentScreen.role}
-          onBack={popScreen}
-          onNavigate={pushScreen}
-        />
-      )}
+        {currentScreen.name === 'role_home' && (
+          <RoleHomeScreen
+            role={currentScreen.role}
+            onBack={() => setHistoryStack([{ name: 'role_selection' }])}
+            onNavigate={pushScreen}
+          />
+        )}
 
-      {currentScreen.name === 'anatomy_home' && (
-        <AnatomyHomeScreen onBack={popScreen} />
-      )}
+        {currentScreen.name === 'anatomy_home' && (
+          <AnatomyHomeScreen onBack={popScreen} />
+        )}
 
-      {currentScreen.name === 'academic_dashboard' && (
-        <AcademicDashboardScreen
-          role={currentScreen.role}
-          onBack={popScreen}
-          onStartExam={(exam) => pushScreen({ name: 'student_exam', exam })}
-        />
-      )}
+        {currentScreen.name === 'academic_dashboard' && (
+          <AcademicDashboardScreen
+            role={currentScreen.role}
+            onBack={popScreen}
+            onStartExam={(exam) =>
+              pushScreen({ name: 'student_exam', role: currentScreen.role, exam })
+            }
+          />
+        )}
 
-      {currentScreen.name === 'professor_exam_editor' && (
-        <ProfessorExamEditorScreen
-          showExisting={currentScreen.showExisting}
-          onBack={popScreen}
-        />
-      )}
+        {currentScreen.name === 'professor_exam_editor' && (
+          <ProfessorExamEditorScreen
+            showExisting={currentScreen.showExisting}
+            onBack={popScreen}
+          />
+        )}
 
-      {currentScreen.name === 'student_exam_list' && (
-        <StudentExamListScreen
-          onBack={popScreen}
-          onSelectExam={(exam) => pushScreen({ name: 'student_exam', exam })}
-        />
-      )}
+        {currentScreen.name === 'student_exam_list' && (
+          <StudentExamListScreen
+            onBack={popScreen}
+            onSelectExam={(exam) =>
+              pushScreen({ name: 'student_exam', role: currentScreen.role, exam })
+            }
+          />
+        )}
 
-      {currentScreen.name === 'student_exam' && (
-        <StudentExamScreen
-          exam={currentScreen.exam}
-          onFinish={() => {
-            setHistoryStack((prev) =>
-              prev.length > 1 ? prev.slice(0, -1) : prev
-            );
-          }}
-        />
+        {currentScreen.name === 'student_exam' && (
+          <StudentExamScreen
+            exam={currentScreen.exam}
+            onFinish={popScreen}
+          />
+        )}
+      </div>
+
+      {/* Mobile Ergonomic Bottom Tab Navigation (Thumb Zone) */}
+      {showMobileBottomNav && activeRole && (
+        <nav
+          aria-label="Navigation principale mobile"
+          className="fixed bottom-0 left-0 right-0 z-30 md:hidden bg-[#0d1a2b]/95 backdrop-blur-md border-t border-[#203651] grid grid-cols-4 items-center h-16 px-1"
+        >
+          <button
+            type="button"
+            onClick={() =>
+              replaceTopScreen({ name: 'role_home', role: activeRole })
+            }
+            className={`min-h-[48px] flex flex-col items-center justify-center rounded-xl transition cursor-pointer ${
+              currentScreen.name === 'role_home'
+                ? 'text-[#8fc5ff]'
+                : 'text-[#71839b] hover:text-[#eef4ff]'
+            }`}
+          >
+            <Home className="w-5 h-5" />
+            <span className="text-[11px] font-medium mt-1 whitespace-nowrap">
+              Accueil
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              replaceTopScreen({ name: 'academic_dashboard', role: activeRole })
+            }
+            className={`min-h-[48px] flex flex-col items-center justify-center rounded-xl transition cursor-pointer ${
+              currentScreen.name === 'academic_dashboard'
+                ? 'text-[#8fc5ff]'
+                : 'text-[#71839b] hover:text-[#eef4ff]'
+            }`}
+          >
+            <Layers className="w-5 h-5" />
+            <span className="text-[11px] font-medium mt-1 whitespace-nowrap">
+              Espace
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              activeRole === AnatomyRole.Professor
+                ? replaceTopScreen({
+                    name: 'professor_exam_editor',
+                    role: activeRole,
+                    showExisting: true,
+                  })
+                : replaceTopScreen({
+                    name: 'student_exam_list',
+                    role: activeRole,
+                  })
+            }
+            className={`min-h-[48px] flex flex-col items-center justify-center rounded-xl transition cursor-pointer ${
+              currentScreen.name === 'professor_exam_editor' ||
+              currentScreen.name === 'student_exam_list'
+                ? 'text-[#8fc5ff]'
+                : 'text-[#71839b] hover:text-[#eef4ff]'
+            }`}
+          >
+            <FileText className="w-5 h-5" />
+            <span className="text-[11px] font-medium mt-1 whitespace-nowrap">
+              Examens
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              replaceTopScreen({ name: 'anatomy_home', role: activeRole })
+            }
+            className={`min-h-[48px] flex flex-col items-center justify-center rounded-xl transition cursor-pointer ${
+              currentScreen.name === 'anatomy_home'
+                ? 'text-[#8fc5ff]'
+                : 'text-[#71839b] hover:text-[#eef4ff]'
+            }`}
+          >
+            <Box className="w-5 h-5" />
+            <span className="text-[11px] font-medium mt-1 whitespace-nowrap">
+              Atlas 3D
+            </span>
+          </button>
+        </nav>
       )}
     </div>
   );
@@ -149,110 +247,141 @@ function RoleSelectionScreen({
 }) {
   return (
     <div className="flex-1 flex flex-col">
-      <header className="border-b border-[#203651] bg-[#0d1a2b]/80 backdrop-blur-md px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Microscope className="w-6 h-6 text-[#8fc5ff]" />
-          <span className="font-bold text-lg tracking-tight">AnatomyZ</span>
-          <span className="hidden sm:inline-block text-xs px-2.5 py-0.5 rounded-full border border-[#2c4a70] text-[#8fc5ff]">
-            Human 3D Anatomy
-          </span>
-        </div>
-        <button
-          type="button"
-          onClick={onOpenAtlas}
-          className="inline-flex items-center gap-2 text-sm font-medium px-3.5 py-1.5 rounded-lg border border-[#2c4a70] bg-[#12243b] text-[#8fc5ff] hover:bg-[#193150] transition cursor-pointer"
-        >
-          <Box className="w-4 h-4" />
-          Atlas 3D direct
-        </button>
-      </header>
+      {/* 3-Zone Top Bar Contract */}
+      <header className="sticky top-0 z-30 h-14 border-b border-[#203651] bg-[#0d1a2b]/90 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between">
+        <span className="font-bold text-lg tracking-tight text-[#eef4ff]">
+          AnatomyZ
+        </span>
 
-      <main className="flex-1 max-w-4xl w-full mx-auto px-6 py-12 flex flex-col justify-center">
-        <div className="text-center mb-10">
-          <div className="w-16 h-16 rounded-2xl bg-[#0d1a2b] border border-[#2c4a70] flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <Microscope className="w-9 h-9 text-[#8fc5ff]" />
-          </div>
-          <span className="inline-block px-3.5 py-1 text-xs font-medium border border-[#2c4a70] rounded-full text-[#8fc5ff] mb-3">
-            AnatomyZ · Atlas Anatomique Humain 3D
-          </span>
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight mb-3">
-            Choisissez votre rôle
-          </h1>
-          <p className="text-[#b8c7da] max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
-            Un atlas anatomique humain 3D construit autour d’un Knowledge Graph
-            anatomique, des ontologies FMA/UBERON et de modèles GLB/GLTF vérifiés
-            progressivement.
-          </p>
-        </div>
-
-        <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto w-full mb-10">
+        <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-[#b8c7da]">
           <button
             type="button"
             onClick={() => onSelectRole(AnatomyRole.Professor)}
-            className="text-left p-6 rounded-2xl border border-[#203651] bg-[#0d1a2b] hover:border-[#8fc5ff] hover:bg-[#112238] transition flex items-center gap-4 group cursor-pointer"
+            className="hover:text-[#eef4ff] transition cursor-pointer whitespace-nowrap"
+          >
+            Professeur
+          </button>
+          <button
+            type="button"
+            onClick={() => onSelectRole(AnatomyRole.Student)}
+            className="hover:text-[#eef4ff] transition cursor-pointer whitespace-nowrap"
+          >
+            Étudiant
+          </button>
+          <button
+            type="button"
+            onClick={onOpenAtlas}
+            className="hover:text-[#eef4ff] transition cursor-pointer whitespace-nowrap"
+          >
+            Atlas 3D
+          </button>
+        </nav>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onOpenAtlas}
+            className="min-h-[40px] px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs sm:text-sm font-semibold text-white whitespace-nowrap transition cursor-pointer"
+          >
+            Explorer l’atlas 3D
+          </button>
+        </div>
+      </header>
+
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-14 flex flex-col justify-center">
+        <div className="text-center mb-8 sm:mb-10">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#0d1a2b] border border-[#2c4a70] flex items-center justify-center mx-auto mb-4">
+            <Microscope className="w-8 h-8 text-[#8fc5ff]" />
+          </div>
+          <p className="text-xs sm:text-sm font-medium text-[#8fc5ff] mb-2">
+            Atlas anatomique humain 3D · FMA &amp; UBERON
+          </p>
+          <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight mb-3 text-balance">
+            Choisissez votre rôle
+          </h1>
+          <p className="text-[#b8c7da] max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
+            Plateforme éducative multi-plateforme (Mobile &amp; Web) combinant un
+            Knowledge Graph anatomique, des modèles GLB/GLTF vérifiés et un mode
+            examen sécurisé.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 max-w-2xl mx-auto w-full mb-10">
+          <button
+            type="button"
+            onClick={() => onSelectRole(AnatomyRole.Professor)}
+            className="min-h-[84px] text-left p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b] hover:border-[#8fc5ff] hover:bg-[#112238] active:scale-[0.99] transition flex items-center gap-4 group cursor-pointer"
           >
             <div className="w-12 h-12 rounded-xl bg-indigo-500/15 border border-indigo-400/30 flex items-center justify-center text-[#8fc5ff] shrink-0">
               <GraduationCap className="w-6 h-6" />
             </div>
-            <div className="flex-1">
-              <h2 className="text-lg font-bold text-[#eef4ff] group-hover:text-[#8fc5ff] transition">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-base sm:text-lg font-bold text-[#eef4ff] group-hover:text-[#8fc5ff] transition">
                 Professeur
               </h2>
-              <p className="text-sm text-[#b8c7da]">
+              <p className="text-xs sm:text-sm text-[#b8c7da]">
                 Créer des quiz et des questions d’examen
               </p>
             </div>
-            <ChevronRight className="w-5 h-5 text-[#71839b] group-hover:text-[#8fc5ff] transition" />
+            <ChevronRight className="w-5 h-5 text-[#71839b] group-hover:text-[#8fc5ff] shrink-0 transition" />
           </button>
 
           <button
             type="button"
             onClick={() => onSelectRole(AnatomyRole.Student)}
-            className="text-left p-6 rounded-2xl border border-[#203651] bg-[#0d1a2b] hover:border-[#8fc5ff] hover:bg-[#112238] transition flex items-center gap-4 group cursor-pointer"
+            className="min-h-[84px] text-left p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b] hover:border-[#8fc5ff] hover:bg-[#112238] active:scale-[0.99] transition flex items-center gap-4 group cursor-pointer"
           >
             <div className="w-12 h-12 rounded-xl bg-indigo-500/15 border border-indigo-400/30 flex items-center justify-center text-[#8fc5ff] shrink-0">
               <User className="w-6 h-6" />
             </div>
-            <div className="flex-1">
-              <h2 className="text-lg font-bold text-[#eef4ff] group-hover:text-[#8fc5ff] transition">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-base sm:text-lg font-bold text-[#eef4ff] group-hover:text-[#8fc5ff] transition">
                 Étudiant
               </h2>
-              <p className="text-sm text-[#b8c7da]">
+              <p className="text-xs sm:text-sm text-[#b8c7da]">
                 Consulter les examens et les passer
               </p>
             </div>
-            <ChevronRight className="w-5 h-5 text-[#71839b] group-hover:text-[#8fc5ff] transition" />
+            <ChevronRight className="w-5 h-5 text-[#71839b] group-hover:text-[#8fc5ff] shrink-0 transition" />
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b]">
-            <h3 className="font-semibold text-[#eef4ff] mb-1">🧠 Knowledge Graph</h3>
-            <p className="text-sm text-[#b8c7da]">
-              Structures, synonymes et relations anatomiques FMA/UBERON.
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <div className="p-4 sm:p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b]">
+            <h3 className="font-semibold text-sm sm:text-base text-[#eef4ff] mb-1">
+              Knowledge Graph
+            </h3>
+            <p className="text-xs sm:text-sm text-[#b8c7da]">
+              Structures, synonymes bilingues et relations anatomiques FMA/UBERON.
             </p>
           </div>
-          <div className="p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b]">
-            <h3 className="font-semibold text-[#eef4ff] mb-1">🦴 3D Anatomy</h3>
-            <p className="text-sm text-[#b8c7da]">
-              Modèles GLB/GLTF, sélection, visibilité et matériaux.
+          <div className="p-4 sm:p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b]">
+            <h3 className="font-semibold text-sm sm:text-base text-[#eef4ff] mb-1">
+              Atlas 3D GLB/GLTF
+            </h3>
+            <p className="text-xs sm:text-sm text-[#b8c7da]">
+              Sélection tactile/souris, visibilité, transparence et matériaux.
             </p>
           </div>
-          <div className="p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b]">
-            <h3 className="font-semibold text-[#eef4ff] mb-1">🔗 Mapping Engine</h3>
-            <p className="text-sm text-[#b8c7da]">
-              Correspondances exactes, xrefs et mappings vérifiés.
+          <div className="p-4 sm:p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b]">
+            <h3 className="font-semibold text-sm sm:text-base text-[#eef4ff] mb-1">
+              Moteur de Mapping
+            </h3>
+            <p className="text-xs sm:text-sm text-[#b8c7da]">
+              Correspondances exactes, xrefs et nœuds 3D vérifiés.
             </p>
           </div>
-          <div className="p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b]">
-            <h3 className="font-semibold text-[#eef4ff] mb-1">🎓 Education</h3>
-            <p className="text-sm text-[#b8c7da]">
-              Professeur, étudiant, quiz, questions et mode examen sécurisé.
+          <div className="p-4 sm:p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b]">
+            <h3 className="font-semibold text-sm sm:text-base text-[#eef4ff] mb-1">
+              Éducation &amp; Examen
+            </h3>
+            <p className="text-xs sm:text-sm text-[#b8c7da]">
+              Espaces dédiés, banque de questions et mode examen sécurisé.
             </p>
           </div>
         </div>
 
-        <footer className="mt-12 text-center text-sm text-[#71839b]">
+        <footer className="mt-10 text-center text-xs sm:text-sm text-[#71839b]">
           Projet académique — Professeur Zenasni Kamel
         </footer>
       </main>
@@ -278,39 +407,51 @@ function RoleHomeScreen({
 
   return (
     <div className="flex-1 flex flex-col">
-      <header className="border-b border-[#203651] bg-[#0d1a2b] px-6 py-4 flex items-center gap-3">
-        <button
-          type="button"
-          onClick={onBack}
-          className="p-2 rounded-lg hover:bg-[#162a45] text-[#b8c7da] hover:text-white transition cursor-pointer"
-          title="Retour"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="font-bold text-lg">AnatomyZ — {labelFr}</h1>
+      <header className="sticky top-0 z-30 h-14 border-b border-[#203651] bg-[#0d1a2b]/95 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between">
+        <div className="flex items-center gap-2 min-w-0">
+          <button
+            type="button"
+            onClick={onBack}
+            className="min-h-[44px] min-w-[44px] rounded-xl hover:bg-[#162a45] text-[#b8c7da] hover:text-white flex items-center justify-center transition cursor-pointer"
+            title="Changer de rôle"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h1 className="font-bold text-base sm:text-lg truncate">
+            AnatomyZ — {labelFr}
+          </h1>
+        </div>
       </header>
 
-      <main className="max-w-2xl w-full mx-auto p-6 space-y-4">
+      <main className="max-w-2xl w-full mx-auto p-4 sm:p-6 space-y-4">
         <div className="p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b] flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-indigo-500/15 border border-indigo-400/30 flex items-center justify-center text-[#8fc5ff]">
-            {isProf ? <GraduationCap className="w-6 h-6" /> : <User className="w-6 h-6" />}
+          <div className="w-12 h-12 rounded-xl bg-indigo-500/15 border border-indigo-400/30 flex items-center justify-center text-[#8fc5ff] shrink-0">
+            {isProf ? (
+              <GraduationCap className="w-6 h-6" />
+            ) : (
+              <User className="w-6 h-6" />
+            )}
           </div>
-          <div>
-            <h2 className="font-bold text-lg">{labelFr}</h2>
-            <p className="text-sm text-[#b8c7da]">
-              {isProf ? 'Créer et gérer des examens' : 'Passer les examens assignés'}
+          <div className="min-w-0">
+            <h2 className="font-bold text-base sm:text-lg">{labelFr}</h2>
+            <p className="text-xs sm:text-sm text-[#b8c7da]">
+              {isProf
+                ? 'Créer et gérer des examens'
+                : 'Passer les examens assignés'}
             </p>
           </div>
         </div>
 
-        <div className="space-y-3 pt-2">
+        <div className="space-y-3 pt-1">
           <button
             type="button"
             onClick={() => onNavigate({ name: 'academic_dashboard', role })}
-            className="w-full py-3.5 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold flex items-center justify-center gap-2.5 transition cursor-pointer"
+            className="w-full min-h-[48px] py-3 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-[0.99] text-white text-sm sm:text-base font-semibold flex items-center justify-center gap-2.5 transition cursor-pointer"
           >
-            <Layers className="w-5 h-5" />
-            {isProf ? 'Espace professeur' : 'Mon espace étudiant'}
+            <Layers className="w-5 h-5 shrink-0" />
+            <span className=" whitespace-nowrap">
+              {isProf ? 'Espace professeur' : 'Mon espace étudiant'}
+            </span>
           </button>
 
           {isProf ? (
@@ -318,42 +459,52 @@ function RoleHomeScreen({
               <button
                 type="button"
                 onClick={() =>
-                  onNavigate({ name: 'professor_exam_editor', showExisting: false })
+                  onNavigate({
+                    name: 'professor_exam_editor',
+                    role,
+                    showExisting: false,
+                  })
                 }
-                className="w-full py-3.5 px-5 rounded-xl bg-indigo-600/90 hover:bg-indigo-500 text-white font-semibold flex items-center justify-center gap-2.5 transition cursor-pointer"
+                className="w-full min-h-[48px] py-3 px-5 rounded-xl bg-indigo-600/90 hover:bg-indigo-500 active:scale-[0.99] text-white text-sm sm:text-base font-semibold flex items-center justify-center gap-2.5 transition cursor-pointer"
               >
-                <FilePlus className="w-5 h-5" />
-                Créer un examen
+                <FilePlus className="w-5 h-5 shrink-0" />
+                <span className="whitespace-nowrap">Créer un examen</span>
               </button>
               <button
                 type="button"
                 onClick={() =>
-                  onNavigate({ name: 'professor_exam_editor', showExisting: true })
+                  onNavigate({
+                    name: 'professor_exam_editor',
+                    role,
+                    showExisting: true,
+                  })
                 }
-                className="w-full py-3.5 px-5 rounded-xl border border-[#2c4a70] bg-[#0d1a2b] hover:bg-[#142740] text-[#8fc5ff] font-semibold flex items-center justify-center gap-2.5 transition cursor-pointer"
+                className="w-full min-h-[48px] py-3 px-5 rounded-xl border border-[#2c4a70] bg-[#0d1a2b] hover:bg-[#142740] active:scale-[0.99] text-[#8fc5ff] text-sm sm:text-base font-semibold flex items-center justify-center gap-2.5 transition cursor-pointer"
               >
-                <FileText className="w-5 h-5" />
-                Mes examens
+                <FileText className="w-5 h-5 shrink-0" />
+                <span className="whitespace-nowrap">Mes examens</span>
               </button>
             </>
           ) : (
             <button
               type="button"
-              onClick={() => onNavigate({ name: 'student_exam_list' })}
-              className="w-full py-3.5 px-5 rounded-xl bg-indigo-600/90 hover:bg-indigo-500 text-white font-semibold flex items-center justify-center gap-2.5 transition cursor-pointer"
+              onClick={() => onNavigate({ name: 'student_exam_list', role })}
+              className="w-full min-h-[48px] py-3 px-5 rounded-xl bg-indigo-600/90 hover:bg-indigo-500 active:scale-[0.99] text-white text-sm sm:text-base font-semibold flex items-center justify-center gap-2.5 transition cursor-pointer"
             >
-              <FileText className="w-5 h-5" />
-              Examens disponibles
+              <FileText className="w-5 h-5 shrink-0" />
+              <span className="whitespace-nowrap">Examens disponibles</span>
             </button>
           )}
 
           <button
             type="button"
-            onClick={() => onNavigate({ name: 'anatomy_home' })}
-            className="w-full py-3.5 px-5 rounded-xl border border-[#2c4a70] bg-[#0d1a2b] hover:bg-[#142740] text-[#eef4ff] font-semibold flex items-center justify-center gap-2.5 transition cursor-pointer"
+            onClick={() => onNavigate({ name: 'anatomy_home', role })}
+            className="w-full min-h-[48px] py-3 px-5 rounded-xl border border-[#2c4a70] bg-[#0d1a2b] hover:bg-[#142740] active:scale-[0.99] text-[#eef4ff] text-sm sm:text-base font-semibold flex items-center justify-center gap-2.5 transition cursor-pointer"
           >
-            <Box className="w-5 h-5 text-[#8fc5ff]" />
-            Explorer l’atlas anatomique
+            <Box className="w-5 h-5 text-[#8fc5ff] shrink-0" />
+            <span className="whitespace-nowrap">
+              Explorer l’atlas anatomique
+            </span>
           </button>
         </div>
       </main>
@@ -362,7 +513,7 @@ function RoleHomeScreen({
 }
 
 /* -------------------------------------------------------------------------- */
-/* 3. Anatomy Home Screen (3D Atlas + Knowledge Graph Catalog + Relations)    */
+/* 3. Anatomy Home Screen (Responsive Mobile/Desktop 3D Atlas & Catalog)      */
 /* -------------------------------------------------------------------------- */
 
 const modelRepo = new AnatomyModelRepository();
@@ -391,7 +542,11 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
   const [remoteResults, setRemoteResults] = useState<AnatomyStructure[]>([]);
   const [remoteLoading, setRemoteLoading] = useState<boolean>(false);
   const [remoteError, setRemoteError] = useState<string | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState<boolean>(true);
+
+  // Open sidebar by default on desktop (>= 1024px), closed overlay drawer on mobile
+  const [drawerOpen, setDrawerOpen] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? window.innerWidth >= 1024 : false
+  );
 
   useEffect(() => {
     const q = structureQuery.trim();
@@ -441,7 +596,14 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
     return null;
   };
 
+  const closeDrawerOnMobile = () => {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setDrawerOpen(false);
+    }
+  };
+
   const openStructureSheet = async (structure: AnatomyStructure) => {
+    closeDrawerOnMobile();
     setSelectedStructure(structure);
     setStructureModal(structure);
     setRelationsLoading(true);
@@ -449,7 +611,6 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
     setRelations(rels);
     setRelationsLoading(false);
 
-    // Also switch to the structure's system if a 3D model is available
     const sysMatch = modelRepo.systems.find((s) => s.id === structure.system);
     if (sysMatch && modelRepo.hasModel(sysMatch.id, sex)) {
       setSelectedSystem(sysMatch);
@@ -470,14 +631,14 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
   });
 
   return (
-    <div className="flex-1 flex flex-col h-screen overflow-hidden">
-      {/* Top App Bar */}
-      <header className="border-b border-[#203651] bg-[#0d1a2b] px-4 py-3 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-2">
+    <div className="flex-1 flex flex-col h-[calc(100dvh-4rem)] md:h-dvh overflow-hidden">
+      {/* Compact Sticky App Bar */}
+      <header className="h-14 border-b border-[#203651] bg-[#0d1a2b] px-3 sm:px-4 flex items-center justify-between gap-2 shrink-0 z-30">
+        <div className="flex items-center gap-1.5 min-w-0">
           <button
             type="button"
             onClick={onBack}
-            className="p-2 rounded-lg hover:bg-[#162a45] text-[#b8c7da] hover:text-white transition cursor-pointer"
+            className="min-h-[44px] min-w-[44px] rounded-xl hover:bg-[#162a45] text-[#b8c7da] hover:text-white flex items-center justify-center transition cursor-pointer"
             title="Retour"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -485,16 +646,21 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
           <button
             type="button"
             onClick={() => setDrawerOpen((o) => !o)}
-            className="p-2 rounded-lg hover:bg-[#162a45] text-[#8fc5ff] transition cursor-pointer"
-            title="Catalogue & Systèmes"
+            className="min-h-[44px] px-2.5 rounded-xl hover:bg-[#162a45] text-[#8fc5ff] inline-flex items-center gap-1.5 transition cursor-pointer"
+            title="Systèmes & Catalogue"
           >
             <Menu className="w-5 h-5" />
+            <span className="text-xs font-semibold hidden sm:inline whitespace-nowrap">
+              Catalogue
+            </span>
           </button>
-          <span className="font-bold text-lg ml-1">AnatomyZ — Atlas 3D</span>
+          <span className="font-bold text-sm sm:text-base truncate ml-1">
+            AnatomyZ
+          </span>
         </div>
 
-        {/* Male / Female Segmented Button */}
-        <div className="inline-flex rounded-xl border border-[#2c4a70] bg-[#08111f] p-1">
+        {/* Male / Female Segmented Control */}
+        <div className="inline-flex rounded-xl border border-[#2c4a70] bg-[#08111f] p-1 shrink-0">
           <button
             type="button"
             onClick={() => {
@@ -507,13 +673,13 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
                 setSelectedSystem(null);
               }
             }}
-            className={`px-3.5 py-1 rounded-lg text-sm font-semibold transition cursor-pointer ${
+            className={`min-h-[36px] px-3 py-1 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition cursor-pointer ${
               sex === AnatomySex.Male
                 ? 'bg-indigo-600 text-white'
                 : 'text-[#b8c7da] hover:text-white'
             }`}
           >
-            ♂ Homme
+            ♂ <span className="hidden xs:inline">Homme</span>
           </button>
           <button
             type="button"
@@ -527,41 +693,63 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
                 setSelectedSystem(null);
               }
             }}
-            className={`px-3.5 py-1 rounded-lg text-sm font-semibold transition cursor-pointer ${
+            className={`min-h-[36px] px-3 py-1 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition cursor-pointer ${
               sex === AnatomySex.Female
                 ? 'bg-indigo-600 text-white'
                 : 'text-[#b8c7da] hover:text-white'
             }`}
           >
-            ♀ Femme
+            ♀ <span className="hidden xs:inline">Femme</span>
           </button>
         </div>
       </header>
 
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Sidebar / Drawer */}
+        {/* Mobile Backdrop Scrim when Drawer is open */}
         {drawerOpen && (
-          <aside className="w-80 sm:w-96 border-r border-[#203651] bg-[#0d1a2b] flex flex-col h-full overflow-y-auto shrink-0 z-20">
+          <div
+            onClick={() => setDrawerOpen(false)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs z-30 lg:hidden"
+            aria-hidden="true"
+          />
+        )}
+
+        {/* Responsive Drawer (Modal Overlay on Mobile, Persistent Sidebar on Desktop) */}
+        {drawerOpen && (
+          <aside className="fixed lg:static inset-y-0 left-0 w-[86vw] max-w-sm lg:w-96 border-r border-[#203651] bg-[#0d1a2b] flex flex-col h-full overflow-y-auto shrink-0 z-40 shadow-2xl lg:shadow-none">
             <div className="p-4 space-y-3 border-b border-[#203651]">
+              <div className="flex items-center justify-between lg:hidden pb-1">
+                <span className="font-bold text-sm text-[#eef4ff]">
+                  Systèmes &amp; Catalogue FMA/UBERON
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setDrawerOpen(false)}
+                  className="min-h-[40px] min-w-[40px] rounded-xl flex items-center justify-center text-[#b8c7da] hover:text-white cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
               <div className="relative">
-                <Search className="w-4 h-4 text-[#71839b] absolute left-3.5 top-3" />
+                <Search className="w-4 h-4 text-[#71839b] absolute left-3.5 top-3.5" />
                 <input
                   type="text"
                   value={systemQuery}
                   onChange={(e) => setSystemQuery(e.target.value)}
                   placeholder="Rechercher un système…"
-                  className="w-full pl-10 pr-3 py-2 rounded-xl bg-[#08111f] border border-[#203651] text-sm text-[#eef4ff] placeholder-[#71839b] focus:outline-hidden focus:border-[#8fc5ff]"
+                  className="w-full min-h-[44px] pl-10 pr-3 py-2 rounded-xl bg-[#08111f] border border-[#203651] text-sm text-[#eef4ff] placeholder-[#71839b] focus:outline-hidden focus:border-[#8fc5ff]"
                 />
               </div>
 
               <div className="relative">
-                <Search className="w-4 h-4 text-[#8fc5ff] absolute left-3.5 top-3" />
+                <Search className="w-4 h-4 text-[#8fc5ff] absolute left-3.5 top-3.5" />
                 <input
                   type="text"
                   value={structureQuery}
                   onChange={(e) => setStructureQuery(e.target.value)}
-                  placeholder="Rechercher une structure (FR / EN / ID)…"
-                  className="w-full pl-10 pr-3 py-2 rounded-xl bg-[#08111f] border border-[#203651] text-sm text-[#eef4ff] placeholder-[#71839b] focus:outline-hidden focus:border-[#8fc5ff]"
+                  placeholder="Structure (FR / EN / ID)…"
+                  className="w-full min-h-[44px] pl-10 pr-3 py-2 rounded-xl bg-[#08111f] border border-[#203651] text-sm text-[#eef4ff] placeholder-[#71839b] focus:outline-hidden focus:border-[#8fc5ff]"
                 />
               </div>
 
@@ -572,14 +760,14 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
               )}
               {remoteError && (
                 <div className="text-xs text-amber-300">
-                  {remoteError} • résultats locaux conservés
+                  {remoteError} · résultats locaux conservés
                 </div>
               )}
             </div>
 
             {/* Structure search results */}
             <div className="px-4 pt-3 pb-2 border-b border-[#203651]">
-              <div className="text-xs font-bold uppercase tracking-wider text-[#8fc5ff] mb-2">
+              <div className="text-xs font-semibold text-[#8fc5ff] mb-2 tabular-nums">
                 Structures anatomiques ({mergedStructureResults().length})
               </div>
               <div className="max-h-52 overflow-y-auto space-y-1 pr-1">
@@ -590,23 +778,17 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
                       key={structure.id}
                       type="button"
                       onClick={() => openStructureSheet(structure)}
-                      className="w-full text-left px-3 py-2 rounded-xl hover:bg-[#152842] transition flex items-center justify-between gap-2 cursor-pointer"
+                      className="w-full min-h-[48px] text-left px-3 py-2 rounded-xl hover:bg-[#152842] transition flex items-center justify-between gap-2 cursor-pointer"
                     >
                       <div className="min-w-0">
                         <div className="text-sm font-semibold text-[#eef4ff] truncate">
                           {structure.nameFr}
                         </div>
                         <div className="text-xs text-[#71839b] truncate">
-                          {structure.nameEn} • {structure.id}
+                          {structure.nameEn} · {structure.id}
                         </div>
                       </div>
-                      <span
-                        className={`text-[11px] px-2 py-0.5 rounded-full shrink-0 ${
-                          structure.meshAvailable
-                            ? 'bg-indigo-500/20 text-[#8fc5ff] border border-indigo-400/30'
-                            : 'bg-[#122238] text-[#71839b]'
-                        }`}
-                      >
+                      <span className="text-xs text-[#8fc5ff] shrink-0">
                         {structure.meshAvailable ? '3D' : 'Catalogue'}
                       </span>
                     </button>
@@ -616,7 +798,7 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
 
             {/* Systems list */}
             <div className="p-4 flex-1">
-              <div className="text-xs font-bold uppercase tracking-wider text-[#8fc5ff] mb-2">
+              <div className="text-xs font-semibold text-[#8fc5ff] mb-2">
                 Systèmes anatomiques 3D
               </div>
               <div className="space-y-1">
@@ -631,8 +813,9 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
                       onClick={() => {
                         setSelectedSystem(system);
                         setSelectedEntity(null);
+                        closeDrawerOnMobile();
                       }}
-                      className={`w-full text-left px-3.5 py-2.5 rounded-xl transition flex items-center gap-3 ${
+                      className={`w-full min-h-[52px] text-left px-3.5 py-2.5 rounded-xl transition flex items-center gap-3 ${
                         !available
                           ? 'opacity-40 cursor-not-allowed'
                           : isSelected
@@ -652,7 +835,7 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
                         >
                           {available
                             ? system.nameEn
-                            : `${system.nameEn} • 3D asset unavailable`}
+                            : `${system.nameEn} · Indisponible en 3D`}
                         </div>
                       </div>
                     </button>
@@ -663,22 +846,22 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
           </aside>
         )}
 
-        {/* Main 3D Viewer Area */}
-        <main className="flex-1 flex flex-col bg-[#06090e] overflow-hidden">
+        {/* Main 3D Viewport */}
+        <main className="flex-1 flex flex-col bg-[#06090e] overflow-hidden min-w-0">
           {!selectedSystem || !activeModel ? (
             <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
               <Box className="w-12 h-12 text-[#8fc5ff] mb-3" />
-              <h2 className="text-xl font-bold mb-2">
+              <h2 className="text-lg sm:text-xl font-bold mb-2">
                 Sélectionnez un système anatomique
               </h2>
-              <p className="text-sm text-[#b8c7da] mb-5 max-w-md">
-                Choisissez un système dans le panneau latéral pour charger son
+              <p className="text-xs sm:text-sm text-[#b8c7da] mb-5 max-w-md">
+                Ouvrez le catalogue pour choisir un système et charger son
                 modèle GLB 3D interactif.
               </p>
               <button
                 type="button"
                 onClick={() => setDrawerOpen(true)}
-                className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold inline-flex items-center gap-2 cursor-pointer"
+                className="min-h-[48px] px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold inline-flex items-center gap-2 cursor-pointer"
               >
                 <Layers className="w-4 h-4" />
                 Explorer les systèmes
@@ -686,25 +869,29 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
             </div>
           ) : (
             <>
-              {/* Viewer Toolbar */}
-              <div className="bg-[#0d1a2b] border-b border-[#203651] px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <div className="font-bold text-sm sm:text-base text-[#eef4ff]">
+              {/* Compact Viewer Control Strip */}
+              <div className="bg-[#0d1a2b] border-b border-[#203651] px-3 sm:px-4 py-2 flex items-center justify-between gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setDrawerOpen(true)}
+                  className="min-w-0 text-left group cursor-pointer"
+                >
+                  <div className="font-bold text-xs sm:text-sm text-[#eef4ff] group-hover:text-[#8fc5ff] truncate">
                     {activeModel.system.nameFr}
                   </div>
-                  <div className="text-xs text-[#8fc5ff]">
-                    {activeModel.system.nameEn} •{' '}
+                  <div className="text-[11px] sm:text-xs text-[#8fc5ff] truncate">
+                    {activeModel.system.nameEn} ·{' '}
                     {activeModel.sex === AnatomySex.Male ? 'Male' : 'Female'}
                   </div>
-                </div>
+                </button>
 
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     type="button"
                     onClick={() =>
                       viewerControllerRef.current?.setCameraZoomLevel(0.85)
                     }
-                    className="p-2 rounded-lg border border-[#203651] bg-[#122238] hover:bg-[#192f4d] text-[#eef4ff] transition cursor-pointer"
+                    className="min-h-[40px] min-w-[40px] rounded-xl border border-[#203651] bg-[#122238] hover:bg-[#192f4d] text-[#eef4ff] flex items-center justify-center transition cursor-pointer"
                     title="Zoom arrière"
                   >
                     <ZoomOut className="w-4 h-4" />
@@ -714,7 +901,7 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
                     onClick={() =>
                       viewerControllerRef.current?.setCameraZoomLevel(1.35)
                     }
-                    className="p-2 rounded-lg border border-[#203651] bg-[#122238] hover:bg-[#192f4d] text-[#eef4ff] transition cursor-pointer"
+                    className="min-h-[40px] min-w-[40px] rounded-xl border border-[#203651] bg-[#122238] hover:bg-[#192f4d] text-[#eef4ff] flex items-center justify-center transition cursor-pointer"
                     title="Zoom avant"
                   >
                     <ZoomIn className="w-4 h-4" />
@@ -726,20 +913,22 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
                       viewerControllerRef.current?.resetAllMaterialOverrides();
                       setSelectedEntity(null);
                     }}
-                    className="px-3 py-1.5 rounded-lg border border-[#203651] bg-[#122238] hover:bg-[#192f4d] text-xs font-medium text-[#eef4ff] inline-flex items-center gap-1.5 transition cursor-pointer"
+                    className="min-h-[40px] px-3 rounded-xl border border-[#203651] bg-[#122238] hover:bg-[#192f4d] text-xs font-medium text-[#eef4ff] inline-flex items-center gap-1.5 transition cursor-pointer"
                     title="Réinitialiser"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
-                    Réinitialiser
+                    <span className="hidden sm:inline whitespace-nowrap">
+                      Réinitialiser
+                    </span>
                   </button>
                 </div>
               </div>
 
-              {/* Selected entity controls */}
+              {/* Selected Entity Touch Action Bar (Horizontal Scroll on Mobile) */}
               {selectedEntity && (
-                <div className="bg-[#102036] border-b border-[#203651] px-4 py-2 flex flex-wrap items-center justify-center gap-2">
-                  <span className="text-xs font-semibold text-[#8fc5ff] mr-2">
-                    Sélection : {selectedEntity.name}
+                <div className="bg-[#102036] border-b border-[#203651] px-3 py-2 flex items-center gap-2 overflow-x-auto shrink-0">
+                  <span className="text-xs font-semibold text-[#8fc5ff] whitespace-nowrap mr-1">
+                    {selectedEntity.name}
                   </span>
                   <button
                     type="button"
@@ -749,7 +938,7 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
                         false
                       )
                     }
-                    className="px-2.5 py-1 rounded-lg border border-[#2c4a70] text-xs font-medium hover:bg-[#172e4d] inline-flex items-center gap-1.5 cursor-pointer"
+                    className="min-h-[38px] px-3 py-1 rounded-xl border border-[#2c4a70] text-xs font-medium hover:bg-[#172e4d] inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
                   >
                     <EyeOff className="w-3.5 h-3.5" />
                     Masquer
@@ -762,7 +951,7 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
                         true
                       )
                     }
-                    className="px-2.5 py-1 rounded-lg border border-[#2c4a70] text-xs font-medium hover:bg-[#172e4d] inline-flex items-center gap-1.5 cursor-pointer"
+                    className="min-h-[38px] px-3 py-1 rounded-xl border border-[#2c4a70] text-xs font-medium hover:bg-[#172e4d] inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
                   >
                     <Eye className="w-3.5 h-3.5" />
                     Afficher
@@ -774,7 +963,7 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
                         selectedEntity.name
                       )
                     }
-                    className="px-2.5 py-1 rounded-lg border border-[#2c4a70] text-xs font-medium hover:bg-[#172e4d] inline-flex items-center gap-1.5 cursor-pointer"
+                    className="min-h-[38px] px-3 py-1 rounded-xl border border-[#2c4a70] text-xs font-medium hover:bg-[#172e4d] inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     Transparence
@@ -786,7 +975,7 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
                         selectedEntity.name
                       )
                     }
-                    className="px-2.5 py-1 rounded-lg border border-[#2c4a70] text-xs font-medium hover:bg-[#172e4d] inline-flex items-center gap-1.5 cursor-pointer"
+                    className="min-h-[38px] px-3 py-1 rounded-xl border border-[#2c4a70] text-xs font-medium hover:bg-[#172e4d] inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     Matériau original
@@ -795,7 +984,7 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
               )}
 
               {/* 3D Canvas */}
-              <div className="flex-1 relative">
+              <div className="flex-1 relative min-h-0">
                 <Interactive3DViewer
                   key={`${activeModel.url}|${
                     selectedStructure ? meshNodeFor(selectedStructure) ?? '' : ''
@@ -815,43 +1004,44 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
                 />
               </div>
 
-              {/* Footer status hint */}
-              <div className="bg-[#0d1a2b] border-t border-[#203651] px-4 py-2 text-center text-xs text-[#b8c7da]">
+              {/* Footer Status Hint */}
+              <div className="bg-[#0d1a2b] border-t border-[#203651] px-3 py-2 text-center text-xs text-[#b8c7da] truncate shrink-0">
                 {selectedEntity ? (
-                  <span className="font-bold text-[#8fc5ff]">
+                  <span className="font-semibold text-[#8fc5ff]">
                     Structure sélectionnée : {selectedEntity.name}
                   </span>
                 ) : (
-                  'Cliquez sur une structure anatomique • molette pour zoomer • glissez pour tourner/déplacer'
+                  'Touchez une structure anatomique · pincez pour zoomer · glissez pour tourner'
                 )}
               </div>
             </>
           )}
         </main>
 
-        {/* Structure Knowledge Graph Sheet / Modal */}
+        {/* Mobile Bottom Sheet / Modal for Structure Knowledge Graph */}
         {structureModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-4 z-50">
-            <div className="bg-[#0d1a2b] border border-[#2c4a70] rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+          <div className="fixed inset-0 bg-black/65 backdrop-blur-xs flex items-end sm:items-center justify-center sm:p-4 z-50">
+            <div className="bg-[#0d1a2b] border-t sm:border border-[#2c4a70] rounded-t-3xl sm:rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4 max-h-[85dvh] overflow-y-auto">
+              <div className="w-10 h-1.5 bg-[#2c4a70] rounded-full mx-auto mb-1 sm:hidden" />
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="text-2xl font-extrabold text-[#eef4ff]">
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-[#eef4ff]">
                     {structureModal.nameFr}
                   </h3>
-                  <p className="text-base text-[#8fc5ff]">
+                  <p className="text-sm sm:text-base text-[#8fc5ff]">
                     {structureModal.nameEn}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setStructureModal(null)}
-                  className="p-1.5 rounded-lg hover:bg-[#182d4a] text-[#b8c7da] cursor-pointer"
+                  className="min-h-[44px] min-w-[44px] rounded-xl hover:bg-[#182d4a] text-[#b8c7da] flex items-center justify-center cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="text-sm space-y-1 text-[#b8c7da] bg-[#08111f] p-3.5 rounded-xl border border-[#203651]">
+              <div className="text-xs sm:text-sm space-y-1 text-[#b8c7da] bg-[#08111f] p-3.5 rounded-xl border border-[#203651]">
                 <div>
                   <span className="font-semibold text-[#eef4ff]">ID :</span>{' '}
                   {structureModal.id}
@@ -875,7 +1065,7 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
               </div>
 
               <div>
-                <h4 className="text-sm font-bold text-[#eef4ff] mb-2">
+                <h4 className="text-sm font-bold text-[#eef4ff] mb-2 tabular-nums">
                   Relations anatomiques ({relations.length})
                 </h4>
                 {relationsLoading ? (
@@ -899,16 +1089,16 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
                 )}
               </div>
 
-              <div className="flex items-center justify-between pt-2">
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full bg-indigo-500/20 text-[#8fc5ff] border border-indigo-400/30">
+              <div className="flex items-center justify-between pt-2 gap-3">
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#8fc5ff]">
                   {structureModal.meshAvailable ? (
                     <>
-                      <Box className="w-3.5 h-3.5" />
+                      <Box className="w-4 h-4" />
                       Structure 3D déclarée
                     </>
                   ) : (
                     <>
-                      <BookOpen className="w-3.5 h-3.5" />
+                      <BookOpen className="w-4 h-4" />
                       Catalogue uniquement
                     </>
                   )}
@@ -917,7 +1107,7 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
                 <button
                   type="button"
                   onClick={() => setStructureModal(null)}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold cursor-pointer"
+                  className="min-h-[44px] px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold cursor-pointer"
                 >
                   Fermer
                 </button>
@@ -972,44 +1162,54 @@ function AcademicDashboardScreen({
 
   return (
     <div className="flex-1 flex flex-col">
-      <header className="border-b border-[#203651] bg-[#0d1a2b] px-6 py-4 flex items-center gap-3">
+      <header className="sticky top-0 z-30 h-14 border-b border-[#203651] bg-[#0d1a2b]/95 backdrop-blur-md px-4 sm:px-6 flex items-center gap-2">
         <button
           type="button"
           onClick={onBack}
-          className="p-2 rounded-lg hover:bg-[#162a45] text-[#b8c7da] hover:text-white transition cursor-pointer"
+          className="min-h-[44px] min-w-[44px] rounded-xl hover:bg-[#162a45] text-[#b8c7da] hover:text-white flex items-center justify-center transition cursor-pointer"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="font-bold text-lg">
+        <h1 className="font-bold text-base sm:text-lg truncate">
           {isProf ? 'Espace professeur' : 'Espace étudiant'}
         </h1>
       </header>
 
-      <main className="max-w-4xl w-full mx-auto p-6 space-y-6">
+      <main className="max-w-4xl w-full mx-auto p-4 sm:p-6 space-y-5">
         {isProf ? (
           <>
             <div>
-              <h2 className="text-2xl font-bold">Pilotage pédagogique</h2>
-              <p className="text-sm text-[#b8c7da]">
+              <h2 className="text-xl sm:text-2xl font-bold">
+                Pilotage pédagogique
+              </h2>
+              <p className="text-xs sm:text-sm text-[#b8c7da] mt-1">
                 Classes, étudiants, examens assignés et résultats réunis au même
                 endroit.
               </p>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
               <StatCard label="Classes" value={String(classes.length)} />
               <StatCard label="Étudiants" value={String(totalStudents)} />
               <StatCard label="Examens" value={String(exams.length)} />
             </div>
 
-            <SectionCard title="Mes classes" icon={<Users className="w-5 h-5 text-[#8fc5ff]" />}>
+            <SectionCard
+              title="Mes classes"
+              icon={<Users className="w-5 h-5 text-[#8fc5ff]" />}
+            >
               <div className="divide-y divide-[#203651]">
                 {classes.map((c) => (
-                  <div key={c.id} className="py-3 flex items-center justify-between">
+                  <div
+                    key={c.id}
+                    className="py-3 flex items-center justify-between"
+                  >
                     <div>
-                      <div className="font-semibold">{c.name}</div>
-                      <div className="text-xs text-[#b8c7da]">
-                        {c.studentIds.length} étudiant(s) • {c.description}
+                      <div className="font-semibold text-sm sm:text-base">
+                        {c.name}
+                      </div>
+                      <div className="text-xs text-[#b8c7da] tabular-nums">
+                        {c.studentIds.length} étudiant(s) · {c.description}
                       </div>
                     </div>
                   </div>
@@ -1017,14 +1217,23 @@ function AcademicDashboardScreen({
               </div>
             </SectionCard>
 
-            <SectionCard title="Examens publiés" icon={<FileText className="w-5 h-5 text-[#8fc5ff]" />}>
+            <SectionCard
+              title="Examens publiés"
+              icon={<FileText className="w-5 h-5 text-[#8fc5ff]" />}
+            >
               <div className="divide-y divide-[#203651]">
                 {exams.map((exam) => (
-                  <div key={exam.id} className="py-3 flex items-center justify-between">
+                  <div
+                    key={exam.id}
+                    className="py-3 flex items-center justify-between"
+                  >
                     <div>
-                      <div className="font-semibold">{exam.title}</div>
-                      <div className="text-xs text-[#b8c7da]">
-                        {exam.questions.length} question(s) · {exam.durationMinutes} min
+                      <div className="font-semibold text-sm sm:text-base">
+                        {exam.title}
+                      </div>
+                      <div className="text-xs text-[#b8c7da] tabular-nums">
+                        {exam.questions.length} question(s) ·{' '}
+                        {exam.durationMinutes} min
                       </div>
                     </div>
                   </div>
@@ -1036,22 +1245,24 @@ function AcademicDashboardScreen({
               title="Fonctions pédagogiques"
               icon={<Sparkles className="w-5 h-5 text-[#8fc5ff]" />}
             >
-              <p className="text-sm text-[#b8c7da]">
-                Banque de questions · assignation par classe · calendrier · notes
-                · statistiques · correction · export · parcours pédagogiques.
+              <p className="text-xs sm:text-sm text-[#b8c7da] leading-relaxed">
+                Banque de questions · assignation par classe · calendrier ·
+                notes · statistiques · correction · export · parcours
+                pédagogiques.
               </p>
             </SectionCard>
           </>
         ) : (
           <>
             <div>
-              <h2 className="text-2xl font-bold">Mon espace</h2>
-              <p className="text-sm text-[#b8c7da]">
-                Examens assignés, résultats, notes et historique d’apprentissage.
+              <h2 className="text-xl sm:text-2xl font-bold">Mon espace</h2>
+              <p className="text-xs sm:text-sm text-[#b8c7da] mt-1">
+                Examens assignés, résultats, notes et historique
+                d’apprentissage.
               </p>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
               <StatCard label="Assignés" value={String(assignments.length)} />
               <StatCard label="Résultats" value={String(results.length)} />
               <StatCard label="Activités" value={String(history.length)} />
@@ -1072,11 +1283,13 @@ function AcademicDashboardScreen({
                     return (
                       <div
                         key={a.id}
-                        className="py-3 flex items-center justify-between gap-4"
+                        className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                       >
                         <div>
-                          <div className="font-semibold">
-                            {matchedExam ? matchedExam.title : `Examen ${a.examId}`}
+                          <div className="font-semibold text-sm sm:text-base">
+                            {matchedExam
+                              ? matchedExam.title
+                              : `Examen ${a.examId}`}
                           </div>
                           <div className="text-xs text-[#8fc5ff]">
                             Statut : {statusLabel(a.status)}
@@ -1086,7 +1299,7 @@ function AcademicDashboardScreen({
                           <button
                             type="button"
                             onClick={() => onStartExam(matchedExam)}
-                            className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white cursor-pointer"
+                            className="min-h-[44px] px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white whitespace-nowrap cursor-pointer"
                           >
                             Passer l’examen
                           </button>
@@ -1103,15 +1316,22 @@ function AcademicDashboardScreen({
               icon={<CheckCircle2 className="w-5 h-5 text-[#8fc5ff]" />}
             >
               {results.length === 0 ? (
-                <p className="text-sm text-[#71839b]">Aucun résultat disponible.</p>
+                <p className="text-sm text-[#71839b]">
+                  Aucun résultat disponible.
+                </p>
               ) : (
                 <div className="divide-y divide-[#203651]">
                   {results.map((r) => (
-                    <div key={r.id} className="py-3 flex items-center justify-between">
-                      <div className="font-semibold">Examen {r.examId}</div>
-                      <div className="text-sm text-[#8fc5ff] font-medium">
-                        {r.score}/{r.maxScore} · {r.percentage.toFixed(1)} % · Note{' '}
-                        {gradeForPercentage(r.percentage)}
+                    <div
+                      key={r.id}
+                      className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1"
+                    >
+                      <div className="font-semibold text-sm">
+                        Examen {r.examId}
+                      </div>
+                      <div className="text-xs sm:text-sm text-[#8fc5ff] font-medium tabular-nums">
+                        {r.score}/{r.maxScore} · {r.percentage.toFixed(1)} % ·
+                        Note {gradeForPercentage(r.percentage)}
                       </div>
                     </div>
                   ))}
@@ -1132,7 +1352,7 @@ function AcademicDashboardScreen({
                   {history.map((entry) => (
                     <div key={entry.id} className="py-3">
                       <div className="font-medium text-sm">{entry.title}</div>
-                      <div className="text-xs text-[#71839b]">
+                      <div className="text-xs text-[#71839b] tabular-nums">
                         {entry.occurredAt.toLocaleString('fr-FR')}
                       </div>
                     </div>
@@ -1149,9 +1369,11 @@ function AcademicDashboardScreen({
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="p-4 rounded-2xl border border-[#203651] bg-[#0d1a2b] text-center">
-      <div className="text-2xl font-extrabold text-[#eef4ff]">{value}</div>
-      <div className="text-xs text-[#b8c7da] mt-1">{label}</div>
+    <div className="p-3 sm:p-4 rounded-2xl border border-[#203651] bg-[#0d1a2b] text-center">
+      <div className="text-xl sm:text-2xl font-extrabold text-[#eef4ff] tabular-nums">
+        {value}
+      </div>
+      <div className="text-xs text-[#b8c7da] mt-1 truncate">{label}</div>
     </div>
   );
 }
@@ -1166,10 +1388,10 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b] space-y-3">
+    <div className="p-4 sm:p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b] space-y-3">
       <div className="flex items-center gap-2.5">
         {icon}
-        <h3 className="text-base font-bold">{title}</h3>
+        <h3 className="text-sm sm:text-base font-bold">{title}</h3>
       </div>
       <div>{children}</div>
     </div>
@@ -1265,7 +1487,10 @@ function ProfessorExamEditorScreen({
   };
 
   const importBankQuestion = (q: AnatomyExamQuestion) => {
-    setQuestions((prev) => [...prev, { ...q, id: `${q.id}-${ prev.length + 1}` }]);
+    setQuestions((prev) => [
+      ...prev,
+      { ...q, id: `${q.id}-${prev.length + 1}` },
+    ]);
     setNotice(`Question ajoutée : ${q.conceptNameFr ?? q.text}`);
   };
 
@@ -1299,52 +1524,58 @@ function ProfessorExamEditorScreen({
 
   return (
     <div className="flex-1 flex flex-col">
-      <header className="border-b border-[#203651] bg-[#0d1a2b] px-6 py-4 flex items-center gap-3">
+      <header className="sticky top-0 z-30 h-14 border-b border-[#203651] bg-[#0d1a2b]/95 backdrop-blur-md px-4 sm:px-6 flex items-center gap-2">
         <button
           type="button"
           onClick={onBack}
-          className="p-2 rounded-lg hover:bg-[#162a45] text-[#b8c7da] hover:text-white transition cursor-pointer"
+          className="min-h-[44px] min-w-[44px] rounded-xl hover:bg-[#162a45] text-[#b8c7da] hover:text-white flex items-center justify-center transition cursor-pointer"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="font-bold text-lg">Créateur d’examen</h1>
+        <h1 className="font-bold text-base sm:text-lg truncate">
+          Créateur d’examen
+        </h1>
       </header>
 
-      <main className="max-w-3xl w-full mx-auto p-6 space-y-6">
+      <main className="max-w-3xl w-full mx-auto p-4 sm:p-6 space-y-5">
         {notice && (
-          <div className="p-3.5 rounded-xl bg-indigo-500/20 border border-indigo-400/40 text-sm text-[#8fc5ff] flex items-center justify-between">
+          <div className="p-3.5 rounded-xl bg-indigo-500/20 border border-indigo-400/40 text-xs sm:text-sm text-[#8fc5ff] flex items-center justify-between gap-2">
             <span>{notice}</span>
             <button
               type="button"
               onClick={() => setNotice(null)}
-              className="text-xs underline ml-4 cursor-pointer"
+              className="min-h-[36px] px-2 text-xs underline shrink-0 cursor-pointer"
             >
               Fermer
             </button>
           </div>
         )}
 
-        <div className="p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b] space-y-4">
-          <h2 className="font-bold text-lg">Informations de l’examen</h2>
+        <div className="p-4 sm:p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b] space-y-3.5">
+          <h2 className="font-bold text-base sm:text-lg">
+            Informations de l’examen
+          </h2>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Titre de l’examen"
-            className="w-full px-3.5 py-2.5 rounded-xl bg-[#08111f] border border-[#203651] text-sm"
+            className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#08111f] border border-[#203651] text-sm"
           />
           <input
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Description"
-            className="w-full px-3.5 py-2.5 rounded-xl bg-[#08111f] border border-[#203651] text-sm"
+            className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#08111f] border border-[#203651] text-sm"
           />
         </div>
 
-        <div className="p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b] space-y-4">
+        <div className="p-4 sm:p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b] space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <h2 className="font-bold text-lg">Nouvelle question</h2>
+            <h2 className="font-bold text-base sm:text-lg">
+              Nouvelle question
+            </h2>
             <div className="inline-flex rounded-xl border border-[#2c4a70] bg-[#08111f] p-1">
               {(
                 [
@@ -1357,7 +1588,7 @@ function ProfessorExamEditorScreen({
                   key={qType}
                   type="button"
                   onClick={() => setType(qType)}
-                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                  className={`min-h-[36px] px-3.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
                     type === qType
                       ? 'bg-indigo-600 text-white'
                       : 'text-[#b8c7da] hover:text-white'
@@ -1378,18 +1609,18 @@ function ProfessorExamEditorScreen({
           />
 
           {type === ExamQuestionType.Quiz && (
-            <div className="grid sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <input
                 type="text"
                 value={optionsText}
                 onChange={(e) => setOptionsText(e.target.value)}
                 placeholder="Choix séparés par ; (ex: Cœur; Foie; Rein)"
-                className="sm:col-span-2 px-3.5 py-2.5 rounded-xl bg-[#08111f] border border-[#203651] text-sm"
+                className="sm:col-span-2 min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#08111f] border border-[#203651] text-sm"
               />
               <select
                 value={correctIndex}
                 onChange={(e) => setCorrectIndex(Number(e.target.value))}
-                className="px-3.5 py-2.5 rounded-xl bg-[#08111f] border border-[#203651] text-sm"
+                className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#08111f] border border-[#203651] text-sm"
               >
                 {[0, 1, 2, 3, 4, 5].map((i) => (
                   <option key={i} value={i}>
@@ -1406,52 +1637,52 @@ function ProfessorExamEditorScreen({
               value={expectedAnswer}
               onChange={(e) => setExpectedAnswer(e.target.value)}
               placeholder="Réponse attendue (optionnelle)"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#08111f] border border-[#203651] text-sm"
+              className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#08111f] border border-[#203651] text-sm"
             />
           )}
 
           {type === ExamQuestionType.Identify3D && (
             <div className="space-y-3 pt-2 border-t border-[#203651]">
-              <div className="text-xs font-bold uppercase tracking-wider text-[#8fc5ff]">
+              <div className="text-xs font-semibold text-[#8fc5ff]">
                 Cible anatomique 3D
               </div>
-              <div className="grid sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <input
                   type="text"
                   value={conceptId}
                   onChange={(e) => setConceptId(e.target.value)}
                   placeholder="ID FMA / UBERON (ex. FMA:55675)"
-                  className="px-3.5 py-2 rounded-xl bg-[#08111f] border border-[#203651] text-sm"
+                  className="min-h-[44px] px-3.5 py-2 rounded-xl bg-[#08111f] border border-[#203651] text-sm"
                 />
                 <input
                   type="text"
                   value={conceptFr}
                   onChange={(e) => setConceptFr(e.target.value)}
                   placeholder="Nom français (ex. Cœur)"
-                  className="px-3.5 py-2 rounded-xl bg-[#08111f] border border-[#203651] text-sm"
+                  className="min-h-[44px] px-3.5 py-2 rounded-xl bg-[#08111f] border border-[#203651] text-sm"
                 />
                 <input
                   type="text"
                   value={conceptEn}
                   onChange={(e) => setConceptEn(e.target.value)}
                   placeholder="Nom anglais (ex. Heart)"
-                  className="px-3.5 py-2 rounded-xl bg-[#08111f] border border-[#203651] text-sm"
+                  className="min-h-[44px] px-3.5 py-2 rounded-xl bg-[#08111f] border border-[#203651] text-sm"
                 />
               </div>
-              <div className="grid sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input
                   type="text"
                   value={meshFile}
                   onChange={(e) => setMeshFile(e.target.value)}
                   placeholder="Fichier GLB (ex. cardiovascular_male.glb)"
-                  className="px-3.5 py-2 rounded-xl bg-[#08111f] border border-[#203651] text-sm"
+                  className="min-h-[44px] px-3.5 py-2 rounded-xl bg-[#08111f] border border-[#203651] text-sm"
                 />
                 <input
                   type="text"
                   value={meshNode}
                   onChange={(e) => setMeshNode(e.target.value)}
-                  placeholder="Nœud GLB vérifié (ex. Heart)"
-                  className="px-3.5 py-2 rounded-xl bg-[#08111f] border border-[#203651] text-sm"
+                  placeholder="Nœud GLB vérifié (ex. Right atrium)"
+                  className="min-h-[44px] px-3.5 py-2 rounded-xl bg-[#08111f] border border-[#203651] text-sm"
                 />
               </div>
               <p className="text-xs text-[#71839b]">
@@ -1465,7 +1696,7 @@ function ProfessorExamEditorScreen({
           <button
             type="button"
             onClick={addQuestion}
-            className="px-4 py-2.5 rounded-xl border border-[#2c4a70] bg-[#132640] hover:bg-[#1b3558] text-sm font-semibold text-[#8fc5ff] inline-flex items-center gap-2 transition cursor-pointer"
+            className="w-full sm:w-auto min-h-[44px] px-4 py-2.5 rounded-xl border border-[#2c4a70] bg-[#132640] hover:bg-[#1b3558] text-sm font-semibold text-[#8fc5ff] inline-flex items-center justify-center gap-2 transition cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             Ajouter la question
@@ -1473,9 +1704,11 @@ function ProfessorExamEditorScreen({
         </div>
 
         {/* Question Bank */}
-        <div className="p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b] space-y-3">
+        <div className="p-4 sm:p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b] space-y-3">
           <div>
-            <h2 className="font-bold text-lg">Banque de questions</h2>
+            <h2 className="font-bold text-base sm:text-lg">
+              Banque de questions
+            </h2>
             <p className="text-xs text-[#b8c7da]">
               Questions déjà liées à des concepts FMA/UBERON.
             </p>
@@ -1484,19 +1717,19 @@ function ProfessorExamEditorScreen({
             {bankQuestions.map((q) => (
               <div
                 key={q.id}
-                className="py-3 flex items-center justify-between gap-4"
+                className="py-3 flex items-center justify-between gap-3"
               >
-                <div>
+                <div className="min-w-0">
                   <div className="text-sm font-semibold">{q.text}</div>
-                  <div className="text-xs text-[#8fc5ff]">
-                    {q.conceptNameFr ?? 'Concept non renseigné'} •{' '}
-                    {q.conceptId ?? 'sans ID'} ({q.type})
+                  <div className="text-xs text-[#8fc5ff] truncate">
+                    {q.conceptNameFr ?? 'Concept non renseigné'} ·{' '}
+                    {q.conceptId ?? 'sans ID'}
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => importBankQuestion(q)}
-                  className="px-3 py-1.5 rounded-lg border border-[#2c4a70] hover:bg-[#152842] text-xs font-semibold text-[#8fc5ff] shrink-0 cursor-pointer"
+                  className="min-h-[44px] px-3.5 py-2 rounded-xl border border-[#2c4a70] hover:bg-[#152842] text-xs font-semibold text-[#8fc5ff] whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   + Ajouter
                 </button>
@@ -1507,24 +1740,24 @@ function ProfessorExamEditorScreen({
 
         {/* Current Exam Questions */}
         {questions.length > 0 && (
-          <div className="p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b] space-y-4">
-            <h2 className="font-bold text-lg">
+          <div className="p-4 sm:p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b] space-y-4">
+            <h2 className="font-bold text-base sm:text-lg tabular-nums">
               Questions de l’examen ({questions.length})
             </h2>
             <div className="divide-y divide-[#203651]">
               {questions.map((q, idx) => (
                 <div key={q.id} className="py-2.5 flex items-center gap-3">
-                  <span className="w-6 h-6 rounded-full bg-indigo-600/30 text-[#8fc5ff] text-xs font-bold flex items-center justify-center">
+                  <span className="w-6 h-6 rounded-full bg-indigo-600/30 text-[#8fc5ff] text-xs font-bold flex items-center justify-center shrink-0 tabular-nums">
                     {idx + 1}
                   </span>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium">{q.text}</div>
                     <div className="text-xs text-[#71839b]">
                       {q.type === ExamQuestionType.Identify3D
-                        ? `Identification 3D • ${q.conceptId ?? 'sans concept'}`
+                        ? `Identification 3D · ${q.conceptId ?? 'sans concept'}`
                         : q.type === ExamQuestionType.Quiz
-                        ? `QCM • ${q.conceptId ?? 'sans concept'}`
-                        : `Question libre • ${q.conceptId ?? 'sans concept'}`}
+                        ? `QCM · ${q.conceptId ?? 'sans concept'}`
+                        : `Question libre · ${q.conceptId ?? 'sans concept'}`}
                     </div>
                   </div>
                 </div>
@@ -1534,7 +1767,7 @@ function ProfessorExamEditorScreen({
             <button
               type="button"
               onClick={saveExam}
-              className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold flex items-center justify-center gap-2 transition cursor-pointer"
+              className="w-full min-h-[48px] py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold flex items-center justify-center gap-2 transition cursor-pointer"
             >
               <Lock className="w-4 h-4" />
               Publier l’examen sécurisé
@@ -1543,14 +1776,18 @@ function ProfessorExamEditorScreen({
         )}
 
         {showExisting && (
-          <div className="p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b] space-y-3">
-            <h2 className="font-bold text-lg">Examens enregistrés</h2>
+          <div className="p-4 sm:p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b] space-y-3">
+            <h2 className="font-bold text-base sm:text-lg">
+              Examens enregistrés
+            </h2>
             <div className="divide-y divide-[#203651]">
               {existingExams.map((exam) => (
                 <div key={exam.id} className="py-3">
-                  <div className="font-semibold">{exam.title}</div>
-                  <div className="text-xs text-[#b8c7da]">
-                    {exam.questions.length} question(s) • {exam.durationMinutes}{' '}
+                  <div className="font-semibold text-sm sm:text-base">
+                    {exam.title}
+                  </div>
+                  <div className="text-xs text-[#b8c7da] tabular-nums">
+                    {exam.questions.length} question(s) · {exam.durationMinutes}{' '}
                     min
                   </div>
                 </div>
@@ -1578,34 +1815,36 @@ function StudentExamListScreen({
 
   return (
     <div className="flex-1 flex flex-col">
-      <header className="border-b border-[#203651] bg-[#0d1a2b] px-6 py-4 flex items-center gap-3">
+      <header className="sticky top-0 z-30 h-14 border-b border-[#203651] bg-[#0d1a2b]/95 backdrop-blur-md px-4 sm:px-6 flex items-center gap-2">
         <button
           type="button"
           onClick={onBack}
-          className="p-2 rounded-lg hover:bg-[#162a45] text-[#b8c7da] hover:text-white transition cursor-pointer"
+          className="min-h-[44px] min-w-[44px] rounded-xl hover:bg-[#162a45] text-[#b8c7da] hover:text-white flex items-center justify-center transition cursor-pointer"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="font-bold text-lg">Examens disponibles</h1>
+        <h1 className="font-bold text-base sm:text-lg truncate">
+          Examens disponibles
+        </h1>
       </header>
 
-      <main className="max-w-3xl w-full mx-auto p-6 space-y-3">
+      <main className="max-w-3xl w-full mx-auto p-4 sm:p-6 space-y-3">
         {exams.map((exam) => (
           <button
             key={exam.id}
             type="button"
             onClick={() => onSelectExam(exam)}
-            className="w-full text-left p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b] hover:border-[#8fc5ff] transition flex items-center justify-between gap-4 cursor-pointer"
+            className="w-full min-h-[72px] text-left p-4 sm:p-5 rounded-2xl border border-[#203651] bg-[#0d1a2b] hover:border-[#8fc5ff] active:scale-[0.99] transition flex items-center justify-between gap-4 cursor-pointer"
           >
-            <div>
-              <div className="font-bold text-base text-[#eef4ff]">
+            <div className="min-w-0">
+              <div className="font-bold text-sm sm:text-base text-[#eef4ff] truncate">
                 {exam.title}
               </div>
-              <div className="text-xs text-[#b8c7da] mt-0.5">
-                {exam.questions.length} question(s) • {exam.durationMinutes} min
+              <div className="text-xs text-[#b8c7da] mt-0.5 tabular-nums">
+                {exam.questions.length} question(s) · {exam.durationMinutes} min
               </div>
             </div>
-            <ChevronRight className="w-5 h-5 text-[#8fc5ff]" />
+            <ChevronRight className="w-5 h-5 text-[#8fc5ff] shrink-0" />
           </button>
         ))}
       </main>
@@ -1640,9 +1879,7 @@ function StudentExamScreen({
       return question.options.indexOf(ans) === question.correctOptionIndex;
     }
     if (question.type === ExamQuestionType.Identify3D) {
-      return (
-        ans.toLowerCase() === (question.meshNode || '').toLowerCase()
-      );
+      return ans.toLowerCase() === (question.meshNode || '').toLowerCase();
     }
     return (
       question.expectedAnswer != null &&
@@ -1675,7 +1912,10 @@ function StudentExamScreen({
       percentage,
       questionScores,
     });
-    AcademicRepository.instance.markAssignmentSubmitted(exam.id, 'student-demo');
+    AcademicRepository.instance.markAssignmentSubmitted(
+      exam.id,
+      'student-demo'
+    );
     AcademicRepository.instance.addHistory({
       id: `hist-${Date.now()}`,
       studentId: 'student-demo',
@@ -1717,22 +1957,24 @@ function StudentExamScreen({
 
   return (
     <div className="flex-1 flex flex-col">
-      <header className="border-b border-[#203651] bg-[#0d1a2b] px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <Lock className="w-5 h-5 text-amber-400" />
-          <h1 className="font-bold text-lg">{exam.title}</h1>
+      <header className="sticky top-0 z-30 h-14 border-b border-[#203651] bg-[#0d1a2b] px-4 sm:px-6 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+          <h1 className="font-bold text-sm sm:text-base truncate">
+            {exam.title}
+          </h1>
         </div>
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#08111f] border border-[#2c4a70] font-mono text-sm text-[#8fc5ff]">
-          <Clock className="w-4 h-4" />
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#08111f] border border-[#2c4a70] font-mono text-xs sm:text-sm text-[#8fc5ff] tabular-nums shrink-0">
+          <Clock className="w-3.5 h-3.5" />
           {minutes}:{String(seconds).padStart(2, '0')}
         </div>
       </header>
 
-      <main className="max-w-3xl w-full mx-auto p-6 space-y-6">
-        <div className="p-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 flex items-center gap-3">
+      <main className="max-w-3xl w-full mx-auto p-4 sm:p-6 space-y-4">
+        <div className="p-3.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 flex items-center gap-3">
           <Lock className="w-5 h-5 text-amber-300 shrink-0" />
           <div>
-            <div className="font-semibold text-sm text-amber-200">
+            <div className="font-semibold text-xs sm:text-sm text-amber-200">
               Mode examen sécurisé
             </div>
             <div className="text-xs text-amber-200/80">
@@ -1741,26 +1983,24 @@ function StudentExamScreen({
           </div>
         </div>
 
-        <div className="p-6 rounded-2xl border border-[#203651] bg-[#0d1a2b] space-y-5">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#8fc5ff]">
+        <div className="p-4 sm:p-6 rounded-2xl border border-[#203651] bg-[#0d1a2b] space-y-5">
+          <div className="flex items-center justify-between text-xs text-[#8fc5ff] font-medium tabular-nums">
+            <span>
               Question {currentIndex + 1} / {exam.questions.length}
             </span>
-            <div className="flex items-center gap-2">
-              <span className="text-xs px-2.5 py-1 rounded-full bg-[#12243b] border border-[#2c4a70] text-[#8fc5ff]">
-                {question.points} pt
-              </span>
-              <span className="text-xs px-2.5 py-1 rounded-full bg-[#12243b] border border-[#2c4a70] text-[#b8c7da]">
-                {question.type === ExamQuestionType.Identify3D
-                  ? 'Identification 3D'
-                  : question.type === ExamQuestionType.Quiz
-                  ? 'QCM'
-                  : 'Réponse libre'}
-              </span>
-            </div>
+            <span>
+              {question.points} pt ·{' '}
+              {question.type === ExamQuestionType.Identify3D
+                ? 'Identification 3D'
+                : question.type === ExamQuestionType.Quiz
+                ? 'QCM'
+                : 'Réponse libre'}
+            </span>
           </div>
 
-          <h2 className="text-xl font-bold text-[#eef4ff]">{question.text}</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-[#eef4ff]">
+            {question.text}
+          </h2>
 
           {question.type === ExamQuestionType.Quiz && (
             <div className="space-y-2.5">
@@ -1769,7 +2009,7 @@ function StudentExamScreen({
                 return (
                   <label
                     key={opt}
-                    className={`flex items-center gap-3 p-3.5 rounded-xl border transition cursor-pointer ${
+                    className={`min-h-[48px] flex items-center gap-3 p-3.5 rounded-xl border transition cursor-pointer ${
                       checked
                         ? 'border-indigo-500 bg-indigo-600/20 text-white'
                         : 'border-[#203651] bg-[#08111f] hover:border-[#2c4a70]'
@@ -1783,7 +2023,7 @@ function StudentExamScreen({
                       onChange={() =>
                         setAnswers((prev) => ({ ...prev, [question.id]: opt }))
                       }
-                      className="accent-indigo-500"
+                      className="accent-indigo-500 w-4 h-4"
                     />
                     <span className="text-sm font-medium">{opt}</span>
                   </label>
@@ -1818,7 +2058,7 @@ function StudentExamScreen({
                     question.meshFile || 'cardiovascular_male.glb'
                   }`}
                   selectionColor={[1.0, 0.25, 0.1, 1.0]}
-                  heightClass="h-[380px]"
+                  heightClass="h-[320px] sm:h-[400px]"
                   onSelectionChanged={(entities) => {
                     if (entities.length > 0) {
                       const last = entities[entities.length - 1];
@@ -1830,7 +2070,7 @@ function StudentExamScreen({
                   }}
                 />
               </div>
-              <div className="p-3 rounded-xl bg-[#08111f] border border-[#203651] text-xs flex items-center justify-between">
+              <div className="p-3 rounded-xl bg-[#08111f] border border-[#203651] text-xs flex flex-wrap items-center justify-between gap-2">
                 <span>
                   Structure sélectionnée :{' '}
                   <strong className="text-[#8fc5ff]">
@@ -1856,7 +2096,7 @@ function StudentExamScreen({
                   handleSubmit();
                 }
               }}
-              className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition cursor-pointer"
+              className="w-full min-h-[48px] py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition cursor-pointer"
             >
               {currentIndex + 1 < exam.questions.length
                 ? 'Question suivante'
@@ -1871,14 +2111,14 @@ function StudentExamScreen({
           <div className="bg-[#0d1a2b] border border-[#2c4a70] rounded-2xl max-w-md w-full p-6 text-center space-y-4">
             <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto" />
             <h3 className="text-2xl font-bold">Examen terminé</h3>
-            <p className="text-lg text-[#8fc5ff] font-semibold">
+            <p className="text-lg text-[#8fc5ff] font-semibold tabular-nums">
               Résultat : {submittedResult.earned} / {submittedResult.total}{' '}
               points
             </p>
             <button
               type="button"
               onClick={onFinish}
-              className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold cursor-pointer"
+              className="w-full min-h-[48px] py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold cursor-pointer"
             >
               Terminer
             </button>

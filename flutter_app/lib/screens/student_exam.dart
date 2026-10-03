@@ -238,6 +238,9 @@ class _ThreeDIdentificationQuestionState
       );
     }
 
+    final viewerHeight =
+        (MediaQuery.sizeOf(context).height * 0.42).clamp(260.0, 420.0);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -247,7 +250,7 @@ class _ThreeDIdentificationQuestionState
         ),
         const SizedBox(height: 10),
         SizedBox(
-          height: 420,
+          height: viewerHeight,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: Interactive3d(

@@ -146,18 +146,20 @@ class _ProfessorExamEditorState extends State<ProfessorExamEditor> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Créateur d’examen')),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          TextField(
-            controller: titleController,
-            decoration: const InputDecoration(labelText: 'Titre'),
-          ),
-          TextField(
-            controller: descriptionController,
-            decoration: const InputDecoration(labelText: 'Description'),
-          ),
-          const SizedBox(height: 20),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(labelText: 'Titre'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: descriptionController,
+              decoration: const InputDecoration(labelText: 'Description'),
+            ),
+            const SizedBox(height: 20),
           SegmentedButton<ExamQuestionType>(
             segments: const [
               ButtonSegment(
@@ -326,7 +328,8 @@ class _ProfessorExamEditorState extends State<ProfessorExamEditor> {
               ),
             ),
           ],
-        ],
+          ],
+        ),
       ),
     );
   }
