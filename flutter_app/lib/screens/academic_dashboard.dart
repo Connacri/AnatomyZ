@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/academic_repository.dart';
 import '../data/exam_repository.dart';
 import '../models/anatomy_exam_assignment.dart';
+import '../models/anatomy_exam_result.dart';
 import '../models/anatomy_history_entry.dart';
 import '../models/anatomy_role.dart';
 
@@ -139,11 +140,17 @@ class _StudentDashboard extends StatelessWidget {
           child: results.isEmpty
               ? const Text('Aucun résultat disponible.')
               : Column(
-                  children: results.map((result) => ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text('Examen ${result.examId}'),
-                    subtitle: Text('${result.score}/${result.maxScore} · ${result.percentage.toStringAsFixed(1)} % · ${result.grade}'),
-                  )).toList(growable: false),
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _StudentScoreBarChart(results: results),
+                    const SizedBox(height: 12),
+                    const Divider(),
+                    ...results.map((result) => ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text('Examen ${result.examId}'),
+                      subtitle: Text('${result.score}/${result.maxScore} · ${result.percentage.toStringAsFixed(1)} % · ${result.grade}'),
+                    )),
+                  ],
                 ),
         ),
         _SectionCard(
@@ -238,4 +245,78 @@ class _SectionCard extends StatelessWidget {
       ),
     ),
   );
+}
+
+class _StudentScoreBarChart extends StatelessWidget {
+  const _StudentScoreBarChart({required this.results});
+  final List<AnatomyExamResult> results;
+
+  @override
+  Widget build(BuildContext context) {
+    final sorted = List<AnatomyExamResult>.from(results)
+      ..sort((a, b) => a.submittedAt.compareTo(b.submittedAt));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Progression des scores dans le temps (%)',
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 150,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: sorted.map((result) {
+              final ratio = (result.percentage / 100.0).clamp(0.05, 1.0);
+              final day = result.submittedAt.day.toString().padLeft(2, '0');
+              final month = result.submittedAt.month.toString().padLeft(2, '0');
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        '${result.percentage.round()}%',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.bottomCenter,
+                          child: FractionallySizedBox(
+                            heightFactor: ratio,
+                            widthFactor: 0.65,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.primary,
+                                borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(6),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '$day/$month',
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(growable: false),
+          ),
+        ),
+      ],
+    );
+  }
 }

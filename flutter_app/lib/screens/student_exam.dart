@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:interactive_3d/interactive_3d.dart';
 
+import '../data/academic_repository.dart';
 import '../models/anatomy_exam.dart';
+import '../models/anatomy_exam_result.dart';
 import '../services/exam_security.dart';
 
 class StudentExamPage extends StatefulWidget {
@@ -66,6 +68,19 @@ class _StudentExamPageState extends State<StudentExamPage> {
         .where(_isCorrect)
         .fold<int>(0, (sum, question) => sum + question.points);
     final total = widget.exam.totalPoints;
+    final percentage = total > 0 ? (earned / total) * 100.0 : 0.0;
+    AcademicRepository.instance.addResult(
+      AnatomyExamResult(
+        id: 'res-${DateTime.now().millisecondsSinceEpoch}',
+        examId: widget.exam.id,
+        assignmentId: 'assign-${widget.exam.id}',
+        studentId: 'student-demo',
+        submittedAt: DateTime.now(),
+        score: earned,
+        maxScore: total,
+        percentage: percentage,
+      ),
+    );
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -94,6 +109,11 @@ class _StudentExamPageState extends State<StudentExamPage> {
     }
 
     final question = widget.exam.questions[current];
+    final totalSeconds = widget.exam.durationMinutes * 60;
+    final remainingRatio = totalSeconds <= 0
+        ? 0.0
+        : (remainingSeconds / totalSeconds).clamp(0.0, 1.0);
+    final remainingPercent = (remainingRatio * 100).round();
     final minutes = remainingSeconds ~/ 60;
     final seconds = remainingSeconds % 60;
 
@@ -105,7 +125,9 @@ class _StudentExamPageState extends State<StudentExamPage> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: Center(
-              child: Text('$minutes:${seconds.toString().padLeft(2, '0')}'),
+              child: Text(
+                '$minutes:${seconds.toString().padLeft(2, '0')} ($remainingPercent%)',
+              ),
             ),
           ),
         ],
@@ -113,6 +135,38 @@ class _StudentExamPageState extends State<StudentExamPage> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Temps restant',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      Text(
+                        '$remainingPercent %',
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: LinearProgressIndicator(
+                      value: remainingRatio,
+                      minHeight: 8,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
           const Card(
             child: ListTile(
               leading: Icon(Icons.lock),

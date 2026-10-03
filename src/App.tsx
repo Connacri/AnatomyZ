@@ -28,6 +28,16 @@ import {
   ZoomOut,
 } from 'lucide-react';
 import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+import {
   AcademicRepository,
   AnatomyCatalogRepository,
   AnatomyExamRepository,
@@ -1320,21 +1330,150 @@ function AcademicDashboardScreen({
                   Aucun résultat disponible.
                 </p>
               ) : (
-                <div className="divide-y divide-[#203651]">
-                  {results.map((r) => (
-                    <div
-                      key={r.id}
-                      className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1"
-                    >
-                      <div className="font-semibold text-sm">
-                        Examen {r.examId}
-                      </div>
-                      <div className="text-xs sm:text-sm text-[#8fc5ff] font-medium tabular-nums">
-                        {r.score}/{r.maxScore} · {r.percentage.toFixed(1)} % ·
-                        Note {gradeForPercentage(r.percentage)}
-                      </div>
+                <div className="space-y-5">
+                  {/* Recharts Bar Chart of Student Score Performance Over Time */}
+                  <div className="pt-1">
+                    <div className="flex items-center justify-between text-xs text-[#b8c7da] mb-3 tabular-nums">
+                      <span>Progression des scores dans le temps (%)</span>
+                      <span>
+                        Moyenne :{' '}
+                        <strong className="text-[#8fc5ff]">
+                          {(
+                            results.reduce((acc, r) => acc + r.percentage, 0) /
+                            results.length
+                          ).toFixed(1)}{' '}
+                          %
+                        </strong>
+                      </span>
                     </div>
-                  ))}
+                    <div className="w-full h-56 sm:h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={[...results]
+                            .sort(
+                              (a, b) =>
+                                a.submittedAt.getTime() -
+                                b.submittedAt.getTime()
+                            )
+                            .map((r) => {
+                              const matched = exams.find(
+                                (e) => e.id === r.examId
+                              );
+                              const shortDate = r.submittedAt.toLocaleDateString(
+                                'fr-FR',
+                                { day: '2-digit', month: 'short' }
+                              );
+                              return {
+                                id: r.id,
+                                dateLabel: shortDate,
+                                examTitle: matched
+                                  ? matched.title
+                                  : `Examen ${r.examId}`,
+                                percentage: Number(r.percentage.toFixed(1)),
+                                score: r.score,
+                                maxScore: r.maxScore,
+                                grade: gradeForPercentage(r.percentage),
+                              };
+                            })}
+                          margin={{ top: 8, right: 8, left: -18, bottom: 4 }}
+                        >
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="#203651"
+                            vertical={false}
+                          />
+                          <XAxis
+                            dataKey="dateLabel"
+                            stroke="#71839b"
+                            tick={{ fill: '#b8c7da', fontSize: 12 }}
+                            tickLine={false}
+                            axisLine={{ stroke: '#203651' }}
+                          />
+                          <YAxis
+                            domain={[0, 100]}
+                            unit="%"
+                            stroke="#71839b"
+                            tick={{ fill: '#b8c7da', fontSize: 12 }}
+                            tickLine={false}
+                            axisLine={{ stroke: '#203651' }}
+                          />
+                          <Tooltip
+                            cursor={{ fill: 'rgba(143, 197, 255, 0.08)' }}
+                            content={({ active, payload }) => {
+                              if (!active || !payload || !payload.length) {
+                                return null;
+                              }
+                              const item = payload[0].payload;
+                              return (
+                                <div className="bg-[#08111f] border border-[#2c4a70] rounded-xl px-3.5 py-2.5 text-xs shadow-xl space-y-1 tabular-nums">
+                                  <div className="font-bold text-[#eef4ff]">
+                                    {item.examTitle}
+                                  </div>
+                                  <div className="text-[#b8c7da]">
+                                    Date : {item.dateLabel}
+                                  </div>
+                                  <div className="text-[#8fc5ff] font-semibold">
+                                    Score : {item.score}/{item.maxScore} ·{' '}
+                                    {item.percentage}% · Note {item.grade}
+                                  </div>
+                                </div>
+                              );
+                            }}
+                          />
+                          <Bar
+                            dataKey="percentage"
+                            name="Score (%)"
+                            radius={[6, 6, 0, 0]}
+                            maxBarSize={48}
+                          >
+                            {[...results]
+                              .sort(
+                                (a, b) =>
+                                  a.submittedAt.getTime() -
+                                  b.submittedAt.getTime()
+                              )
+                              .map((entry) => (
+                                <Cell
+                                  key={entry.id}
+                                  fill={
+                                    entry.percentage >= 80
+                                      ? '#16a34a'
+                                      : entry.percentage >= 60
+                                      ? '#6366f1'
+                                      : '#d97706'
+                                  }
+                                />
+                              ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  <div className="divide-y divide-[#203651] border-t border-[#203651]">
+                    {results.map((r) => {
+                      const matched = exams.find((e) => e.id === r.examId);
+                      return (
+                        <div
+                          key={r.id}
+                          className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1"
+                        >
+                          <div>
+                            <div className="font-semibold text-sm">
+                              {matched ? matched.title : `Examen ${r.examId}`}
+                            </div>
+                            <div className="text-xs text-[#71839b] tabular-nums">
+                              {r.submittedAt.toLocaleDateString('fr-FR')}
+                            </div>
+                          </div>
+                          <div className="text-xs sm:text-sm text-[#8fc5ff] font-medium tabular-nums">
+                            {r.score}/{r.maxScore} · {r.percentage.toFixed(1)} %
+                            · Note {gradeForPercentage(r.percentage)}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </SectionCard>
@@ -1952,21 +2091,70 @@ function StudentExamScreen({
   }
 
   const question = exam.questions[currentIndex];
+  const totalSeconds = Math.max(1, exam.durationMinutes * 60);
+  const remainingPercentage = Math.max(
+    0,
+    Math.min(100, (remainingSeconds / totalSeconds) * 100)
+  );
   const minutes = Math.floor(remainingSeconds / 60);
   const seconds = remainingSeconds % 60;
 
+  const isLowTime = remainingPercentage <= 20;
+  const isWarningTime = remainingPercentage > 20 && remainingPercentage <= 50;
+  const progressBarColor = isLowTime
+    ? 'bg-rose-500'
+    : isWarningTime
+    ? 'bg-amber-400'
+    : 'bg-indigo-500';
+
   return (
     <div className="flex-1 flex flex-col">
-      <header className="sticky top-0 z-30 h-14 border-b border-[#203651] bg-[#0d1a2b] px-4 sm:px-6 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <Lock className="w-4 h-4 text-amber-400 shrink-0" />
-          <h1 className="font-bold text-sm sm:text-base truncate">
-            {exam.title}
-          </h1>
+      <header className="sticky top-0 z-30 border-b border-[#203651] bg-[#0d1a2b] px-4 sm:px-6 pt-3 pb-2.5 space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+            <h1 className="font-bold text-sm sm:text-base truncate">
+              {exam.title}
+            </h1>
+          </div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-[#08111f] border border-[#2c4a70] font-mono text-xs sm:text-sm text-[#8fc5ff] tabular-nums shrink-0">
+            <Clock className="w-3.5 h-3.5" />
+            <span>
+              {minutes}:{String(seconds).padStart(2, '0')}
+            </span>
+            <span className="text-[#71839b]">·</span>
+            <span>{Math.round(remainingPercentage)}%</span>
+          </div>
         </div>
-        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#08111f] border border-[#2c4a70] font-mono text-xs sm:text-sm text-[#8fc5ff] tabular-nums shrink-0">
-          <Clock className="w-3.5 h-3.5" />
-          {minutes}:{String(seconds).padStart(2, '0')}
+
+        {/* Real-time visual remaining duration progress bar */}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between text-[11px] text-[#b8c7da] tabular-nums">
+            <span>
+              Durée restante{' '}
+              {isLowTime
+                ? '(Urgent)'
+                : isWarningTime
+                ? '(Attention)'
+                : ''}
+            </span>
+            <span className="font-semibold text-[#8fc5ff]">
+              { remainingPercentage.toFixed(1) } % restant
+            </span>
+          </div>
+          <div
+            role="progressbar"
+            aria-label="Pourcentage du temps restant"
+            aria-valuenow={Math.round(remainingPercentage)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            className="w-full h-2 rounded-full bg-[#08111f] border border-[#203651] overflow-hidden"
+          >
+            <div
+              className={`h-full ${progressBarColor} transition-all duration-500 ease-out rounded-full`}
+              style={{ width: `${remainingPercentage}%` }}
+            />
+          </div>
         </div>
       </header>
 

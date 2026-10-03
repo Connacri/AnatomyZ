@@ -599,7 +599,41 @@ export class AcademicRepository {
     },
   ];
 
-  private results: AnatomyExamResult[] = [];
+  private results: AnatomyExamResult[] = [
+    {
+      id: 'res-demo-1',
+      examId: 'osteo-l1',
+      assignmentId: 'assign-osteo-1',
+      studentId: 'student-demo',
+      submittedAt: new Date(Date.now() - 86400 * 1000 * 14),
+      score: 14,
+      maxScore: 20,
+      percentage: 70.0,
+      questionScores: { q1: 14 },
+    },
+    {
+      id: 'res-demo-2',
+      examId: 'respiratory-l1',
+      assignmentId: 'assign-resp-1',
+      studentId: 'student-demo',
+      submittedAt: new Date(Date.now() - 86400 * 1000 * 7),
+      score: 16,
+      maxScore: 20,
+      percentage: 80.0,
+      questionScores: { q1: 16 },
+    },
+    {
+      id: 'res-demo-3',
+      examId: 'digestive-l1',
+      assignmentId: 'assign-dig-1',
+      studentId: 'student-demo',
+      submittedAt: new Date(Date.now() - 86400 * 1000 * 2),
+      score: 18,
+      maxScore: 20,
+      percentage: 90.0,
+      questionScores: { q1: 18 },
+    },
+  ];
   private history: AnatomyHistoryEntry[] = [
     {
       id: 'hist-1',

@@ -29,7 +29,41 @@ class AcademicRepository {
   ];
 
   final List<AnatomyExamAssignment> _assignments = [];
-  final List<AnatomyExamResult> _results = [];
+  final List<AnatomyExamResult> _results = [
+    AnatomyExamResult(
+      id: 'res-demo-1',
+      examId: 'osteo-l1',
+      assignmentId: 'assign-osteo-1',
+      studentId: 'student-demo',
+      submittedAt: DateTime.utc(2026, 9, 19),
+      score: 14,
+      maxScore: 20,
+      percentage: 70.0,
+      questionScores: const {'q1': 14},
+    ),
+    AnatomyExamResult(
+      id: 'res-demo-2',
+      examId: 'respiratory-l1',
+      assignmentId: 'assign-resp-1',
+      studentId: 'student-demo',
+      submittedAt: DateTime.utc(2026, 9, 26),
+      score: 16,
+      maxScore: 20,
+      percentage: 80.0,
+      questionScores: const {'q1': 16},
+    ),
+    AnatomyExamResult(
+      id: 'res-demo-3',
+      examId: 'digestive-l1',
+      assignmentId: 'assign-dig-1',
+      studentId: 'student-demo',
+      submittedAt: DateTime.utc(2026, 10, 1),
+      score: 18,
+      maxScore: 20,
+      percentage: 90.0,
+      questionScores: const {'q1': 18},
+    ),
+  ];
   final List<AnatomyHistoryEntry> _history = [];
 
   List<AnatomyClass> classesForProfessor(String professorId) =>
