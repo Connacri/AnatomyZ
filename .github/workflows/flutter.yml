@@ -32,12 +32,21 @@ jobs:
       - name: Verify native Android host
         run: test -f android/app/build.gradle.kts
 
-      # The repository keeps the native host under source control. This fallback
-      # only restores Gradle wrapper files when they are absent in CI.
-      - name: Bootstrap missing Flutter wrapper files
+      # Generate only the missing Gradle wrapper, then restore the repository's
+      # native Android host so Flutter cannot overwrite custom security code.
+      - name: Bootstrap Gradle wrapper without replacing native host
         run: |
           if [ ! -f android/gradlew ]; then
+            tmpdir="$(mktemp -d)"
             flutter create --platforms=android .
+            cp android/gradlew "$tmpdir/gradlew"
+            cp android/gradlew.bat "$tmpdir/gradlew.bat"
+            cp -R android/gradle "$tmpdir/gradle"
+            git checkout -- android
+            cp "$tmpdir/gradlew" android/gradlew
+            cp "$tmpdir/gradlew.bat" android/gradlew.bat
+            cp -R "$tmpdir/gradle" android/gradle
+            chmod +x android/gradlew
           fi
 
       - run: flutter pub get
