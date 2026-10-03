@@ -3,6 +3,7 @@ import 'package:interactive_3d/interactive_3d.dart';
 
 import '../data/anatomy_catalog_repository.dart';
 import '../data/anatomy_model_repository.dart';
+import '../models/anatomy_structure.dart';
 import '../models/anatomy_system.dart';
 
 class AnatomyHomePage extends StatefulWidget {
@@ -242,6 +243,19 @@ class _AnatomyViewer extends StatelessWidget {
                           await controller.updatePartGroupConfig(
                             group: ModelPartGroup(title: 'Sélection', names: [name]),
                             isVisible: false,
+                          );
+                        },
+                      ),
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.visibility_outlined),
+                        label: const Text('Afficher'),
+                        onPressed: () async {
+                          await controller.updatePartGroupConfig(
+                            group: ModelPartGroup(
+                              title: 'Sélection',
+                              names: [selectedEntity!.name],
+                            ),
+                            isVisible: true,
                           );
                         },
                       ),
