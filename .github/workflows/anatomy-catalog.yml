@@ -1,6 +1,12 @@
 name: Build AnatomyZ anatomy catalog
 
 on:
+  push:
+    branches: [master]
+    paths:
+      - "scripts/**"
+      - "docs/ANATOMY_CATALOG_PIPELINE.md"
+      - ".github/workflows/anatomy-catalog.yml"
   workflow_dispatch:
   schedule:
     - cron: "0 3 * * 0"
