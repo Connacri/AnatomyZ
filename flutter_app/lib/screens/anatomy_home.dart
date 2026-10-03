@@ -228,6 +228,24 @@ class _AnatomyViewer extends StatelessWidget {
               },
               icon: const Icon(Icons.clear_all),
               ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      tooltip: 'Zoom arrière',
+                      onPressed: () => controller.setCameraZoomLevel(0.85),
+                      icon: const Icon(Icons.zoom_out),
+                    ),
+                    IconButton(
+                      tooltip: 'Zoom avant',
+                      onPressed: () => controller.setCameraZoomLevel(1.35),
+                      icon: const Icon(Icons.zoom_in),
+                    ),
+                  ],
+                ),
+              ),
               if (selectedEntity != null)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
