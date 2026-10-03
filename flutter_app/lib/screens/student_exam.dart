@@ -99,12 +99,21 @@ class _StudentExamPageState extends State<StudentExamPage> {
           Text(question.text, style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 24),
           if (question.type == ExamQuestionType.quiz)
-            ...question.options.map((option) => RadioListTile<String>(
-              value: option,
+            RadioGroup<String>(
               groupValue: answers[question.id],
-              title: Text(option),
-              onChanged: (value) => setState(() => answers[question.id] = value ?? ''),
-            ))
+              onChanged: (value) =>
+                  setState(() => answers[question.id] = value ?? ''),
+              child: Column(
+                children: question.options
+                    .map(
+                      (option) => RadioListTile<String>(
+                        value: option,
+                        title: Text(option),
+                      ),
+                    )
+                    .toList(growable: false),
+              ),
+            )
           else
             TextField(
               onChanged: (value) => answers[question.id] = value,
