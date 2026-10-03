@@ -1,0 +1,20 @@
+{
+  "sources": [
+    {
+      "id": "fma",
+      "name": "Foundational Model of Anatomy",
+      "version": "5.1.0",
+      "download": "http://purl.org/sig/ont/fma.owl",
+      "source_repository": "https://github.com/uw-sig/FMA",
+      "license_note": "Retain upstream licensing/provenance metadata; verify redistribution terms for each release before publishing derived data."
+    },
+    {
+      "id": "uberon",
+      "name": "Uberon",
+      "version": "latest-at-build",
+      "download": "http://purl.obolibrary.org/obo/uberon.owl",
+      "source_repository": "https://github.com/obophenotype/uberon",
+      "license_note": "Retain upstream licensing/provenance metadata."
+    }
+  ]
+}
