@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AnatomyZ — Atlas anatomique 3D</title>
+  <meta name="description" content="AnatomyZ — atlas anatomique humain 3D basé sur un Knowledge Graph et des modèles GLB/GLTF.">
+  <style>
+    :root{color-scheme:dark}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#08111f;color:#eef4ff}
+    main{max-width:1000px;margin:auto;padding:72px 24px}
+    .badge{display:inline-block;padding:8px 14px;border:1px solid #2c4a70;border-radius:999px;color:#8fc5ff}
+    h1{font-size:clamp(42px,8vw,76px);margin:24px 0 12px}
+    p{font-size:18px;line-height:1.7;color:#b8c7da}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:36px 0}
+    .card{padding:22px;border:1px solid #203651;border-radius:18px;background:#0d1a2b}
+    a{color:#8fc5ff;text-decoration:none}
+    footer{margin-top:60px;color:#71839b}
+  </style>
+</head>
+<body>
+<main>
+  <span class="badge">AnatomyZ · Human 3D Anatomy</span>
+  <h1>AnatomyZ</h1>
+  <p>
+    Un atlas anatomique humain 3D natif Flutter, construit autour d'un
+    Knowledge Graph anatomique, des ontologies FMA/UBERON et de modèles
+    GLB/GLTF vérifiés progressivement.
+  </p>
+  <div class="grid">
+    <section class="card"><h2>🧠 Knowledge Graph</h2><p>Structures, synonymes et relations anatomiques.</p></section>
+    <section class="card"><h2>🦴 3D Anatomy</h2><p>Modèles GLB/GLTF, sélection, visibilité et matériaux.</p></section>
+    <section class="card"><h2>🔗 Mapping Engine</h2><p>Correspondances exactes, xrefs et mappings vérifiés.</p></section>
+    <section class="card"><h2>🎓 Education</h2><p>Professeur, étudiant, quiz, questions et mode examen sécurisé.</p></section>
+  </div>
+  <p><a href="./catalog/index.json">→ Catalogue anatomique</a></p>
+  <p><a href="https://github.com/Connacri/AnatomyZ">→ Dépôt GitHub</a></p>
+  <footer>Projet académique — Professeur Zenasni Kamel</footer>
+</main>
+</body>
+</html>
