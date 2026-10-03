@@ -29,8 +29,8 @@ class RemoteAnatomyCatalogRepository {
 
   Future<Map<String, dynamic>> _loadIndex() async {
     if (_index != null) return _index!;
-    final response = await http.get(Uri.parse(baseUrl + '/index.json'));
-    if (response.statusCode != 200) throw Exception('Catalogue AnatomyZ indisponible (' + response.statusCode.toString() + ')');
+    final response = await http.get(Uri.parse('$baseUrl/index.json'));
+    if (response.statusCode != 200) throw Exception('Catalogue AnatomyZ indisponible (${response.statusCode})');
     _index = jsonDecode(response.body) as Map<String, dynamic>;
     return _index!;
   }
@@ -40,7 +40,7 @@ class RemoteAnatomyCatalogRepository {
     final rows = <AnatomyStructure>[];
     for (final item in chunks) {
       final file = (item as Map<String, dynamic>)['file'] as String;
-      final response = await http.get(Uri.parse(baseUrl + '/' + file));
+      final response = await http.get(Uri.parse('$baseUrl/$file'));
       if (response.statusCode != 200) continue;
       for (final line in const LineSplitter().convert(response.body)) {
         if (line.trim().isEmpty) continue;
