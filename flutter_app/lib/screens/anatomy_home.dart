@@ -5,6 +5,8 @@ import 'package:interactive_3d/interactive_3d.dart';
 
 import '../data/anatomy_catalog_repository.dart';
 import '../data/remote_anatomy_catalog_repository.dart';
+import '../data/remote_anatomy_relation_repository.dart';
+import '../models/anatomy_relation.dart';
 import '../data/anatomy_model_repository.dart';
 import '../models/anatomy_structure.dart';
 import '../models/anatomy_system.dart';
@@ -20,6 +22,7 @@ class _AnatomyHomePageState extends State<AnatomyHomePage> {
   final repository = AnatomyModelRepository();
   final catalog = AnatomyCatalogRepository();
   final remoteCatalog = RemoteAnatomyCatalogRepository();
+  final relationRepository = RemoteAnatomyRelationRepository();
   final viewerController = Interactive3dController();
 
   AnatomySex sex = AnatomySex.male;
@@ -113,6 +116,48 @@ class _AnatomyHomePageState extends State<AnatomyHomePage> {
                   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
               Text(structure.nameEn,
                   style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 12),
+              FutureBuilder<List<AnatomyRelation>>(
+                future: relationRepository.forConcept(structure.id),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const LinearProgressIndicator();
+                  }
+                  if (snapshot.hasError) {
+                    return const Text('Relations anatomiques indisponibles');
+                  }
+                  final relations = snapshot.data ?? const <AnatomyRelation>[];
+                  if (relations.isEmpty) {
+                    return const Text('Aucune relation publiée pour cette structure');
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Relations anatomiques (' + relations.length.toString() + ')',
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: 4),
+                      ...relations.take(12).map(
+                        (relation) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Text(
+                            relation.predicate == 'xref'
+                                ? relation.predicate + ': ' + relation.object
+                                : relation.subject + ' — ' + relation.predicate + ' → ' + relation.object,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
+                      ),
+                      if (relations.length > 12)
+                        Text(
+                          '+ ' + (relations.length - 12).toString() + ' autres relations',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                    ],
+                  );
+                },
+              ),
               const SizedBox(height: 12),
               Text('ID : ${structure.id}'),
               Text('Système : ${structure.system}'),
