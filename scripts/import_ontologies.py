@@ -58,6 +58,7 @@ def parse_ontology(path: Path, source: str) -> list[dict]:
         if not labels:
             continue
         synonyms = text_values(graph, subject, SYNONYM_PREDICATES)
+        xrefs = text_values(graph, subject, [URIRef("http://www.geneontology.org/formats/oboInOwl#hasDbXref")])
         rows.append({
             "id": local_id(str(subject)),
             "iri": str(subject),
@@ -69,11 +70,62 @@ def parse_ontology(path: Path, source: str) -> list[dict]:
             "source": source,
             "mesh_available": False,
             "mesh_entity": None,
+            "xrefs": xrefs,
         })
     return rows
 
+RELATION_NAMES = {
+    "subClassOf": "is_a",
+    "part_of": "part_of",
+    "has_part": "has_part",
+    "develops_from": "develops_from",
+    "derives_from": "derives_from",
+    "connected_to": "connected_to",
+    "regional_part_of": "regional_part_of",
+}
+
+
+def relation_rows(path: Path, source: str) -> list[dict]:
+    graph = Graph()
+    graph.parse(path)
+    rows: list[dict] = []
+    for subject in graph.subjects():
+        if not isinstance(subject, URIRef):
+            continue
+        subject_id = local_id(str(subject))
+        for predicate, object_ in graph.predicate_objects(subject):
+            if not isinstance(object_, URIRef):
+                continue
+            local = str(predicate).rsplit("#", 1)[-1].rsplit("/", 1)[-1]
+            relation = RELATION_NAMES.get(local)
+            if relation is None:
+                continue
+            rows.append({
+                "source": source,
+                "subject": subject_id,
+                "predicate": relation,
+                "object": local_id(str(object_)),
+                "subject_iri": str(subject),
+                "object_iri": str(object_),
+            })
+    return rows
+
+
+def crossref_rows(rows: list[dict]) -> list[dict]:
+    result: list[dict] = []
+    for row in rows:
+        for xref in row.get("xrefs", []):
+            if xref.startswith("FMA:") or xref.startswith("UBERON:"):
+                result.append({
+                    "source": row["source"],
+                    "subject": row["id"],
+                    "predicate": "xref",
+                    "object": xref,
+                })
+    return result
+
 def normalize(value: str) -> str:
-    return re.sub(r"\\s+", " ", value.lower().strip())
+    return re.sub(r"\s+", " ", value.lower().strip())
 
 
 def load_mesh_index(path: Path) -> dict[tuple[str, str], list[dict]]:
@@ -124,13 +176,21 @@ def main() -> None:
     download(FMA_URL, fma_path)
     download(UBERON_URL, uberon_path)
 
-    rows = parse_ontology(fma_path, "FMA 5.1.0")
-    rows += parse_ontology(uberon_path, "Uberon")
+    fma_rows = parse_ontology(fma_path, "FMA 5.1.0")
+    uberon_rows = parse_ontology(uberon_path, "Uberon")
+    rows = fma_rows + uberon_rows
+    relations = relation_rows(fma_path, "FMA 5.1.0") + relation_rows(uberon_path, "Uberon")
+    relations += crossref_rows(rows)
 
     mesh_index = load_mesh_index(Path("data/generated/anatria_mesh_manifest.json"))
     enrich_mesh(rows, mesh_index)
     rows.sort(key=lambda x: (x["name_en"].lower(), x["id"]))
     out.mkdir(parents=True, exist_ok=True)
+    relations_dir = out / "relations"
+    relations_dir.mkdir(parents=True, exist_ok=True)
+    with (relations_dir / "all.jsonl").open("w", encoding="utf-8") as handle:
+        for relation in relations:
+            handle.write(json.dumps(relation, ensure_ascii=False, separators=(",", ":")) + "\n")
 
     # Build prefix-partitioned chunks so the Flutter client can fetch only
     # the relevant portion of the ontology for a search query.
@@ -155,9 +215,10 @@ def main() -> None:
         prefix_index[prefix] = {"count": len(prefix_rows), "chunks": files}
 
     index = {
-        "version": 2,
+        "version": 3,
         "sources": ["FMA 5.1.0", "Uberon"],
         "count": len(rows),
+        "relation_count": len(relations),
         "chunk_size": chunk_size,
         "prefixes": prefix_index,
     }
