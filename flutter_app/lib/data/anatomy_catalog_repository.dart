@@ -1,6 +1,6 @@
 import '../models/anatomy_structure.dart';
 
-class AnatomyCatalogRepository {
+/// Runtime catalog facade. Production catalogs are generated as JSONL;\n/// this seed remains intentionally small for the first native build.\nclass AnatomyCatalogRepository {
   AnatomyCatalogRepository({List<AnatomyStructure>? structures})
       : _structures = structures ?? _seed;
 
