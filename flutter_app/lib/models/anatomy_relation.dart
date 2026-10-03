@@ -6,6 +6,8 @@ class AnatomyRelation {
     required this.object,
     this.subjectIri,
     this.objectIri,
+    this.predicateIri,
+    this.direction = "forward",
   });
 
   final String source;
@@ -14,6 +16,8 @@ class AnatomyRelation {
   final String object;
   final String? subjectIri;
   final String? objectIri;
+  final String? predicateIri;
+  final String direction;
 
   factory AnatomyRelation.fromJson(Map<String, dynamic> json) {
     return AnatomyRelation(
@@ -23,6 +27,8 @@ class AnatomyRelation {
       object: json['object'] as String? ?? '',
       subjectIri: json['subject_iri'] as String?,
       objectIri: json['object_iri'] as String?,
+      predicateIri: json['predicate_iri'] as String?,
+      direction: json['direction'] as String? ?? "forward",
     );
   }
 }
