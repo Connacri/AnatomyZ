@@ -91,16 +91,35 @@ def main() -> None:
     rows.sort(key=lambda x: (x["name_en"].lower(), x["id"]))
     out.mkdir(parents=True, exist_ok=True)
 
-    index = {"version": 1, "sources": ["FMA 5.1.0", "Uberon"], "count": len(rows), "chunks": []}
+    # Build prefix-partitioned chunks so the Flutter client can fetch only
+    # the relevant portion of the ontology for a search query.
+    prefix_index: dict[str, dict] = {}
     chunk_size = 1000
-    for start in range(0, len(rows), chunk_size):
-        chunk = rows[start:start + chunk_size]
-        name = f"{start // chunk_size:04d}.jsonl"
-        with (out / name).open("w", encoding="utf-8") as handle:
-            for row in chunk:
-                handle.write(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n")
-        index["chunks"].append({"file": name, "start": start, "count": len(chunk)})
+    grouped: dict[str, list[dict]] = {}
+    for row in rows:
+        first = next((ch for ch in row["name_en"].lower() if ch.isalnum()), "_")
+        grouped.setdefault(first, []).append(row)
 
+    for prefix, prefix_rows in sorted(grouped.items()):
+        prefix_dir = out / "prefixes" / prefix
+        prefix_dir.mkdir(parents=True, exist_ok=True)
+        files = []
+        for start in range(0, len(prefix_rows), chunk_size):
+            chunk = prefix_rows[start:start + chunk_size]
+            name = f"{start // chunk_size:04d}.jsonl"
+            with (prefix_dir / name).open("w", encoding="utf-8") as handle:
+                for row in chunk:
+                    handle.write(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n")
+            files.append({"file": f"prefixes/{prefix}/{name}", "count": len(chunk)})
+        prefix_index[prefix] = {"count": len(prefix_rows), "chunks": files}
+
+    index = {
+        "version": 2,
+        "sources": ["FMA 5.1.0", "Uberon"],
+        "count": len(rows),
+        "chunk_size": chunk_size,
+        "prefixes": prefix_index,
+    }
     (out / "index.json").write_text(
         json.dumps(index, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
