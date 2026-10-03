@@ -24,9 +24,15 @@ jobs:
           channel: stable
           cache: true
 
-      # The repository intentionally keeps the Flutter/Dart source lean; regenerate the
-      # native Android host before every Android build so Gradle files are always present.
-      - run: flutter create --platforms=android .
+      # The native Android host is part of the repository. Keep a guarded fallback
+      # only for the Gradle wrapper files that Flutter can bootstrap in CI.
+      - name: Verify native Android host
+        run: test -f android/app/build.gradle.kts
+      - name: Bootstrap missing Flutter wrapper files
+        run: |
+          if [ ! -f android/gradlew ]; then
+            flutter create --platforms=android .
+          fi
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
