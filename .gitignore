@@ -4,8 +4,13 @@
 .flutter-plugins-dependencies
 .pub-cache/
 build/
-.flutter-plugins-dependencies
 pubspec.lock
+**/android/local.properties
+local.properties
+
+# Web / Node
+node_modules/
+dist/
 
 # IDE
 .idea/

@@ -43,9 +43,11 @@ jobs:
             cp android/gradlew.bat "$tmpdir/gradlew.bat"
             cp -R android/gradle "$tmpdir/gradle"
             git checkout -- android
+            rm -f android/local.properties
             cp "$tmpdir/gradlew" android/gradlew
             cp "$tmpdir/gradlew.bat" android/gradlew.bat
             cp -R "$tmpdir/gradle" android/gradle
+            git checkout -- android/gradle/wrapper/gradle-wrapper.properties
             chmod +x android/gradlew
           fi
 

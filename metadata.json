@@ -1,0 +1,5 @@
+{
+  "name": "AnatomyZ — Atlas Anatomique 3D",
+  "description": "Atlas anatomique humain 3D interactif basé sur un Knowledge Graph (FMA/UBERON), des modèles GLB/GLTF vérifiés et un espace pédagogique Professeur/Étudiant.",
+  "requestFramePermissions": []
+}
