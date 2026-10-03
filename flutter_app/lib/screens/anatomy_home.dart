@@ -152,9 +152,10 @@ class _AnatomyViewer extends StatelessWidget {
               '${model.sex == AnatomySex.male ? 'Male' : 'Female'}',
             ),
             trailing: IconButton(
-              tooltip: 'Reset selection',
+              tooltip: 'Réinitialiser',
               onPressed: () async {
                 await controller.clearSelections();
+                await controller.resetAllMaterialOverrides();
                 onSelectionChanged(const []);
               },
               icon: const Icon(Icons.clear_all),
@@ -174,7 +175,17 @@ class _AnatomyViewer extends StatelessWidget {
             loadingWidget: const Center(
               child: CircularProgressIndicator(),
             ),
-            onSelectionChanged: onSelectionChanged,
+            onSelectionChanged: (entities) async {
+              if (entities.isNotEmpty) {
+                final entity = entities.last;
+                await controller.setEntityMaterial(
+                  name: entity.name,
+                  color: const [0.15, 0.65, 1.0, 1.0],
+                  roughness: 0.55,
+                );
+              }
+              onSelectionChanged(entities);
+            },
           ),
         ),
         Padding(
