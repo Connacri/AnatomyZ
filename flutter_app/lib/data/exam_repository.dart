@@ -11,7 +11,7 @@ class AnatomyExamRepository {
       title: 'Évaluation — Système cardiovasculaire',
       description: 'Quiz de démonstration AnatomyZ.',
       questions: [
-        const AnatomyExamQuestion(
+        AnatomyExamQuestion(
           id: 'q1',
           text: 'Quel organe pompe le sang dans la circulation ?',
           type: ExamQuestionType.quiz,
