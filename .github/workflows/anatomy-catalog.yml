@@ -34,6 +34,7 @@ jobs:
       - run: pip install -r scripts/requirements.txt
       - run: python scripts/build_mesh_manifest.py
       - run: python scripts/import_ontologies.py
+      - run: python scripts/verify_mesh_mappings.py
 
       - uses: actions/configure-pages@v5
 
