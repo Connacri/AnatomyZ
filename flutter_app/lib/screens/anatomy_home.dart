@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:interactive_3d/interactive_3d.dart';
 
 import '../data/anatomy_catalog_repository.dart';
+import '../data/remote_anatomy_catalog_repository.dart';
 import '../data/anatomy_model_repository.dart';
 import '../models/anatomy_structure.dart';
 import '../models/anatomy_system.dart';
@@ -16,6 +19,7 @@ class AnatomyHomePage extends StatefulWidget {
 class _AnatomyHomePageState extends State<AnatomyHomePage> {
   final repository = AnatomyModelRepository();
   final catalog = AnatomyCatalogRepository();
+  final remoteCatalog = RemoteAnatomyCatalogRepository();
   final viewerController = Interactive3dController();
 
   AnatomySex sex = AnatomySex.male;
@@ -23,12 +27,62 @@ class _AnatomyHomePageState extends State<AnatomyHomePage> {
   EntityData? selectedEntity;
   final searchController = TextEditingController();
   final structureSearchController = TextEditingController();
+  Timer? _searchDebounce;
+  List<AnatomyStructure> _remoteResults = const [];
+  bool _remoteLoading = false;
+  String? _remoteError;
 
   @override
   void dispose() {
     searchController.dispose();
     structureSearchController.dispose();
+    _searchDebounce?.cancel();
     super.dispose();
+  }
+
+  void _searchRemoteStructures(String value) {
+    _searchDebounce?.cancel();
+    final query = value.trim();
+    if (query.length < 2) {
+      setState(() {
+        _remoteResults = const [];
+        _remoteLoading = false;
+        _remoteError = null;
+      });
+      return;
+    }
+    setState(() {
+      _remoteLoading = true;
+      _remoteError = null;
+    });
+    _searchDebounce = Timer(const Duration(milliseconds: 350), () async {
+      try {
+        final results = await remoteCatalog.search(query);
+        if (!mounted || structureSearchController.text.trim() != query) return;
+        setState(() {
+          _remoteResults = results;
+          _remoteLoading = false;
+        });
+      } catch (error) {
+        if (!mounted || structureSearchController.text.trim() != query) return;
+        setState(() {
+          _remoteResults = const [];
+          _remoteLoading = false;
+          _remoteError = 'Catalogue distant indisponible';
+        });
+      }
+    });
+  }
+
+  List<AnatomyStructure> _structureResults() {
+    final query = structureSearchController.text.trim();
+    if (query.isEmpty) return const [];
+    final local = catalog.search(query);
+    final merged = <String, AnatomyStructure>{
+      for (final item in local) item.id: item,
+      for (final item in _remoteResults) item.id: item,
+    };
+    return merged.values.take(80).toList(growable: false);
   }
 
   void _showStructureSheet(AnatomyStructure structure) {
@@ -115,11 +169,24 @@ class _AnatomyHomePageState extends State<AnatomyHomePage> {
                   controller: structureSearchController,
                   hintText: 'Rechercher une structure (FR / EN / ID)…',
                   leading: const Icon(Icons.manage_search),
-                  onChanged: (_) => setState(() {}),
+                  onChanged: _searchRemoteStructures,
                 ),
               ),
+              if (_remoteLoading)
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: LinearProgressIndicator(),
+                ),
+              if (_remoteError != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                  child: Text(
+                    _remoteError! + ' • résultats locaux conservés',
+                    style: TextStyle(color: Theme.of(context).colorScheme.error),
+                  ),
+                ),
               if (structureSearchController.text.trim().isNotEmpty)
-                ...catalog.search(structureSearchController.text).take(40).map(
+                ..._structureResults().take(40).map(
                   (structure) => ListTile(
                     leading: Icon(structure.meshAvailable
                         ? Icons.accessibility_new
