@@ -18,6 +18,13 @@ class _AnatomyHomePageState extends State<AnatomyHomePage> {
   AnatomySex sex = AnatomySex.male;
   AnatomySystem? selectedSystem;
   EntityData? selectedEntity;
+  final searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +60,15 @@ class _AnatomyHomePageState extends State<AnatomyHomePage> {
           child: ListView(
             padding: const EdgeInsets.symmetric(vertical: 16),
             children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: SearchBar(
+                  controller: searchController,
+                  hintText: 'Rechercher un système…',
+                  leading: const Icon(Icons.search),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
               const Padding(
                 padding: EdgeInsets.all(20),
                 child: Text(
@@ -60,7 +76,10 @@ class _AnatomyHomePageState extends State<AnatomyHomePage> {
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
                 ),
               ),
-              for (final system in repository.systems)
+              for (final system in repository.systems.where((system) {
+                final q = searchController.text.trim().toLowerCase();
+                return q.isEmpty || system.nameFr.toLowerCase().contains(q) || system.nameEn.toLowerCase().contains(q);
+              }))
                 ListTile(
                   enabled: repository.hasModel(system, sex),
                   leading: Icon(
