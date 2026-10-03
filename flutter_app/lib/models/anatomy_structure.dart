@@ -11,6 +11,7 @@ class AnatomyStructure {
     this.meshSex,
     this.meshFile,
     this.meshNode,
+    this.meshVariants = const [],
   });
 
   final String id;
@@ -24,6 +25,7 @@ class AnatomyStructure {
   final String? meshSex;
   final String? meshFile;
   final String? meshNode;
+  final List<Map<String, String>> meshVariants;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -37,6 +39,7 @@ class AnatomyStructure {
         'mesh_sex': meshSex,
         'mesh_file': meshFile,
         'mesh_node': meshNode,
+        'mesh_variants': meshVariants,
       };
 
   factory AnatomyStructure.fromJson(Map<String, dynamic> json) {
@@ -52,6 +55,9 @@ class AnatomyStructure {
       meshSex: json['mesh_sex'] as String?,
       meshFile: json['mesh_file'] as String?,
       meshNode: json['mesh_node'] as String?,
+      meshVariants: (json['mesh_variants'] as List<dynamic>? ?? const [])
+          .map((dynamic item) => Map<String, String>.from(item as Map))
+          .toList(growable: false),
     );
   }
 }
