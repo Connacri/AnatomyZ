@@ -128,40 +128,94 @@ def normalize(value: str) -> str:
     return re.sub(r"\s+", " ", value.lower().strip())
 
 
-def load_mesh_index(path: Path) -> dict[tuple[str, str], list[dict]]:
+def mesh_terms(organ: dict) -> set[str]:
+    terms = {
+        normalize(organ.get("name_en", "")),
+        normalize(organ.get("ta2_latin", "")),
+        normalize(organ.get("organ_id", "")),
+        normalize(organ.get("node", "")),
+    }
+    return {term for term in terms if term}
+
+
+def ontology_terms(row: dict) -> set[str]:
+    terms = {
+        normalize(row.get("name_en", "")),
+        normalize(row.get("name_fr", "")),
+        normalize(row.get("id", "")),
+    }
+    terms.update(normalize(value) for value in row.get("synonyms_en", []))
+    terms.update(normalize(value) for value in row.get("synonyms_fr", []))
+    terms.update(normalize(value) for value in row.get("xrefs", []))
+    return {term for term in terms if term}
+
+
+def load_mesh_index(path: Path) -> dict[str, list[dict]]:
     if not path.exists():
         return {}
     payload = json.loads(path.read_text(encoding="utf-8"))
-    index: dict[tuple[str, str], list[dict]] = {}
+    index: dict[str, list[dict]] = {}
     for organ in payload.get("organs", []):
-        key = (normalize(organ.get("name_en", "")), normalize(organ.get("system", "")))
-        if key[0]:
-            index.setdefault(key, []).append(organ)
+        for term in mesh_terms(organ):
+            index.setdefault(term, []).append(organ)
     return index
 
 
-def enrich_mesh(rows: list[dict], mesh_index: dict[tuple[str, str], list[dict]]) -> None:
+def enrich_mesh(rows: list[dict], mesh_index: dict[str, list[dict]]) -> None:
+    """Attach only lexical mesh candidates; preserve match provenance.
+
+    Exact ontology xrefs/IDs are treated as stronger evidence than names.
+    A name-only match is marked lexical and is never presented as an
+    authoritative ontology equivalence.
+    """
     for row in rows:
-        key = (normalize(row["name_en"]), normalize(row["system"]))
-        matches = mesh_index.get(key, [])
-        if not matches:
-            continue
-        variants = []
-        seen = set()
-        for match in matches:
-            variant = {
-                "sex": match.get("sex", ""),
-                "mesh_file": match.get("mesh_file", ""),
-                "node": match.get("node", ""),
-            }
-            signature = tuple(variant.values())
-            if signature not in seen:
-                seen.add(signature)
-                variants.append(variant)
-        if variants:
+        candidates: dict[tuple[str, str, str], dict] = {}
+        row_terms = ontology_terms(row)
+        for term in row_terms:
+            for match in mesh_index.get(term, []):
+                mesh_terms_set = mesh_terms(match)
+                if term in {
+                    normalize(row.get("id", "")),
+                    *(normalize(value) for value in row.get("xrefs", [])),
+                }:
+                    match_type = "ontology_xref"
+                    confidence = 1.0
+                elif term == normalize(row.get("name_en", "")):
+                    match_type = "exact_name"
+                    confidence = 0.90
+                else:
+                    match_type = "synonym"
+                    confidence = 0.80
+
+                key = (
+                    match.get("sex", ""),
+                    match.get("mesh_file", ""),
+                    match.get("node", ""),
+                )
+                candidate = {
+                    "sex": match.get("sex", ""),
+                    "mesh_file": match.get("mesh_file", ""),
+                    "node": match.get("node", ""),
+                    "match_type": match_type,
+                    "confidence": confidence,
+                    "matched_term": term,
+                    "provenance": "Connacri/Anatria-3D manifest",
+                }
+                existing = candidates.get(key)
+                if existing is None or confidence > existing["confidence"]:
+                    candidates[key] = candidate
+
+        if candidates:
+            variants = sorted(
+                candidates.values(),
+                key=lambda item: (-item["confidence"], item["sex"], item["node"]),
+            )
             row["mesh_available"] = True
             row["mesh_variants"] = variants
-
+            row["mesh_mapping_status"] = (
+                "verified_xref" if variants[0]["match_type"] == "ontology_xref"
+                else "lexical_candidate"
+            )
 
 def main() -> None:
     parser = argparse.ArgumentParser()
