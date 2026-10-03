@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:interactive_3d/interactive_3d.dart';
 
+import '../data/anatomy_catalog_repository.dart';
 import '../data/anatomy_model_repository.dart';
 import '../models/anatomy_system.dart';
 
@@ -13,17 +14,55 @@ class AnatomyHomePage extends StatefulWidget {
 
 class _AnatomyHomePageState extends State<AnatomyHomePage> {
   final repository = AnatomyModelRepository();
+  final catalog = AnatomyCatalogRepository();
   final viewerController = Interactive3dController();
 
   AnatomySex sex = AnatomySex.male;
   AnatomySystem? selectedSystem;
   EntityData? selectedEntity;
   final searchController = TextEditingController();
+  final structureSearchController = TextEditingController();
 
   @override
   void dispose() {
     searchController.dispose();
+    structureSearchController.dispose();
     super.dispose();
+  }
+
+  void _showStructureSheet(AnatomyStructure structure) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(structure.nameFr,
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
+              Text(structure.nameEn,
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 12),
+              Text('ID : ' + structure.id),
+              Text('Système : ' + structure.system),
+              Text('Source : ' + structure.source),
+              const SizedBox(height: 8),
+              Chip(
+                avatar: Icon(structure.meshAvailable
+                    ? Icons.view_in_ar
+                    : Icons.menu_book),
+                label: Text(structure.meshAvailable
+                    ? 'Structure 3D déclarée'
+                    : 'Catalogue uniquement'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -69,6 +108,32 @@ class _AnatomyHomePageState extends State<AnatomyHomePage> {
                   onChanged: (_) => setState(() {}),
                 ),
               ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                child: SearchBar(
+                  controller: structureSearchController,
+                  hintText: 'Rechercher une structure (FR / EN / ID)…',
+                  leading: const Icon(Icons.manage_search),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+              if (structureSearchController.text.trim().isNotEmpty)
+                ...catalog.search(structureSearchController.text).take(40).map(
+                  (structure) => ListTile(
+                    leading: Icon(structure.meshAvailable
+                        ? Icons.accessibility_new
+                        : Icons.menu_book_outlined),
+                    title: Text(structure.nameFr),
+                    subtitle: Text(structure.nameEn + ' • ' + structure.id),
+                    trailing: Icon(structure.meshAvailable
+                        ? Icons.view_in_ar_outlined
+                        : Icons.info_outline),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showStructureSheet(structure);
+                    },
+                  ),
+                ),
               const Padding(
                 padding: EdgeInsets.all(20),
                 child: Text(
@@ -145,8 +210,10 @@ class _AnatomyViewer extends StatelessWidget {
     return Column(
       children: [
         Material(
-          child: ListTile(
-            title: Text(model.system.nameFr),
+          child: Column(
+            children: [
+              ListTile(
+                title: Text(model.system.nameFr),
             subtitle: Text(
               '${model.system.nameEn} • '
               '${model.sex == AnatomySex.male ? 'Male' : 'Female'}',
@@ -159,7 +226,45 @@ class _AnatomyViewer extends StatelessWidget {
                 onSelectionChanged(const []);
               },
               icon: const Icon(Icons.clear_all),
-            ),
+              ),
+              if (selectedEntity != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    children: [
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.visibility_off_outlined),
+                        label: const Text('Masquer'),
+                        onPressed: () async {
+                          final name = selectedEntity!.name;
+                          await controller.updatePartGroupConfig(
+                            group: ModelPartGroup(title: 'Sélection', names: [name]),
+                            isVisible: false,
+                          );
+                        },
+                      ),
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.opacity),
+                        label: const Text('Transparence'),
+                        onPressed: () async {
+                          await controller.setEntityMaterial(
+                            name: selectedEntity!.name,
+                            color: const [0.15, 0.65, 1.0, 0.35],
+                            roughness: 0.7,
+                          );
+                        },
+                      ),
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.restore),
+                        label: const Text('Matériau original'),
+                        onPressed: () => controller.resetEntityMaterial(selectedEntity!.name),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
           ),
         ),
         Expanded(
