@@ -72,6 +72,45 @@ def parse_ontology(path: Path, source: str) -> list[dict]:
         })
     return rows
 
+def normalize(value: str) -> str:
+    return re.sub(r"\\s+", " ", value.lower().strip())
+
+
+def load_mesh_index(path: Path) -> dict[tuple[str, str], list[dict]]:
+    if not path.exists():
+        return {}
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    index: dict[tuple[str, str], list[dict]] = {}
+    for organ in payload.get("organs", []):
+        key = (normalize(organ.get("name_en", "")), normalize(organ.get("system", "")))
+        if key[0]:
+            index.setdefault(key, []).append(organ)
+    return index
+
+
+def enrich_mesh(rows: list[dict], mesh_index: dict[tuple[str, str], list[dict]]) -> None:
+    for row in rows:
+        key = (normalize(row["name_en"]), normalize(row["system"]))
+        matches = mesh_index.get(key, [])
+        if not matches:
+            continue
+        variants = []
+        seen = set()
+        for match in matches:
+            variant = {
+                "sex": match.get("sex", ""),
+                "mesh_file": match.get("mesh_file", ""),
+                "node": match.get("node", ""),
+            }
+            signature = tuple(variant.values())
+            if signature not in seen:
+                seen.add(signature)
+                variants.append(variant)
+        if variants:
+            row["mesh_available"] = True
+            row["mesh_variants"] = variants
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", default="site/catalog")
@@ -88,6 +127,8 @@ def main() -> None:
     rows = parse_ontology(fma_path, "FMA 5.1.0")
     rows += parse_ontology(uberon_path, "Uberon")
 
+    mesh_index = load_mesh_index(Path("data/generated/anatria_mesh_manifest.json"))
+    enrich_mesh(rows, mesh_index)
     rows.sort(key=lambda x: (x["name_en"].lower(), x["id"]))
     out.mkdir(parents=True, exist_ok=True)
 
