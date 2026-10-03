@@ -101,9 +101,9 @@ class _AnatomyHomePageState extends State<AnatomyHomePage> {
               Text(structure.nameEn,
                   style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 12),
-              Text('ID : ' + structure.id),
-              Text('Système : ' + structure.system),
-              Text('Source : ' + structure.source),
+              Text('ID : ${structure.id}'),
+              Text('Système : ${structure.system}'),
+              Text('Source : ${structure.source}'),
               const SizedBox(height: 8),
               Chip(
                 avatar: Icon(structure.meshAvailable
@@ -192,7 +192,7 @@ class _AnatomyHomePageState extends State<AnatomyHomePage> {
                         ? Icons.accessibility_new
                         : Icons.menu_book_outlined),
                     title: Text(structure.nameFr),
-                    subtitle: Text(structure.nameEn + ' • ' + structure.id),
+                    subtitle: Text('${structure.nameEn} • ${structure.id}'),
                     trailing: Icon(structure.meshAvailable
                         ? Icons.view_in_ar_outlined
                         : Icons.info_outline),
@@ -294,6 +294,7 @@ class _AnatomyViewer extends StatelessWidget {
                 onSelectionChanged(const []);
               },
               icon: const Icon(Icons.clear_all),
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
