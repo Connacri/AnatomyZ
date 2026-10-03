@@ -73,8 +73,8 @@ def main() -> None:
         "version": 1,
         "source": "Connacri/Anatria-3D",
         "source_url": "https://github.com/Connacri/Anatria-3D",
-        "mesh_attribution": manifests["male"].get("attribution"),
-        "license": manifests["male"].get("license"),
+        "mesh_attribution": {sex: manifest.get("attribution") for sex, manifest in manifests.items()},
+        "licenses": {sex: manifest.get("license") for sex, manifest in manifests.items()},
         "systems": systems,
         "organs": organs,
         "organ_counts": {
