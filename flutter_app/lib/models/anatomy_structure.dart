@@ -25,7 +25,7 @@ class AnatomyStructure {
   final String? meshSex;
   final String? meshFile;
   final String? meshNode;
-  final List<Map<String, String>> meshVariants;
+  final List<Map<String, dynamic>> meshVariants;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -56,7 +56,7 @@ class AnatomyStructure {
       meshFile: json['mesh_file'] as String?,
       meshNode: json['mesh_node'] as String?,
       meshVariants: (json['mesh_variants'] as List<dynamic>? ?? const [])
-          .map((dynamic item) => Map<String, String>.from(item as Map))
+          .map((dynamic item) => Map<String, dynamic>.from(item as Map))
           .toList(growable: false),
     );
   }
