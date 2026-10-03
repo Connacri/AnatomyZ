@@ -206,6 +206,14 @@ def enrich_mesh(rows: list[dict], mesh_index: dict[str, list[dict]]) -> None:
                     candidates[key] = candidate
 
         if candidates:
+            matched_systems = {
+                match.get("system", "")
+                for term in row_terms
+                for match in mesh_index.get(term, [])
+                if match.get("system", "")
+            }
+            if row.get("system") == "unknown" and len(matched_systems) == 1:
+                row["system"] = next(iter(matched_systems))
             variants = sorted(
                 candidates.values(),
                 key=lambda item: (-item["confidence"], item["sex"], item["node"]),
