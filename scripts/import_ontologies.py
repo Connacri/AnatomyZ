@@ -114,6 +114,7 @@ def relation_rows(path: Path, source: str) -> list[dict]:
                 "source": source,
                 "subject": subject_id,
                 "predicate": relation,
+                "predicate_iri": str(predicate),
                 "object": local_id(str(object_)),
                 "subject_iri": str(subject),
                 "object_iri": str(object_),
@@ -171,7 +172,25 @@ def load_mesh_index(path: Path) -> dict[str, list[dict]]:
     return index
 
 
-def enrich_mesh(rows: list[dict], mesh_index: dict[str, list[dict]]) -> None:
+def load_manual_mesh_mappings(path: Path) -> dict[str, list[dict]]:
+    if not path.exists():
+        return {}
+    result: dict[str, list[dict]] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        row = json.loads(line)
+        concept_id = row.get("concept_id", "")
+        if concept_id:
+            result.setdefault(concept_id, []).append(row)
+    return result
+
+
+def enrich_mesh(
+    rows: list[dict],
+    mesh_index: dict[str, list[dict]],
+    manual_mappings: dict[str, list[dict]],
+) -> None:
     """Attach only lexical mesh candidates; preserve match provenance.
 
     Exact ontology xrefs/IDs are treated as stronger evidence than names.
@@ -208,12 +227,32 @@ def enrich_mesh(rows: list[dict], mesh_index: dict[str, list[dict]]) -> None:
                     "node": match.get("node", ""),
                     "match_type": match_type,
                     "confidence": confidence,
+                    "semantic_status": ("candidate" if match_type in {"exact_name", "synonym"} else "ontology_evidence"),
                     "matched_term": term,
                     "provenance": "Connacri/Anatria-3D manifest",
                 }
                 existing = candidates.get(key)
                 if existing is None or confidence > existing["confidence"]:
                     candidates[key] = candidate
+
+        for manual in manual_mappings.get(row.get("id", ""), []):
+            key = (
+                manual.get("sex", ""),
+                manual.get("mesh_file", ""),
+                manual.get("node", ""),
+            )
+            candidates[key] = {
+                "sex": manual.get("sex", ""),
+                "mesh_file": manual.get("mesh_file", ""),
+                "node": manual.get("node", ""),
+                "match_type": manual.get("match_type", "manual_verified"),
+                "confidence": float(manual.get("confidence", 1.0)),
+                "semantic_status": manual.get("semantic_status", "expert_verified"),
+                "matched_term": manual.get("matched_term", row.get("name_en", "")),
+                "provenance": manual.get(
+                    "provenance", "AnatomyZ manual mapping registry"
+                ),
+            }
 
         if candidates:
             matched_systems = {
@@ -231,9 +270,16 @@ def enrich_mesh(rows: list[dict], mesh_index: dict[str, list[dict]]) -> None:
             row["mesh_available"] = True
             row["mesh_variants"] = variants
             row["mesh_mapping_status"] = (
-                "verified_xref" if variants[0]["match_type"] == "ontology_xref"
-                else "lexical_candidate"
+                "expert_verified"
+                if any(v["match_type"] == "manual_verified" for v in variants)
+                else (
+                    "verified_xref"
+                    if variants[0]["match_type"] == "ontology_xref"
+                    else "lexical_candidate"
+                )
             )
+        else:
+            row["mesh_mapping_status"] = "catalog_only"
 
 def main() -> None:
     parser = argparse.ArgumentParser()
@@ -255,7 +301,8 @@ def main() -> None:
     relations += crossref_rows(rows)
 
     mesh_index = load_mesh_index(Path("data/generated/anatria_mesh_manifest.json"))
-    enrich_mesh(rows, mesh_index)
+    manual_mappings = load_manual_mesh_mappings(Path("data/sources/mesh_mappings.jsonl"))
+    enrich_mesh(rows, mesh_index, manual_mappings)
     rows.sort(key=lambda x: (x["name_en"].lower(), x["id"]))
     out.mkdir(parents=True, exist_ok=True)
     relations_dir = out / "relations"
