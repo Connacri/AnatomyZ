@@ -1,4 +1,4 @@
-enum ExamQuestionType { quiz, question }
+enum ExamQuestionType { quiz, question, identify3d }
 
 class AnatomyExamQuestion {
   const AnatomyExamQuestion({
@@ -9,6 +9,15 @@ class AnatomyExamQuestion {
     this.correctOptionIndex,
     this.expectedAnswer,
     this.points = 1,
+    this.conceptId,
+    this.conceptNameFr,
+    this.conceptNameEn,
+    this.meshSex,
+    this.meshFile,
+    this.meshNode,
+    this.relationPredicate,
+    this.tags = const [],
+    this.difficulty = 1,
   });
 
   final String id;
@@ -18,6 +27,29 @@ class AnatomyExamQuestion {
   final int? correctOptionIndex;
   final String? expectedAnswer;
   final int points;
+
+  /// Ontology concept targeted by this question, e.g. FMA:55675 or UBERON:0000948.
+  final String? conceptId;
+  final String? conceptNameFr;
+  final String? conceptNameEn;
+
+  /// Optional physical 3D target. A student answer is valid only when the
+  /// selected GLB node matches this value.
+  final String? meshSex;
+  final String? meshFile;
+  final String? meshNode;
+
+  /// Optional ontology relation targeted by a future relation-question engine.
+  final String? relationPredicate;
+
+  final List<String> tags;
+  final int difficulty;
+
+  bool get has3dTarget =>
+      type == ExamQuestionType.identify3d &&
+      conceptId != null &&
+      meshNode != null &&
+      meshNode!.isNotEmpty;
 }
 
 class AnatomyExam {
