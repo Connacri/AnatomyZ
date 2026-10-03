@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AnatomyZ structure catalog",
+  "type": "object",
+  "required": ["id", "name_fr", "name_en", "system", "source", "mesh_available"],
+  "properties": {
+    "id": {"type": "string"},
+    "name_fr": {"type": "string"},
+    "name_en": {"type": "string"},
+    "system": {"type": "string"},
+    "synonyms_fr": {"type": "array", "items": {"type": "string"}},
+    "synonyms_en": {"type": "array", "items": {"type": "string"}},
+    "source": {"type": "string"},
+    "mesh_available": {"type": "boolean"}
+  }
+}
