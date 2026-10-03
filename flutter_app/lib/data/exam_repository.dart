@@ -6,12 +6,12 @@ class AnatomyExamRepository {
   static final AnatomyExamRepository instance = AnatomyExamRepository._();
 
   final List<AnatomyExam> _exams = [
-    AnatomyExam(
+    const AnatomyExam(
       id: 'demo-cardiovascular',
       title: 'Évaluation — Système cardiovasculaire',
       description: 'Quiz de démonstration AnatomyZ.',
       questions: [
-        AnatomyExamQuestion(
+        const AnatomyExamQuestion(
           id: 'q1',
           text: 'Quel organe pompe le sang dans la circulation ?',
           type: ExamQuestionType.quiz,
