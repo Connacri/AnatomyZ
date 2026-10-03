@@ -8,6 +8,9 @@ class AnatomyStructure {
     this.synonymsEn = const [],
     this.source = 'AnatomyZ',
     this.meshAvailable = false,
+    this.meshSex,
+    this.meshFile,
+    this.meshNode,
   });
 
   final String id;
@@ -18,6 +21,9 @@ class AnatomyStructure {
   final List<String> synonymsEn;
   final String source;
   final bool meshAvailable;
+  final String? meshSex;
+  final String? meshFile;
+  final String? meshNode;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -28,6 +34,9 @@ class AnatomyStructure {
         'synonyms_en': synonymsEn,
         'source': source,
         'mesh_available': meshAvailable,
+        'mesh_sex': meshSex,
+        'mesh_file': meshFile,
+        'mesh_node': meshNode,
       };
 
   factory AnatomyStructure.fromJson(Map<String, dynamic> json) {
@@ -40,6 +49,9 @@ class AnatomyStructure {
       synonymsEn: List<String>.from(json['synonyms_en'] ?? const []),
       source: json['source'] as String? ?? 'AnatomyZ',
       meshAvailable: json['mesh_available'] as bool? ?? false,
+      meshSex: json['mesh_sex'] as String?,
+      meshFile: json['mesh_file'] as String?,
+      meshNode: json['mesh_node'] as String?,
     );
   }
 }
