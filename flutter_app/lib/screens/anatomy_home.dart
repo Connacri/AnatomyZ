@@ -282,18 +282,18 @@ class _AnatomyViewer extends StatelessWidget {
             children: [
               ListTile(
                 title: Text(model.system.nameFr),
-            subtitle: Text(
-              '${model.system.nameEn} • '
-              '${model.sex == AnatomySex.male ? 'Male' : 'Female'}',
-            ),
-            trailing: IconButton(
-              tooltip: 'Réinitialiser',
-              onPressed: () async {
-                await controller.clearSelections();
-                await controller.resetAllMaterialOverrides();
-                onSelectionChanged(const []);
-              },
-              icon: const Icon(Icons.clear_all),
+                subtitle: Text(
+                  '${model.system.nameEn} • '
+                  '${model.sex == AnatomySex.male ? 'Male' : 'Female'}',
+                ),
+                trailing: IconButton(
+                  tooltip: 'Réinitialiser',
+                  onPressed: () async {
+                    await controller.clearSelections();
+                    await controller.resetAllMaterialOverrides();
+                    onSelectionChanged(const []);
+                  },
+                  icon: const Icon(Icons.clear_all),
                 ),
               ),
               Padding(
