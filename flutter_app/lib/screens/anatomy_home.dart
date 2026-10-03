@@ -25,6 +25,7 @@ class _AnatomyHomePageState extends State<AnatomyHomePage> {
   AnatomySex sex = AnatomySex.male;
   AnatomySystem? selectedSystem;
   EntityData? selectedEntity;
+  AnatomyStructure? selectedStructure;
   final searchController = TextEditingController();
   final structureSearchController = TextEditingController();
   Timer? _searchDebounce;
@@ -85,6 +86,18 @@ class _AnatomyHomePageState extends State<AnatomyHomePage> {
     return merged.values.take(80).toList(growable: false);
   }
 
+  String? _meshNodeFor(AnatomyStructure structure) {
+    for (final variant in structure.meshVariants) {
+      if (variant['sex'] == sex.name && (variant['node'] ?? '').isNotEmpty) {
+        return variant['node'];
+      }
+    }
+    if (structure.meshSex == sex.name && (structure.meshNode ?? '').isNotEmpty) {
+      return structure.meshNode;
+    }
+    return null;
+  }
+
   void _showStructureSheet(AnatomyStructure structure) {
     showModalBottomSheet<void>(
       context: context,
@@ -105,6 +118,8 @@ class _AnatomyHomePageState extends State<AnatomyHomePage> {
               Text('Système : ${structure.system}'),
               Text('Source : ${structure.source}'),
               const SizedBox(height: 8),
+              if (_meshNodeFor(structure) != null)
+                Text('Nœud GLB : ' + _meshNodeFor(structure)!),
               Chip(
                 avatar: Icon(structure.meshAvailable
                     ? Icons.view_in_ar
@@ -139,6 +154,7 @@ class _AnatomyHomePageState extends State<AnatomyHomePage> {
               setState(() {
                 sex = value.first;
                 selectedEntity = null;
+                selectedStructure = null;
                 if (selectedSystem != null &&
                     !repository.hasModel(selectedSystem!, sex)) {
                   selectedSystem = null;
@@ -198,6 +214,7 @@ class _AnatomyHomePageState extends State<AnatomyHomePage> {
                         : Icons.info_outline),
                     onTap: () {
                       Navigator.pop(context);
+                      setState(() => selectedStructure = structure);
                       _showStructureSheet(structure);
                     },
                   ),
@@ -234,6 +251,7 @@ class _AnatomyHomePageState extends State<AnatomyHomePage> {
                           setState(() {
                             selectedSystem = system;
                             selectedEntity = null;
+                            selectedStructure = null;
                           });
                         }
                       : null,
@@ -249,6 +267,9 @@ class _AnatomyHomePageState extends State<AnatomyHomePage> {
               model: model,
               controller: viewerController,
               selectedEntity: selectedEntity,
+              preselectedEntityName: selectedStructure == null
+                  ? null
+                  : _meshNodeFor(selectedStructure!),
               onSelectionChanged: (entities) {
                 setState(() {
                   selectedEntity = entities.isEmpty ? null : entities.last;
@@ -266,12 +287,14 @@ class _AnatomyViewer extends StatelessWidget {
     required this.controller,
     required this.selectedEntity,
     required this.onSelectionChanged,
+    this.preselectedEntityName,
   });
 
   final AnatomyModelRef model;
   final Interactive3dController controller;
   final EntityData? selectedEntity;
   final ValueChanged<List<EntityData>> onSelectionChanged;
+  final String? preselectedEntityName;
 
   @override
   Widget build(BuildContext context) {
