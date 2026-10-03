@@ -134,7 +134,7 @@ class _AnatomyHomePageState extends State<AnatomyHomePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Relations anatomiques (' + relations.length.toString() + ')',
+                        'Relations anatomiques (${relations.length})',
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                       const SizedBox(height: 4),
@@ -143,15 +143,15 @@ class _AnatomyHomePageState extends State<AnatomyHomePage> {
                           padding: const EdgeInsets.symmetric(vertical: 2),
                           child: Text(
                             relation.predicate == 'xref'
-                                ? relation.predicate + ': ' + relation.object
-                                : relation.subject + ' — ' + relation.predicate + ' → ' + relation.object,
+                                ? '${relation.predicate}: ${relation.object}'
+                                : '${relation.subject} — ${relation.predicate} → ${relation.object}',
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ),
                       ),
                       if (relations.length > 12)
                         Text(
-                          '+ ' + (relations.length - 12).toString() + ' autres relations',
+                          '+ ${relations.length - 12} autres relations',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                     ],
