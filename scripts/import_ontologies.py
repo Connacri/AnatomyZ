@@ -246,6 +246,43 @@ def main() -> None:
         for relation in relations:
             handle.write(json.dumps(relation, ensure_ascii=False, separators=(",", ":")) + "\n")
 
+    # Build endpoint-indexed relation chunks. Each concept points to one small
+    # JSONL chunk, so Flutter never needs to download the complete relation graph.
+    adjacency: dict[str, list[dict]] = {}
+    for relation in relations:
+        adjacency.setdefault(relation["subject"], []).append(relation)
+        if relation["object"] != relation["subject"]:
+            inverse = dict(relation)
+            inverse["direction"] = "inverse"
+            adjacency.setdefault(relation["object"], []).append(inverse)
+
+    relation_index: dict[str, dict] = {}
+    relation_rows_sorted = sorted(adjacency.items())
+    relation_chunk_size = 250
+    for start in range(0, len(relation_rows_sorted), relation_chunk_size):
+        chunk = relation_rows_sorted[start:start + relation_chunk_size]
+        name = f"{start // relation_chunk_size:05d}.jsonl"
+        with (relations_dir / name).open("w", encoding="utf-8") as handle:
+            for concept_id, concept_relations in chunk:
+                handle.write(json.dumps({
+                    "concept": concept_id,
+                    "relations": concept_relations,
+                }, ensure_ascii=False, separators=(",", ":")) + "\n")
+                relation_index[concept_id] = {
+                    "file": f"relations/{name}",
+                    "count": len(concept_relations),
+                }
+
+    (out / "relations" / "index.json").write_text(
+        json.dumps({
+            "version": 1,
+            "concept_count": len(relation_index),
+            "chunk_size": relation_chunk_size,
+            "concepts": relation_index,
+        }, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
     # Build prefix-partitioned chunks so the Flutter client can fetch only
     # the relevant portion of the ontology for a search query.
     prefix_index: dict[str, dict] = {}
