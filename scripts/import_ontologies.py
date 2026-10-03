@@ -123,7 +123,7 @@ def main() -> None:
     (out / "index.json").write_text(
         json.dumps(index, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
-    print(f"Generated {len(rows)} concepts in {len(index['chunks'])} chunks.")
+    print(f"Generated {len(rows)} concepts across {sum(len(v['chunks']) for v in prefix_index.values())} chunks.")
 
 if __name__ == "__main__":
     main()
