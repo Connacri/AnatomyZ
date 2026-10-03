@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../models/anatomy_exam.dart';
+import '../services/exam_security.dart';
 
 class StudentExamPage extends StatefulWidget {
   const StudentExamPage({super.key, required this.exam});
@@ -22,6 +23,7 @@ class _StudentExamPageState extends State<StudentExamPage> {
   void initState() {
     super.initState();
     remainingSeconds = widget.exam.durationMinutes * 60;
+    ExamSecurity.enable();
     timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
       if (remainingSeconds <= 1) {
@@ -35,11 +37,13 @@ class _StudentExamPageState extends State<StudentExamPage> {
   @override
   void dispose() {
     timer?.cancel();
+    ExamSecurity.disable();
     super.dispose();
   }
 
   void _submit() {
     timer?.cancel();
+    ExamSecurity.disable();
     final correct = widget.exam.questions.where((question) {
       final answer = answers[question.id];
       if (question.type == ExamQuestionType.quiz) {
