@@ -34,10 +34,10 @@ class _ProfessorDashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     final repository = AcademicRepository.instance;
     final classes = repository.classesForProfessor('prof-demo');
-    final students = classes
-        .expand((item) => repository.studentsForClass(item.id))
-        .toSet()
-        .length;
+    final students = classes.fold<int>(
+      0,
+      (total, item) => total + repository.studentsForClass(item.id).length,
+    );
     final exams = AnatomyExamRepository.instance.exams;
 
     return ListView(
