@@ -119,7 +119,7 @@ class _AnatomyHomePageState extends State<AnatomyHomePage> {
               Text('Source : ${structure.source}'),
               const SizedBox(height: 8),
               if (_meshNodeFor(structure) != null)
-                Text('Nœud GLB : ' + _meshNodeFor(structure)!),
+                Text('Nœud GLB : ${_meshNodeFor(structure)}'),
               Chip(
                 avatar: Icon(structure.meshAvailable
                     ? Icons.view_in_ar
