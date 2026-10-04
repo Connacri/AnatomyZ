@@ -188,6 +188,13 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
                         onSelected: (value) {
                           if (value == 'signout') {
                             _authService.signOut();
+                            // Rafraîchir l'écran après chaque déconnexion
+                            Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(
+                                builder: (_) => const RoleSelectionPage(),
+                              ),
+                              (route) => false,
+                            );
                           } else if (value == 'fcm') {
                             _showFcmDialog(context, user);
                           } else if (value == 'profile') {

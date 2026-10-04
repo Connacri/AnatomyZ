@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:interactive_3d/interactive_3d.dart';
@@ -414,7 +414,7 @@ class _AnatomyViewerState extends State<_AnatomyViewer> {
                         icon: const Icon(Icons.visibility_off_outlined),
                         label: const Text('Masquer'),
                         onPressed: () async {
-                          final name = selectedEntity!.name;
+                          final name = selectedEntity.name;
                           await controller.updatePartGroupConfig(
                             group: ModelPartGroup(title: 'Sélection', names: [name]),
                             isVisible: false,
@@ -428,7 +428,7 @@ class _AnatomyViewerState extends State<_AnatomyViewer> {
                           await controller.updatePartGroupConfig(
                             group: ModelPartGroup(
                               title: 'Sélection',
-                              names: [selectedEntity!.name],
+                              names: [selectedEntity.name],
                             ),
                             isVisible: true,
                           );
@@ -439,7 +439,7 @@ class _AnatomyViewerState extends State<_AnatomyViewer> {
                         label: const Text('Transparence'),
                         onPressed: () async {
                           await controller.setEntityMaterial(
-                            name: selectedEntity!.name,
+                            name: selectedEntity.name,
                             color: const [0.15, 0.65, 1.0, 0.35],
                             roughness: 0.7,
                           );
@@ -448,7 +448,7 @@ class _AnatomyViewerState extends State<_AnatomyViewer> {
                       OutlinedButton.icon(
                         icon: const Icon(Icons.restore),
                         label: const Text('Matériau original'),
-                        onPressed: () => controller.resetEntityMaterial(selectedEntity!.name),
+                        onPressed: () => controller.resetEntityMaterial(selectedEntity.name),
                       ),
                     ],
                   ),
@@ -492,8 +492,8 @@ class _AnatomyViewerState extends State<_AnatomyViewer> {
                     textAlign: TextAlign.center,
                   )
                 : Text(
-                    selectedEntity!.name,
-                    key: ValueKey(selectedEntity!.id),
+                    selectedEntity.name,
+                    key: ValueKey(selectedEntity.id),
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),

@@ -668,6 +668,8 @@ export function App() {
       await logoutUser();
       setUserProfile(null);
       setProfileModalOpen(false);
+      // Rafraîchir complètement la page après chaque déconnexion
+      window.location.reload();
     } catch (err: any) {
       console.error(err);
     }
