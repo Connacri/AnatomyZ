@@ -312,56 +312,76 @@ class _AnatomyHomePageState extends State<AnatomyHomePage> {
               key: ValueKey('${model.system.id}-${model.sex.name}'),
               model: model,
               controller: viewerController,
-              selectedEntity: selectedEntity,
               preselectedEntityName: selectedStructure == null
                   ? null
                   : _meshNodeFor(selectedStructure!),
-              onSelectionChanged: (entities) {
-                setState(() {
-                  selectedEntity = entities.isEmpty ? null : entities.last;
-                });
-              },
             ),
     );
   }
 }
 
-class _AnatomyViewer extends StatelessWidget {
+class _AnatomyViewer extends StatefulWidget {
   const _AnatomyViewer({
     super.key,
     required this.model,
     required this.controller,
-    required this.selectedEntity,
-    required this.onSelectionChanged,
     this.preselectedEntityName,
   });
 
   final AnatomyModelRef model;
   final Interactive3dController controller;
-  final EntityData? selectedEntity;
-  final ValueChanged<List<EntityData>> onSelectionChanged;
   final String? preselectedEntityName;
 
   @override
+  State<_AnatomyViewer> createState() => _AnatomyViewerState();
+}
+
+class _AnatomyViewerState extends State<_AnatomyViewer> {
+  static const double _defaultZoom = 1.15;
+  static const double _minZoom = 0.65;
+  static const double _maxZoom = 1.8;
+  static const double _zoomStep = 0.1;
+
+  EntityData? _selectedEntity;
+  double _zoomLevel = _defaultZoom;
+
+  Interactive3dController get controller => widget.controller;
+
+  void _changeZoom(double delta) {
+    final next = (_zoomLevel + delta).clamp(_minZoom, _maxZoom).toDouble();
+    if (next == _zoomLevel) return;
+    setState(() => _zoomLevel = next);
+    controller.setCameraZoomLevel(next);
+  }
+
+  Future<void> _resetViewer() async {
+    await controller.clearSelections();
+    await controller.resetAllMaterialOverrides();
+    if (!mounted) return;
+    setState(() {
+      _selectedEntity = null;
+      _zoomLevel = _defaultZoom;
+    });
+    await controller.setCameraZoomLevel(_defaultZoom);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final selectedEntity = _selectedEntity;
     return Column(
       children: [
         Material(
           child: Column(
             children: [
               ListTile(
-                title: Text(model.system.nameFr),
+                title: Text(widget.model.system.nameFr),
                 subtitle: Text(
-                  '${model.system.nameEn} • '
-                  '${model.sex == AnatomySex.male ? 'Male' : 'Female'}',
+                  '${widget.model.system.nameEn} • '
+                  '${widget.model.sex == AnatomySex.male ? 'Male' : 'Female'}',
                 ),
                 trailing: IconButton(
                   tooltip: 'Réinitialiser',
-                  onPressed: () async {
-                    await controller.clearSelections();
-                    await controller.resetAllMaterialOverrides();
-                    onSelectionChanged(const []);
-                  },
+                  onPressed: _resetViewer,
                   icon: const Icon(Icons.clear_all),
                 ),
               ),
@@ -372,12 +392,12 @@ class _AnatomyViewer extends StatelessWidget {
                   children: [
                     IconButton(
                       tooltip: 'Zoom arrière',
-                      onPressed: () => controller.setCameraZoomLevel(0.85),
+                      onPressed: () => _changeZoom(-_zoomStep),
                       icon: const Icon(Icons.zoom_out),
                     ),
                     IconButton(
                       tooltip: 'Zoom avant',
-                      onPressed: () => controller.setCameraZoomLevel(1.35),
+                      onPressed: () => _changeZoom(_zoomStep),
                       icon: const Icon(Icons.zoom_in),
                     ),
                   ],
@@ -438,13 +458,13 @@ class _AnatomyViewer extends StatelessWidget {
         ),
         Expanded(
           child: Interactive3d(
-            key: ValueKey('${model.url}|${preselectedEntityName ?? ''}'),
+            key: ValueKey('${widget.model.url}|${widget.preselectedEntityName ?? ''}'),
             controller: controller,
-            modelUrl: model.url,
-            preselectedEntities: preselectedEntityName == null
+            modelUrl: widget.model.url,
+            preselectedEntities: widget.preselectedEntityName == null
                 ? null
-                : [preselectedEntityName!],
-            defaultZoom: 1.15,
+                : [widget.preselectedEntityName!],
+            defaultZoom: _defaultZoom,
             enableCache: true,
             selectionColor: const [0.1, 0.55, 1.0, 1.0],
             backgroundColor: Colors.black,
@@ -452,16 +472,11 @@ class _AnatomyViewer extends StatelessWidget {
             loadingWidget: const Center(
               child: CircularProgressIndicator(),
             ),
-            onSelectionChanged: (entities) async {
-              if (entities.isNotEmpty) {
-                final entity = entities.last;
-                await controller.setEntityMaterial(
-                  name: entity.name,
-                  color: const [0.15, 0.65, 1.0, 1.0],
-                  roughness: 0.55,
-                );
-              }
-              onSelectionChanged(entities);
+            onSelectionChanged: (entities) {
+              if (!mounted) return;
+              setState(() {
+                _selectedEntity = entities.isEmpty ? null : entities.last;
+              });
             },
           ),
         ),
