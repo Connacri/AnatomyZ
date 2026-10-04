@@ -73,6 +73,8 @@ import { SplashScreen } from './components/SplashScreen';
 import { AdminDashboard } from './components/AdminDashboard';
 import { FcmNotificationsModal } from './components/FcmNotificationsModal';
 import { UserProfileModal } from './components/UserProfileModal';
+import { StudentWorkspace } from './components/StudentWorkspace';
+import { ProfessorWorkspace } from './components/ProfessorWorkspace';
 import {
   Interactive3DControllerHandle,
   Interactive3DViewer,
@@ -782,9 +784,14 @@ export function App() {
         {currentScreen.name === 'academic_dashboard' && (
           <AcademicDashboardScreen
             role={currentScreen.role}
+            userProfile={userProfile}
             onBack={() => setHistoryStack([{ name: 'home' }])}
-            onOpenAtlas={() =>
-              pushScreen({ name: 'anatomy_home', role: currentScreen.role })
+            onOpenProfile={() => setProfileModalOpen(true)}
+            onOpenAtlas={(system) =>
+              pushScreen({
+                name: 'anatomy_home',
+                role: currentScreen.role,
+              })
             }
             onOpenExamEditor={() =>
               pushScreen({
@@ -908,39 +915,38 @@ function HomeScreen({
   onOpenAtlas: () => void;
 }) {
   return (
-    <div className="flex-1 bg-[#08111f] text-[#eef4ff]">
+    <div className="flex-1 bg-[#15191E] text-[#FAF6F0]">
       <main className="max-w-[1000px] mx-auto px-6 py-10 sm:py-16">
-        <span className="inline-block px-3.5 py-1.5 border border-[#2c4a70] rounded-full text-xs sm:text-sm text-[#8fc5ff]">
-          AnatomyZ · Human 3D Anatomy
+        <span className="inline-block px-3.5 py-1.5 border border-[#323B46] bg-[#1E242C] rounded-full text-xs sm:text-sm text-[#DACBA9] font-semibold">
+          AnatomyZ · Atlas Anatomique Humain 3D
         </span>
 
-        <h1 className="text-[clamp(40px,7vw,72px)] font-bold leading-none mt-5 mb-3">
+        <h1 className="text-[clamp(40px,7vw,72px)] font-extrabold leading-none mt-5 mb-3 text-[#FAF6F0]">
           AnatomyZ
         </h1>
 
-        <p className="text-base sm:text-[18px] leading-[1.7] text-[#b8c7da] max-w-3xl">
-          Un atlas anatomique humain 3D natif Flutter et Web, construit autour
-          d&apos;un Knowledge Graph anatomique, des ontologies FMA/UBERON et de
-          modèles GLB/GLTF vérifiés progressivement.
+        <p className="text-base sm:text-[18px] leading-[1.7] text-[#BAC3CE] max-w-3xl">
+          Atlas anatomique humain 3D haute fidélité pour étudiants et professeurs de médecine,
+          articulé autour d’un Knowledge Graph certifié, des ontologies FMA/UBERON et d'évaluations cliniques.
         </p>
 
-        {/* Google Authentication & Firebase Cloud Sync Card */}
-        <div className="mt-7 p-4 sm:p-5 rounded-2xl border border-[#2c4a70] bg-[#0d1a2b] shadow-xl">
+        {/* Google Authentication & Academic Session Card */}
+        <div className="mt-7 p-4 sm:p-5 rounded-3xl border-2 border-[#323B46] bg-[#1E242C] shadow-xl">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-start sm:items-center gap-3.5">
-              <div className="w-11 h-11 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0">
+              <div className="w-11 h-11 rounded-2xl bg-[#15191E] border border-[#323B46] flex items-center justify-center shrink-0">
                 <GoogleIcon className="w-6 h-6" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-sm sm:text-base text-white">
-                    {currentUser ? 'Compte Google Connecté' : 'Authentification Google & Cloud'}
+                  <h3 className="font-bold text-sm sm:text-base text-[#FAF6F0]">
+                    {currentUser ? 'Compte Académique Connecté' : 'Authentification Sécurisée'}
                   </h3>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30">
+                  <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30">
                     Session Active
                   </span>
                 </div>
-                <p className="text-xs text-[#b8c7da] mt-0.5 max-w-xl">
+                <p className="text-xs text-[#BAC3CE] mt-0.5 max-w-xl">
                   {currentUser
                     ? `Connecté en tant que ${currentUser.displayName || currentUser.email} · Vos notes, examens et progression sont enregistrés.`
                     : 'Connectez-vous avec votre compte Google pour enregistrer vos résultats d’examens, compléter votre profil et suivre vos notes.'}
@@ -953,16 +959,16 @@ function HomeScreen({
                 <button
                   type="button"
                   onClick={onOpenProfile}
-                  className="w-full sm:w-auto min-h-[42px] px-4 py-2 rounded-xl bg-[#13253d] hover:bg-[#1a3252] border border-[#2c4a70] text-xs font-semibold text-[#8fc5ff] inline-flex items-center justify-center gap-2 transition cursor-pointer"
+                  className="w-full sm:w-auto min-h-[42px] px-4 py-2 rounded-xl bg-[#252D37] hover:bg-[#323B46] border border-[#323B46] text-xs font-semibold text-[#DACBA9] inline-flex items-center justify-center gap-2 transition cursor-pointer"
                 >
                   <User className="w-4 h-4" />
-                  <span>Mon Compte Google</span>
+                  <span>Mon Profil Académique</span>
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={onSignIn}
-                  className="w-full sm:w-auto min-h-[42px] px-4 py-2 rounded-xl bg-white hover:bg-gray-100 text-gray-900 text-xs font-bold shadow-md inline-flex items-center justify-center gap-2 transition cursor-pointer active:scale-95"
+                  className="w-full sm:w-auto min-h-[42px] px-5 py-2.5 rounded-xl bg-[#DACBA9] hover:bg-[#FAF6F0] text-[#15191E] text-xs font-bold shadow-md inline-flex items-center justify-center gap-2 transition cursor-pointer active:scale-95"
                 >
                   <GoogleIcon className="w-4 h-4" />
                   <span>Se connecter avec Google</span>
@@ -972,52 +978,52 @@ function HomeScreen({
           </div>
         </div>
 
-        {/* Single Role Selection Section (No duplicate role buttons or pages) */}
+        {/* Single Role Selection Section */}
         <section aria-labelledby="role-heading" className="mt-8 mb-10">
           <h2
             id="role-heading"
-            className="text-sm font-semibold uppercase tracking-wider text-[#8fc5ff] mb-3.5"
+            className="text-xs font-bold uppercase tracking-wider text-[#DACBA9] mb-3.5"
           >
-            Choisissez votre rôle
+            Accéder à votre espace
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <button
               type="button"
               onClick={() => onSelectRole(AnatomyRole.Professor)}
-              className="min-h-[88px] text-left p-5 rounded-[18px] border border-[#203651] bg-[#0d1a2b] hover:border-[#8fc5ff] hover:bg-[#112238] active:scale-[0.99] transition flex items-center gap-4 group cursor-pointer"
+              className="min-h-[88px] text-left p-5 rounded-3xl border-2 border-[#323B46] bg-[#1E242C] hover:border-[#DACBA9] hover:bg-[#252D37] active:scale-[0.99] transition flex items-center gap-4 group cursor-pointer shadow-md"
             >
-              <div className="w-12 h-12 rounded-xl bg-indigo-500/15 border border-indigo-400/30 flex items-center justify-center text-[#8fc5ff] shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center justify-center shrink-0">
                 <GraduationCap className="w-6 h-6" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-lg font-bold text-[#eef4ff] group-hover:text-[#8fc5ff] transition">
-                  Professeur
+                <div className="text-base font-bold text-[#FAF6F0] group-hover:text-[#DACBA9] transition">
+                  Espace Enseignant / Professeur
                 </div>
-                <p className="text-sm text-[#b8c7da]">
-                  Créer des quiz, gérer les classes et publier des examens
+                <p className="text-xs text-[#BAC3CE] mt-0.5">
+                  Créer des examens, gérer les promotions d'externes et projeter l'Atlas 3D en cours
                 </p>
               </div>
-              <ChevronRight className="w-5 h-5 text-[#71839b] group-hover:text-[#8fc5ff] shrink-0 transition" />
+              <ChevronRight className="w-5 h-5 text-[#8C97A5] group-hover:text-[#DACBA9] shrink-0 transition" />
             </button>
 
             <button
               type="button"
               onClick={() => onSelectRole(AnatomyRole.Student)}
-              className="min-h-[88px] text-left p-5 rounded-[18px] border border-[#203651] bg-[#0d1a2b] hover:border-[#8fc5ff] hover:bg-[#112238] active:scale-[0.99] transition flex items-center gap-4 group cursor-pointer"
+              className="min-h-[88px] text-left p-5 rounded-3xl border-2 border-[#323B46] bg-[#1E242C] hover:border-[#DACBA9] hover:bg-[#252D37] active:scale-[0.99] transition flex items-center gap-4 group cursor-pointer shadow-md"
             >
-              <div className="w-12 h-12 rounded-xl bg-indigo-500/15 border border-indigo-400/30 flex items-center justify-center text-[#8fc5ff] shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-[#DACBA9]/20 text-[#DACBA9] border border-[#DACBA9]/30 flex items-center justify-center shrink-0">
                 <User className="w-6 h-6" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-lg font-bold text-[#eef4ff] group-hover:text-[#8fc5ff] transition">
-                  Étudiant
+                <div className="text-base font-bold text-[#FAF6F0] group-hover:text-[#DACBA9] transition">
+                  Espace Étudiant en Médecine
                 </div>
-                <p className="text-sm text-[#b8c7da]">
-                  Consulter les examens assignés, les passer et suivre ses notes
+                <p className="text-xs text-[#BAC3CE] mt-0.5">
+                  Passer les examens assignés, s’entraîner aux flashcards et consulter ses notes
                 </p>
               </div>
-              <ChevronRight className="w-5 h-5 text-[#71839b] group-hover:text-[#8fc5ff] shrink-0 transition" />
+              <ChevronRight className="w-5 h-5 text-[#8C97A5] group-hover:text-[#DACBA9] shrink-0 transition" />
             </button>
           </div>
 
@@ -1025,51 +1031,51 @@ function HomeScreen({
             <button
               type="button"
               onClick={onOpenAtlas}
-              className="w-full sm:w-auto min-h-[48px] px-5 py-3 rounded-[14px] border border-[#2c4a70] bg-[#0d1a2b] hover:bg-[#142740] hover:border-[#8fc5ff] text-[#eef4ff] font-semibold text-sm inline-flex items-center justify-center gap-2.5 transition cursor-pointer"
+              className="w-full sm:w-auto min-h-[48px] px-5 py-3 rounded-2xl border-2 border-[#323B46] bg-[#1E242C] hover:bg-[#252D37] hover:border-[#DACBA9] text-[#FAF6F0] font-semibold text-xs inline-flex items-center justify-center gap-2.5 transition cursor-pointer"
             >
-              <Box className="w-4 h-4 text-[#8fc5ff]" />
-              <span>Explorer directement l’atlas 3D</span>
+              <Box className="w-4 h-4 text-[#DACBA9]" />
+              <span>Explorer directement l’atlas anatomique 3D</span>
             </button>
           </div>
         </section>
 
-        {/* The 4 Architecture Cards from site/index.html (Shown once) */}
+        {/* The 4 Architecture Cards from site/index.html */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-9">
-          <section className="p-[22px] border border-[#203651] rounded-[18px] bg-[#0d1a2b]">
-            <h3 className="text-lg font-bold mb-2">🧠 Knowledge Graph</h3>
-            <p className="text-sm sm:text-[15px] leading-[1.6] text-[#b8c7da]">
-              Structures, synonymes et relations anatomiques.
+          <section className="p-5 border-2 border-[#323B46] rounded-2xl bg-[#1E242C]">
+            <h3 className="text-base font-bold mb-1.5 text-[#FAF6F0]">🧠 Knowledge Graph</h3>
+            <p className="text-xs leading-relaxed text-[#BAC3CE]">
+              Structures, synonymes et relations ontologiques FMA/UBERON.
             </p>
           </section>
 
-          <section className="p-[22px] border border-[#203651] rounded-[18px] bg-[#0d1a2b]">
-            <h3 className="text-lg font-bold mb-2">🦴 3D Anatomy</h3>
-            <p className="text-sm sm:text-[15px] leading-[1.6] text-[#b8c7da]">
-              Modèles GLB/GLTF, sélection, visibilité et matériaux.
+          <section className="p-5 border-2 border-[#323B46] rounded-2xl bg-[#1E242C]">
+            <h3 className="text-base font-bold mb-1.5 text-[#FAF6F0]">🦴 3D Anatomy</h3>
+            <p className="text-xs leading-relaxed text-[#BAC3CE]">
+              Modèles 3D interactifs, dissection par couches et repérage.
             </p>
           </section>
 
-          <section className="p-[22px] border border-[#203651] rounded-[18px] bg-[#0d1a2b]">
-            <h3 className="text-lg font-bold mb-2">🔗 Mapping Engine</h3>
-            <p className="text-sm sm:text-[15px] leading-[1.6] text-[#b8c7da]">
-              Correspondances exactes, xrefs et mappings vérifiés.
+          <section className="p-5 border-2 border-[#323B46] rounded-2xl bg-[#1E242C]">
+            <h3 className="text-base font-bold mb-1.5 text-[#FAF6F0]">🔗 Mapping Engine</h3>
+            <p className="text-xs leading-relaxed text-[#BAC3CE]">
+              Correspondances exactes, xrefs et mappings certifiés.
             </p>
           </section>
 
-          <section className="p-[22px] border border-[#203651] rounded-[18px] bg-[#0d1a2b]">
-            <h3 className="text-lg font-bold mb-2">🎓 Education</h3>
-            <p className="text-sm sm:text-[15px] leading-[1.6] text-[#b8c7da]">
-              Professeur, étudiant, quiz, questions et mode examen sécurisé.
+          <section className="p-5 border-2 border-[#323B46] rounded-2xl bg-[#1E242C]">
+            <h3 className="text-base font-bold mb-1.5 text-[#FAF6F0]">🎓 Éducation Médicale</h3>
+            <p className="text-xs leading-relaxed text-[#BAC3CE]">
+              Examens cliniques, QCM, repérage 3D et suivi des promotions.
             </p>
           </section>
         </div>
 
-        <div className="flex flex-wrap items-center gap-6 text-sm sm:text-base">
+        <div className="flex flex-wrap items-center gap-6 text-xs sm:text-sm">
           <a
             href="https://github.com/Connacri/AnatomyZ/releases/latest/download/AnatomyZ-release.apk"
             target="_blank"
             rel="noreferrer"
-            className="text-[#8fc5ff] hover:underline"
+            className="text-[#DACBA9] hover:underline font-semibold"
           >
             → Télécharger APK (Release)
           </a>
@@ -1077,13 +1083,13 @@ function HomeScreen({
             href="https://github.com/Connacri/AnatomyZ/releases/latest/download/AnatomyZ-release.aab"
             target="_blank"
             rel="noreferrer"
-            className="text-[#8fc5ff] hover:underline"
+            className="text-[#DACBA9] hover:underline font-semibold"
           >
             → Télécharger AAB (Release)
           </a>
           <a
             href="./catalog/index.json"
-            className="text-[#8fc5ff] hover:underline"
+            className="text-[#BAC3CE] hover:text-[#FAF6F0] hover:underline"
           >
             → Catalogue anatomique
           </a>
@@ -1091,7 +1097,7 @@ function HomeScreen({
             href="https://github.com/Connacri/AnatomyZ"
             target="_blank"
             rel="noreferrer"
-            className="text-[#8fc5ff] hover:underline"
+            className="text-[#BAC3CE] hover:text-[#FAF6F0] hover:underline"
           >
             → Dépôt GitHub
           </a>

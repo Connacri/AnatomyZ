@@ -45,10 +45,14 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
       </div>
 
       <div className="flex flex-col items-center text-center max-w-sm px-4">
-        {/* Anatomical Head Logo with subtle pulsing aura */}
+        {/* Anatomical Head Logo with seamless integration */}
         <div className="relative mb-6">
-          <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-3xl overflow-hidden shadow-2xl border-2 border-[#D8CCBF] bg-[#ECE3D9] flex items-center justify-center">
-            <AnatomyZLogo className="w-full h-full p-2" />
+          <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-3xl overflow-hidden shadow-2xl bg-[#DACBA8] flex items-center justify-center">
+            <img
+              src="/icon.png"
+              alt="Logo officiel AnatomyZ"
+              className="w-full h-full object-cover block"
+            />
           </div>
           <span className="absolute -bottom-2 -right-2 px-2.5 py-1 rounded-full bg-[#646D79] text-[#FAF6F0] text-[10px] font-bold tracking-wider uppercase shadow-md">
             Atlas 3D
