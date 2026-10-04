@@ -66,10 +66,11 @@ import {
   deleteStoredFcmToken,
   subscribeToForegroundMessages,
   createNotificationRecord,
+  onAuthStateChanged,
+  FirebaseUser,
   FcmTokenRecord,
   UserRecord,
 } from './firebase';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { AnatomyZLogo } from './components/AnatomyZLogo';
 import { SplashScreen } from './components/SplashScreen';
 import { AdminDashboard } from './components/AdminDashboard';
