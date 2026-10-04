@@ -272,9 +272,9 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
                         ),
                         child: Column(
                           children: [
-                            const Row(
+                            Row(
                               mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
+                              children: const [
                                 Icon(Icons.account_circle_outlined, size: 20, color: Color(0xFFE5DCD0)),
                                 SizedBox(width: 8),
                                 Text(

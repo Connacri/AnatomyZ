@@ -1,8 +1,26 @@
 // File generated for AnatomyZ Firebase Configuration.
 // ignore_for_file: type=lint
-import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
+
+/// Firebase options representation for AnatomyZ platform configuration.
+class FirebaseOptions {
+  const FirebaseOptions({
+    required this.apiKey,
+    required this.appId,
+    required this.messagingSenderId,
+    required this.projectId,
+    this.authDomain,
+    this.storageBucket,
+  });
+
+  final String apiKey;
+  final String appId;
+  final String messagingSenderId;
+  final String projectId;
+  final String? authDomain;
+  final String? storageBucket;
+}
 
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
