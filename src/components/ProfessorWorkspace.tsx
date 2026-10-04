@@ -182,6 +182,53 @@ export function ProfessorWorkspace({
   const [stuPhone, setStuPhone] = useState('');
   const [stuBio, setStuBio] = useState('');
 
+  // Academic year / level management (created by the professor)
+  const DEFAULT_LEVELS = [
+    'PASS / LAS (1ère année)',
+    'DFGSM 2 (2ème année)',
+    'DFGSM 3 (3ème année)',
+    'DFASM 1 (Externat)',
+  ];
+  const [academicLevels, setAcademicLevels] = useState<string[]>(() => {
+    try {
+      const saved = window.localStorage.getItem('anatomyz_academic_levels');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.filter((v) => typeof v === 'string' && v.trim());
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+    return DEFAULT_LEVELS;
+  });
+  const [newLevelInput, setNewLevelInput] = useState('');
+
+  const persistLevels = (levels: string[]) => {
+    setAcademicLevels(levels);
+    try {
+      window.localStorage.setItem(
+        'anatomyz_academic_levels',
+        JSON.stringify(levels)
+      );
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const addAcademicLevel = () => {
+    const value = newLevelInput.trim();
+    if (!value || academicLevels.includes(value)) return;
+    persistLevels([...academicLevels, value]);
+    setStuYear(value);
+    setNewLevelInput('');
+  };
+
+  const removeAcademicLevel = (level: string) => {
+    persistLevels(academicLevels.filter((l) => l !== level));
+  };
+
   // Professor Accreditation Profile Detail Modal (for unapproved professor)
   const [isProfRequestModalOpen, setIsProfRequestModalOpen] = useState(false);
   const [profName, setProfName] = useState(userProfile?.displayName || '');
@@ -821,10 +868,11 @@ export function ProfessorWorkspace({
                 className="px-3 py-2 text-xs bg-[#1E242C] border border-[#323B46] rounded-xl text-[#FAF6F0] cursor-pointer"
               >
                 <option value="all">Toutes promotions</option>
-                <option value="PASS">PASS / LAS</option>
-                <option value="DFGSM 2">DFGSM 2</option>
-                <option value="DFGSM 3">DFGSM 3</option>
-                <option value="DFASM">DFASM (Externat)</option>
+                {academicLevels.map((level) => (
+                  <option key={level} value={level}>
+                    {level}
+                  </option>
+                ))}
               </select>
 
               <button
@@ -1315,11 +1363,48 @@ export function ProfessorWorkspace({
                   onChange={(e) => setStuYear(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-[#15191E] border border-[#323B46] text-[#FAF6F0]"
                 >
-                  <option value="PASS / LAS (1ère année)">PASS / LAS (1ère année)</option>
-                  <option value="DFGSM 2 (2ème année)">DFGSM 2 (2ème année)</option>
-                  <option value="DFGSM 3 (3ème année)">DFGSM 3 (3ème année)</option>
-                  <option value="DFASM 1 (Externat)">DFASM 1 (Externat)</option>
+                  {academicLevels.map((level) => (
+                    <option key={level} value={level}>
+                      {level}
+                    </option>
+                  ))}
                 </select>
+
+                {/* Professeur : créer / supprimer des niveaux */}
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={newLevelInput}
+                    onChange={(e) => setNewLevelInput(e.target.value)}
+                    placeholder="Nouveau niveau (ex: DFASM 2)"
+                    className="flex-1 px-3 py-1.5 rounded-xl bg-[#15191E] border border-[#323B46] text-[#FAF6F0] text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={addAcademicLevel}
+                    className="px-3 py-1.5 rounded-xl bg-[#DACBA9] text-[#15191E] text-xs font-bold transition cursor-pointer"
+                  >
+                    + Ajouter
+                  </button>
+                </div>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {academicLevels.map((level) => (
+                    <span
+                      key={level}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#1E242C] border border-[#323B46] text-[10px] text-[#BAC3CE]"
+                    >
+                      {level}
+                      <button
+                        type="button"
+                        onClick={() => removeAcademicLevel(level)}
+                        className="text-rose-400 hover:text-rose-300 cursor-pointer"
+                        title="Supprimer ce niveau"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
               </div>
 
               <div>
