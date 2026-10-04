@@ -291,19 +291,223 @@ export async function registerNewUser(
 export async function approveUserRequest(
   targetUid: string,
   approvedRole: 'student' | 'professor' | 'admin',
-  adminEmail?: string
+  adminEmail?: string,
+  profileDetails?: {
+    displayName?: string;
+    email?: string;
+    matricule?: string;
+    university?: string;
+    academicYear?: string;
+    specialty?: string;
+    bio?: string;
+    phone?: string;
+  }
 ): Promise<void> {
   const userRef = doc(db, 'users', targetUid);
+  const now = new Date().toISOString();
+  const cleanDetails: Record<string, string> = {};
+  if (profileDetails) {
+    Object.entries(profileDetails).forEach(([k, v]) => {
+      if (v !== undefined) {
+        cleanDetails[k] = v;
+      }
+    });
+  }
   try {
     await updateDoc(userRef, {
+      ...cleanDetails,
       role: approvedRole,
       status: 'approved',
-      approvedAt: new Date().toISOString(),
+      approvedAt: now,
       approvedBy: adminEmail || 'Administrateur',
-      updatedAt: new Date().toISOString(),
+      updatedAt: now,
     });
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, `users/${targetUid}`);
+  }
+}
+
+export async function createProfessorCandidate(data: {
+  displayName: string;
+  email: string;
+  matricule?: string;
+  university?: string;
+  academicYear?: string;
+  specialty?: string;
+  bio?: string;
+  phone?: string;
+  autoApprove?: boolean;
+  adminEmail?: string;
+}): Promise<UserRecord> {
+  const now = new Date().toISOString();
+  const uid = `prof_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const isApproved = Boolean(data.autoApprove);
+  const record: UserRecord = {
+    uid,
+    email: data.email.trim(),
+    displayName: data.displayName.trim(),
+    photoURL: '',
+    role: isApproved ? 'professor' : 'student',
+    status: isApproved ? 'approved' : 'pending_approval',
+    requestedRole: 'professor',
+    requestedAt: now,
+    ...(isApproved
+      ? {
+          approvedAt: now,
+          approvedBy: data.adminEmail || 'Administrateur',
+        }
+      : {}),
+    matricule: (data.matricule || '').trim(),
+    university: (data.university || 'Faculté de Médecine').trim(),
+    academicYear: (data.academicYear || 'Praticien Hospitalier / Enseignant').trim(),
+    specialty: (data.specialty || 'Anatomie Générale & Organogénèse').trim(),
+    bio: (data.bio || '').trim(),
+    phone: (data.phone || '').trim(),
+    notificationsEnabled: true,
+    createdAt: now,
+    updatedAt: now,
+  };
+  const userRef = doc(db, 'users', uid);
+  try {
+    await setDoc(userRef, record);
+    return record;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, `users/${uid}`);
+  }
+}
+
+export async function requestProfessorAccreditation(
+  uid: string,
+  profileDetails: {
+    displayName: string;
+    matricule: string;
+    university: string;
+    academicYear: string;
+    specialty: string;
+    bio: string;
+    phone: string;
+  }
+): Promise<void> {
+  const userRef = doc(db, 'users', uid);
+  const now = new Date().toISOString();
+  try {
+    await updateDoc(userRef, {
+      displayName: profileDetails.displayName.trim(),
+      matricule: profileDetails.matricule.trim(),
+      university: profileDetails.university.trim(),
+      academicYear: profileDetails.academicYear.trim(),
+      specialty: profileDetails.specialty.trim(),
+      bio: profileDetails.bio.trim(),
+      phone: profileDetails.phone.trim(),
+      status: 'pending_approval',
+      requestedRole: 'professor',
+      requestedAt: now,
+      updatedAt: now,
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, `users/${uid}`);
+  }
+}
+
+export async function deleteUserRecord(targetUid: string): Promise<void> {
+  const userRef = doc(db, 'users', targetUid);
+  try {
+    await deleteDoc(userRef);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, `users/${targetUid}`);
+  }
+}
+
+// -------------------------------------------------------------
+// PROFESSOR -> STUDENT CRUD HELPERS
+// -------------------------------------------------------------
+
+export async function fetchStudentRecords(): Promise<UserRecord[]> {
+  try {
+    const q = query(collection(db, 'users'), where('role', '==', 'student'));
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => d.data() as UserRecord);
+  } catch (error) {
+    console.warn('Impossible de charger les étudiants depuis Firestore:', error);
+    return [];
+  }
+}
+
+export async function createStudentRecord(data: {
+  displayName: string;
+  email: string;
+  matricule: string;
+  university: string;
+  academicYear: string;
+  specialty: string;
+  phone?: string;
+  bio?: string;
+}): Promise<UserRecord> {
+  const now = new Date().toISOString();
+  const uid = `stu_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const record: UserRecord = {
+    uid,
+    email: data.email.trim(),
+    displayName: data.displayName.trim(),
+    photoURL: '',
+    role: 'student',
+    status: 'approved',
+    matricule: data.matricule.trim(),
+    university: data.university.trim() || 'Faculté de Médecine',
+    academicYear: data.academicYear.trim() || 'DFGSM 2 (2ème année)',
+    specialty: data.specialty.trim() || 'Anatomie Générale',
+    phone: (data.phone || '').trim(),
+    bio: (data.bio || '').trim(),
+    notificationsEnabled: true,
+    createdAt: now,
+    updatedAt: now,
+  };
+  const userRef = doc(db, 'users', uid);
+  try {
+    await setDoc(userRef, record);
+    return record;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, `users/${uid}`);
+  }
+}
+
+export async function updateStudentRecord(
+  uid: string,
+  data: {
+    displayName: string;
+    email: string;
+    matricule: string;
+    university: string;
+    academicYear: string;
+    specialty: string;
+    phone?: string;
+    bio?: string;
+  }
+): Promise<void> {
+  const userRef = doc(db, 'users', uid);
+  try {
+    await updateDoc(userRef, {
+      displayName: data.displayName.trim(),
+      email: data.email.trim(),
+      matricule: data.matricule.trim(),
+      university: data.university.trim(),
+      academicYear: data.academicYear.trim(),
+      specialty: data.specialty.trim(),
+      phone: (data.phone || '').trim(),
+      bio: (data.bio || '').trim(),
+      updatedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, `users/${uid}`);
+  }
+}
+
+export async function deleteStudentRecord(uid: string): Promise<void> {
+  const userRef = doc(db, 'users', uid);
+  try {
+    await deleteDoc(userRef);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, `users/${uid}`);
   }
 }
 

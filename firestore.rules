@@ -45,6 +45,20 @@ service cloud.firestore {
       return isSignedIn() && (
         isSuperAdminEmail()
         || exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        || (
+          exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        )
+      );
+    }
+
+    function isProfessor() {
+      return isSignedIn() && (
+        isAdmin()
+        || (
+          exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['professor', 'admin']
+        )
       );
     }
 
@@ -75,7 +89,9 @@ service cloud.firestore {
         && (!('phone' in data) || (data.phone is string && data.phone.size() <= 32))
         && (!('fcmToken' in data) || (data.fcmToken is string && data.fcmToken.size() <= 1024))
         && (!('lastTokenUpdatedAt' in data) || (data.lastTokenUpdatedAt is string && data.lastTokenUpdatedAt.size() <= 128))
-        && (!('notificationsEnabled' in data) || data.notificationsEnabled is bool);
+        && (!('notificationsEnabled' in data) || data.notificationsEnabled is bool)
+        && (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 64))
+        && (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 64));
     }
 
     function isValidExam(data) {
@@ -93,7 +109,7 @@ service cloud.firestore {
       return data.keys().hasAll(['id', 'studentId', 'examId', 'score'])
         && data.keys().hasOnly(['id', 'studentId', 'studentName', 'studentEmail', 'examId', 'examTitle', 'score', 'totalPoints', 'percentage', 'submittedAt'])
         && data.id is string && isValidId(data.id)
-        && data.studentId is string && data.studentId == request.auth.uid
+        && data.studentId is string && (data.studentId == request.auth.uid || isProfessor() || isAdmin())
         && data.score is number;
     }
 
@@ -108,30 +124,46 @@ service cloud.firestore {
     // Match Collections
 
     match /users/{userId} {
-      allow get: if isOwner(userId) || isAdmin();
-      allow list: if isAdmin();
+      allow get: if isOwner(userId) || isAdmin() || isProfessor();
+      allow list: if isAdmin() || isProfessor() || (isSignedIn() && resource.data.role == 'student');
       allow create: if isSignedIn()
         && isValidId(userId)
-        && (isOwner(userId) || isAdmin())
+        && (isOwner(userId) || isAdmin() || (isProfessor() && incoming().role == 'student'))
         && incoming().keys().hasAll(['uid', 'email', 'role'])
         && incoming().uid == userId
         && incoming().email is string
         && isValidUserShape(incoming());
-      
-      // USER CANNOT CHANGE ROLE! ONLY ADMIN CAN CHANGE ROLE!
+
       allow update: if isSignedIn()
         && isValidId(userId)
         && isValidUserShape(incoming())
         && (
-          (isOwner(userId) && incoming().diff(existing()).affectedKeys().hasOnly([
-            'displayName', 'photoURL', 'matricule', 'university', 'academicYear', 'specialty', 'bio', 'phone', 'fcmToken', 'fcmTokens', 'lastTokenUpdatedAt', 'notificationsEnabled', 'updatedAt'
-          ]))
+          // Owner can update own profile details or submit a pending role request (whilst keeping current role unchanged)
+          (isOwner(userId)
+            && incoming().role == existing().role
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'displayName', 'photoURL', 'matricule', 'university', 'academicYear',
+              'specialty', 'bio', 'phone', 'fcmToken', 'fcmTokens',
+              'lastTokenUpdatedAt', 'notificationsEnabled',
+              'status', 'requestedRole', 'requestedAt', 'updatedAt'
+            ]))
+          // Professor can update student profiles
+          || (isProfessor()
+            && existing().role == 'student'
+            && incoming().role == 'student'
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'displayName', 'email', 'photoURL', 'matricule', 'university',
+              'academicYear', 'specialty', 'bio', 'phone', 'updatedAt'
+            ]))
+          // Admin can update role, accreditation status, and profile details
           || (isAdmin() && incoming().diff(existing()).affectedKeys().hasOnly([
             'role', 'status', 'requestedRole', 'requestedAt', 'approvedAt', 'approvedBy',
-            'displayName', 'photoURL', 'matricule', 'university', 'academicYear', 'specialty', 'bio', 'phone', 'fcmToken', 'fcmTokens', 'lastTokenUpdatedAt', 'notificationsEnabled', 'updatedAt'
+            'displayName', 'email', 'photoURL', 'matricule', 'university',
+            'academicYear', 'specialty', 'bio', 'phone',
+            'fcmToken', 'fcmTokens', 'lastTokenUpdatedAt', 'notificationsEnabled', 'updatedAt'
           ]))
         );
-      allow delete: if isOwner(userId) || isAdmin();
+      allow delete: if isOwner(userId) || isAdmin() || (isProfessor() && existing().role == 'student');
 
       // FCM Tokens subcollection for multi-device support
       match /fcm_tokens/{tokenId} {
@@ -154,7 +186,7 @@ service cloud.firestore {
     }
 
     match /exam_results/{resultId} {
-      allow get: if isSignedIn() && (existing().studentId == request.auth.uid || isAdmin());
+      allow get: if isSignedIn() && (existing().studentId == request.auth.uid || isProfessor() || isAdmin());
       allow list: if isSignedIn();
       allow create: if isSignedIn() && isValidId(resultId) && isValidExamResult(incoming());
       allow update: if false; // Results are immutable after submission

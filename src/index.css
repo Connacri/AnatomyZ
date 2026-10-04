@@ -1,1 +1,99 @@
 @import "tailwindcss";
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --az-bg-primary: #15191E;
+  --az-bg-secondary: #1E242C;
+  --az-bg-elevated: #232C3A;
+  --az-border: #323B46;
+  --az-text-primary: #FAF6F0;
+  --az-text-secondary: #BAC3CE;
+  --az-accent: #DACBA9;
+  --az-accent-light: #ECE3D9;
+  --az-accent-contrast: #15191E;
+}
+
+/* Light Theme based on the original AnatomyZ Icon palette:
+   Warm Limestone Ochre (#DACBA9 / #ECE3D9 / #F5EFE6) & Anatomical Slate (#1E242C / #5C656B) */
+[data-theme="light"] {
+  color-scheme: light;
+  --az-bg-primary: #F5EFE6;
+  --az-bg-secondary: #ECE3D9;
+  --az-bg-elevated: #E2D5C3;
+  --az-border: #C8B9A6;
+  --az-text-primary: #1E242C;
+  --az-text-secondary: #4E5865;
+  --az-accent: #1E242C;
+  --az-accent-light: #DACBA9;
+  --az-accent-contrast: #FAF6F0;
+}
+
+[data-theme="light"] body {
+  background-color: #F5EFE6 !important;
+  color: #1E242C !important;
+}
+
+/* Automatic adaptation of surfaces, cards, text, and buttons in Light Mode using original icon colors */
+[data-theme="light"] .bg-\[\#15191E\],
+[data-theme="light"] .bg-\[\#0F1318\],
+[data-theme="light"] .bg-\[\#08111f\] {
+  background-color: #F5EFE6 !important;
+}
+
+[data-theme="light"] .bg-\[\#1E242C\],
+[data-theme="light"] .bg-\[\#1E242C\]\/95,
+[data-theme="light"] .bg-\[\#161C24\],
+[data-theme="light"] .bg-\[\#161C24\]\/95,
+[data-theme="light"] .bg-\[\#0d1a2b\] {
+  background-color: #ECE3D9 !important;
+}
+
+[data-theme="light"] .bg-\[\#1D2530\],
+[data-theme="light"] .bg-\[\#232C3A\],
+[data-theme="light"] .bg-\[\#2A323D\] {
+  background-color: #DFD3C3 !important;
+}
+
+[data-theme="light"] .border-\[\#323B46\],
+[data-theme="light"] .border-\[\#263140\],
+[data-theme="light"] .border-\[\#232B35\],
+[data-theme="light"] .border-\[\#455160\],
+[data-theme="light"] .border-\[\#203651\] {
+  border-color: #C4B49E !important;
+}
+
+[data-theme="light"] .text-\[\#FAF6F0\],
+[data-theme="light"] .text-\[\#F5F7FA\],
+[data-theme="light"] .text-\[\#eef4ff\] {
+  color: #1E242C !important;
+}
+
+[data-theme="light"] .text-\[\#BAC3CE\],
+[data-theme="light"] .text-\[\#BCC7D5\],
+[data-theme="light"] .text-\[\#8F9CAE\],
+[data-theme="light"] .text-\[\#8C97A5\],
+[data-theme="light"] .text-\[\#b8c7da\] {
+  color: #4A5462 !important;
+}
+
+[data-theme="light"] .text-\[\#E5DCD0\],
+[data-theme="light"] .text-\[\#ECE3D9\],
+[data-theme="light"] .text-\[\#DACBA9\] {
+  color: #2B3440 !important;
+}
+
+/* Primary action buttons in Light Mode use original icon Slate (#1E242C) with Warm Limestone (#ECE3D9) text */
+[data-theme="light"] .bg-\[\#E5DCD0\],
+[data-theme="light"] .bg-\[\#DACBA9\],
+[data-theme="light"] .bg-\[\#FAF6F0\] {
+  background-color: #1E242C !important;
+  color: #ECE3D9 !important;
+}
+
+[data-theme="light"] .bg-\[\#E5DCD0\]:hover,
+[data-theme="light"] .bg-\[\#DACBA9\]:hover,
+[data-theme="light"] .bg-\[\#FAF6F0\]:hover {
+  background-color: #323B46 !important;
+  color: #FAF6F0 !important;
+}

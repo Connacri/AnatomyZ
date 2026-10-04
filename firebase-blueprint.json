@@ -10,6 +10,11 @@
         "displayName": { "type": "string", "maxLength": 128 },
         "photoURL": { "type": "string", "maxLength": 512 },
         "role": { "type": "string", "enum": ["student", "professor", "admin", "guest"], "maxLength": 32 },
+        "status": { "type": "string", "enum": ["approved", "pending_approval", "rejected"], "maxLength": 32 },
+        "requestedRole": { "type": "string", "enum": ["student", "professor", "admin"], "maxLength": 32 },
+        "requestedAt": { "type": "string", "maxLength": 64 },
+        "approvedAt": { "type": "string", "maxLength": 64 },
+        "approvedBy": { "type": "string", "maxLength": 128 },
         "matricule": { "type": "string", "maxLength": 64 },
         "university": { "type": "string", "maxLength": 128 },
         "academicYear": { "type": "string", "maxLength": 64 },
@@ -88,6 +93,46 @@
         "timestamp": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "userId", "title"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Push or in-app notification record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "targetUserId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 256 },
+        "body": { "type": "string", "maxLength": 1000 },
+        "category": { "type": "string", "enum": ["system", "exam", "reminder", "update"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "targetUserId", "title", "body"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles and RBAC state"
+    },
+    "/users/{userId}/fcm_tokens/{tokenId}": {
+      "schema": "FcmToken",
+      "description": "Multi-device FCM push tokens for a user"
+    },
+    "/exams/{examId}": {
+      "schema": "Exam",
+      "description": "Published or draft anatomy exams"
+    },
+    "/exam_results/{resultId}": {
+      "schema": "ExamResult",
+      "description": "Submitted student exam results"
+    },
+    "/history/{historyId}": {
+      "schema": "HistoryEntry",
+      "description": "User learning activity history"
+    },
+    "/notifications/{notifId}": {
+      "schema": "Notification",
+      "description": "User and system notifications"
     }
   }
 }
