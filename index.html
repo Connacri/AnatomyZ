@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AnatomyZ — Atlas Anatomique 3D</title>
+    <link rel="icon" type="image/png" href="/icon.png" />
+    <link rel="apple-touch-icon" href="/icon.png" />
+    <meta name="theme-color" content="#ECE3D9" />
     <meta
       name="description"
       content="Atlas anatomique humain 3D interactif basé sur un Knowledge Graph (FMA/UBERON), des modèles GLB/GLTF vérifiés et un espace pédagogique Professeur/Étudiant."
@@ -23,26 +26,26 @@
     <meta name="twitter:image" content="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSVCzO5QESs72fNzOTKX3qAHsBAYQoO1U0RfRb14QWYxw&s=10" />
     <style>
       :root { color-scheme: dark; }
-      body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, sans-serif; background: #08111f; color: #eef4ff; }
+      body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, sans-serif; background: #15191E; color: #FAF6F0; }
       .site-fallback-main { max-width: 1000px; margin: auto; padding: 64px 24px; }
-      .site-fallback-badge { display: inline-block; padding: 8px 14px; border: 1px solid #2c4a70; border-radius: 999px; color: #8fc5ff; font-size: 14px; }
-      .site-fallback-h1 { font-size: clamp(40px, 7vw, 72px); margin: 20px 0 12px; font-weight: 700; }
-      .site-fallback-p { font-size: 18px; line-height: 1.7; color: #b8c7da; }
+      .site-fallback-badge { display: inline-block; padding: 8px 14px; border: 1px solid #455160; border-radius: 999px; color: #ECE3D9; font-size: 14px; }
+      .site-fallback-h1 { font-size: clamp(40px, 7vw, 72px); margin: 20px 0 12px; font-weight: 700; color: #FAF6F0; }
+      .site-fallback-p { font-size: 18px; line-height: 1.7; color: #BAC3CE; }
       .site-fallback-roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 28px; }
-      .site-fallback-role-card { display: block; padding: 20px; border-radius: 18px; border: 1px solid #203651; background: #0d1a2b; color: #eef4ff; text-decoration: none; }
-      .site-fallback-role-card strong { display: block; font-size: 18px; margin-bottom: 4px; color: #8fc5ff; }
-      .site-fallback-role-card span { font-size: 14px; color: #b8c7da; }
-      .site-fallback-btn { display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; padding: 12px 20px; border-radius: 14px; font-weight: 600; font-size: 14px; text-decoration: none; border: 1px solid #2c4a70; background: #0d1a2b; color: #eef4ff; }
+      .site-fallback-role-card { display: block; padding: 20px; border-radius: 18px; border: 1px solid #323B46; background: #1E242C; color: #FAF6F0; text-decoration: none; }
+      .site-fallback-role-card strong { display: block; font-size: 18px; margin-bottom: 4px; color: #ECE3D9; }
+      .site-fallback-role-card span { font-size: 14px; color: #BAC3CE; }
+      .site-fallback-btn { display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; padding: 12px 20px; border-radius: 14px; font-weight: 600; font-size: 14px; text-decoration: none; border: 1px solid #455160; background: #1E242C; color: #FAF6F0; }
       .site-fallback-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 36px 0; }
-      .site-fallback-card { padding: 22px; border: 1px solid #203651; border-radius: 18px; background: #0d1a2b; }
-      .site-fallback-card h2 { margin-top: 0; margin-bottom: 8px; font-size: 18px; }
-      .site-fallback-card p { font-size: 15px; line-height: 1.6; color: #b8c7da; margin: 0; }
+      .site-fallback-card { padding: 22px; border: 1px solid #323B46; border-radius: 18px; background: #1E242C; }
+      .site-fallback-card h2 { margin-top: 0; margin-bottom: 8px; font-size: 18px; color: #ECE3D9; }
+      .site-fallback-card p { font-size: 15px; line-height: 1.6; color: #BAC3CE; margin: 0; }
       .site-fallback-links { display: flex; flex-wrap: wrap; gap: 24px; }
-      .site-fallback-link { color: #8fc5ff; text-decoration: none; font-size: 16px; }
-      .site-fallback-footer { margin-top: 48px; color: #71839b; font-size: 14px; }
+      .site-fallback-link { color: #ECE3D9; text-decoration: none; font-size: 16px; }
+      .site-fallback-footer { margin-top: 48px; color: #8C97A5; font-size: 14px; }
     </style>
   </head>
-  <body class="bg-[#08111f] text-[#eef4ff] antialiased selection:bg-indigo-500 selection:text-white">
+  <body class="bg-[#15191E] text-[#FAF6F0] antialiased selection:bg-[#646D79] selection:text-[#FAF6F0]">
     <div id="root">
       <main class="site-fallback-main">
         <span class="site-fallback-badge">AnatomyZ · Human 3D Anatomy</span>

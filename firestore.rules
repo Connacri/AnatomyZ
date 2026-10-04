@@ -1,0 +1,161 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Hardened Helper Primitives
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Verified super admin emails from runtime and error log
+    function isSuperAdminEmail() {
+      return isSignedIn()
+        && request.auth.token.email_verified == true
+        && (request.auth.token.email == 'ramzi.guedouar@gmail.com' || request.auth.token.email == 'samuel69tr00@gmail.com');
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        isSuperAdminEmail()
+        || exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // Entity Validators
+    function isValidUserShape(data) {
+      return data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'role', 'matricule', 'university', 'academicYear', 'specialty', 'bio', 'phone', 'fcmToken', 'fcmTokens', 'lastTokenUpdatedAt', 'notificationsEnabled', 'createdAt', 'updatedAt'])
+        && (!('uid' in data) || (data.uid is string && data.uid.size() <= 128))
+        && (!('email' in data) || (data.email is string && data.email.size() <= 256))
+        && (!('role' in data) || data.role in ['student', 'professor', 'admin', 'guest'])
+        && (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 128))
+        && (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 512))
+        && (!('matricule' in data) || (data.matricule is string && data.matricule.size() <= 64))
+        && (!('university' in data) || (data.university is string && data.university.size() <= 128))
+        && (!('academicYear' in data) || (data.academicYear is string && data.academicYear.size() <= 64))
+        && (!('specialty' in data) || (data.specialty is string && data.specialty.size() <= 128))
+        && (!('bio' in data) || (data.bio is string && data.bio.size() <= 500))
+        && (!('phone' in data) || (data.phone is string && data.phone.size() <= 32))
+        && (!('fcmToken' in data) || (data.fcmToken is string && data.fcmToken.size() <= 1024))
+        && (!('lastTokenUpdatedAt' in data) || (data.lastTokenUpdatedAt is string && data.lastTokenUpdatedAt.size() <= 128))
+        && (!('notificationsEnabled' in data) || data.notificationsEnabled is bool);
+    }
+
+    function isValidExam(data) {
+      return data.keys().hasAll(['id', 'authorId', 'title'])
+        && data.keys().hasOnly(['id', 'authorId', 'authorName', 'title', 'description', 'targetSystem', 'isPublished', 'questionsCount', 'questions', 'createdAt', 'updatedAt'])
+        && data.id is string && isValidId(data.id)
+        && data.authorId is string && (data.authorId == request.auth.uid || isAdmin())
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 256
+        && (!('description' in data) || (data.description is string && data.description.size() <= 1000))
+        && (!('targetSystem' in data) || (data.targetSystem is string && data.targetSystem.size() <= 64))
+        && (!('isPublished' in data) || data.isPublished is bool);
+    }
+
+    function isValidExamResult(data) {
+      return data.keys().hasAll(['id', 'studentId', 'examId', 'score'])
+        && data.keys().hasOnly(['id', 'studentId', 'studentName', 'studentEmail', 'examId', 'examTitle', 'score', 'totalPoints', 'percentage', 'submittedAt'])
+        && data.id is string && isValidId(data.id)
+        && data.studentId is string && data.studentId == request.auth.uid
+        && data.score is number;
+    }
+
+    function isValidHistory(data) {
+      return data.keys().hasAll(['id', 'userId', 'title'])
+        && data.keys().hasOnly(['id', 'userId', 'title', 'type', 'timestamp'])
+        && data.id is string && isValidId(data.id)
+        && data.userId is string && data.userId == request.auth.uid
+        && data.title is string && data.title.size() <= 256;
+    }
+
+    // Match Collections
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isSignedIn()
+        && isValidId(userId)
+        && (isOwner(userId) || isAdmin())
+        && incoming().keys().hasAll(['uid', 'email', 'role'])
+        && incoming().uid == userId
+        && incoming().email is string
+        && isValidUserShape(incoming());
+      
+      // USER CANNOT CHANGE ROLE! ONLY ADMIN CAN CHANGE ROLE!
+      allow update: if isSignedIn()
+        && isValidId(userId)
+        && isValidUserShape(incoming())
+        && (
+          (isOwner(userId) && incoming().diff(existing()).affectedKeys().hasOnly([
+            'displayName', 'photoURL', 'matricule', 'university', 'academicYear', 'specialty', 'bio', 'phone', 'fcmToken', 'fcmTokens', 'lastTokenUpdatedAt', 'notificationsEnabled', 'updatedAt'
+          ]))
+          || (isAdmin() && incoming().diff(existing()).affectedKeys().hasOnly([
+            'role', 'displayName', 'photoURL', 'matricule', 'university', 'academicYear', 'specialty', 'bio', 'phone', 'fcmToken', 'fcmTokens', 'lastTokenUpdatedAt', 'notificationsEnabled', 'updatedAt'
+          ]))
+        );
+      allow delete: if isOwner(userId) || isAdmin();
+
+      // FCM Tokens subcollection for multi-device support
+      match /fcm_tokens/{tokenId} {
+        allow read, write: if isSignedIn() && (isOwner(userId) || isAdmin());
+      }
+    }
+
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /exams/{examId} {
+      allow get: if isSignedIn() && (existing().isPublished == true || existing().authorId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(examId) && isValidExam(incoming());
+      allow update: if isSignedIn() && isValidId(examId) && (existing().authorId == request.auth.uid || isAdmin()) && isValidExam(incoming())
+        && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'description', 'targetSystem', 'isPublished', 'questionsCount', 'questions', 'updatedAt']);
+      allow delete: if isSignedIn() && isValidId(examId) && (existing().authorId == request.auth.uid || isAdmin());
+    }
+
+    match /exam_results/{resultId} {
+      allow get: if isSignedIn() && (existing().studentId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(resultId) && isValidExamResult(incoming());
+      allow update: if false; // Results are immutable after submission
+      allow delete: if isAdmin();
+    }
+
+    match /history/{historyId} {
+      allow get: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(historyId) && isValidHistory(incoming());
+      allow update: if isSignedIn() && isValidId(historyId) && existing().userId == request.auth.uid && isValidHistory(incoming());
+      allow delete: if isSignedIn() && isValidId(historyId) && (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    match /notifications/{notifId} {
+      allow read: if isSignedIn() && (resource.data.targetUserId == request.auth.uid || resource.data.targetUserId == 'all' || isAdmin());
+      allow create: if isSignedIn() && (incoming().targetUserId == request.auth.uid || isAdmin());
+      allow update, delete: if isAdmin();
+    }
+  }
+}

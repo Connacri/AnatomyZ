@@ -18,12 +18,15 @@ import {
   Plus,
   RotateCcw,
   Search,
+  Shield,
   Sparkles,
   User,
   Users,
   X,
   ZoomIn,
   ZoomOut,
+  Bell,
+  BellRing,
 } from 'lucide-react';
 import {
   Bar,
@@ -45,6 +48,31 @@ import {
   RemoteAnatomyRelationRepository,
   gradeForPercentage,
 } from './data/repositories';
+import {
+  auth,
+  loginWithGoogle,
+  logoutUser,
+  getUserProfile,
+  registerNewUser,
+  updateUserRole,
+  isSuperAdminEmail,
+  saveExamResult,
+  saveUserHistoryEntry,
+  requestWebPushPermissionAndToken,
+  saveFcmToken,
+  getStoredFcmTokens,
+  deleteStoredFcmToken,
+  subscribeToForegroundMessages,
+  createNotificationRecord,
+  FcmTokenRecord,
+  UserRecord,
+} from './firebase';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { AnatomyZLogo } from './components/AnatomyZLogo';
+import { SplashScreen } from './components/SplashScreen';
+import { AdminDashboard } from './components/AdminDashboard';
+import { FcmNotificationsModal } from './components/FcmNotificationsModal';
+import { UserProfileModal } from './components/UserProfileModal';
 import {
   Interactive3DControllerHandle,
   Interactive3DViewer,
@@ -68,9 +96,486 @@ type ScreenState =
   | { name: 'academic_dashboard'; role: AnatomyRole }
   | { name: 'professor_exam_editor'; role: AnatomyRole }
   | { name: 'anatomy_home'; role?: AnatomyRole }
-  | { name: 'student_exam'; role: AnatomyRole; exam: AnatomyExam };
+  | { name: 'student_exam'; role: AnatomyRole; exam: AnatomyExam }
+  | { name: 'admin_dashboard' };
+
+export function GoogleIcon({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24">
+      <path
+        fill="#4285F4"
+        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.03h3.88c2.27-2.09 3.665-5.17 3.665-9.12z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.03c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.27v3.13C3.26 21.36 7.33 24 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.28 14.29c-.25-.72-.38-1.49-.38-2.29s.13-1.57.38-2.29V6.57H1.27C.46 8.2 0 10.04 0 12s.46 3.8 1.27 5.43l4.01-3.14z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.27 6.57l4.01 3.14c.95-2.83 3.6-4.96 6.72-4.96z"
+      />
+    </svg>
+  );
+}
+
+interface NewUserRoleModalProps {
+  user: FirebaseUser;
+  onSelectRole: (role: 'student' | 'professor' | 'admin') => Promise<void>;
+  loading: boolean;
+}
+
+function NewUserRoleModal({
+  user,
+  onSelectRole,
+  loading,
+}: NewUserRoleModalProps) {
+  const [selectedRole, setSelectedRole] = useState<'student' | 'professor' | 'admin'>('student');
+  const isSuper = isSuperAdminEmail(user.email);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="w-full max-w-lg rounded-3xl bg-[#1E242C] border-2 border-[#D8CCBF] shadow-2xl p-6 sm:p-8 space-y-6 text-[#FAF6F0]">
+        <div className="text-center space-y-2">
+          <div className="w-16 h-16 rounded-2xl mx-auto bg-[#ECE3D9] flex items-center justify-center shadow-lg border border-[#D8CCBF]">
+            <AnatomyZLogo className="w-12 h-12" />
+          </div>
+          <h2 className="text-2xl font-bold text-[#FAF6F0]">
+            Bienvenue sur AnatomyZ
+          </h2>
+          <p className="text-sm text-[#BAC3CE]">
+            Bonjour <strong className="text-[#ECE3D9]">{user.displayName || user.email}</strong>. Pour configurer votre profil, veuillez sélectionner votre rôle universitaire :
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <button
+            type="button"
+            onClick={() => setSelectedRole('student')}
+            className={`p-4 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between ${
+              selectedRole === 'student'
+                ? 'border-[#ECE3D9] bg-[#646D79]/40 text-[#FAF6F0] shadow-lg'
+                : 'border-[#323B46] bg-[#15191E] text-[#BAC3CE] hover:border-[#455160]'
+            }`}
+          >
+            <div className="w-10 h-10 rounded-xl bg-sky-500/20 text-sky-300 flex items-center justify-center mb-3">
+              <User className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="font-bold text-base text-[#FAF6F0]">Étudiant</div>
+              <p className="text-xs text-[#BAC3CE] mt-1">
+                Explorer l&apos;atlas 3D, passer les examens et enregistrer mes notes sur Firestore.
+              </p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setSelectedRole('professor')}
+            className={`p-4 rounded-2xl border-2 text-left transition cursor-pointer flex flex-col justify-between ${
+              selectedRole === 'professor'
+                ? 'border-[#ECE3D9] bg-[#646D79]/40 text-[#FAF6F0] shadow-lg'
+                : 'border-[#323B46] bg-[#15191E] text-[#BAC3CE] hover:border-[#455160]'
+            }`}
+          >
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center mb-3">
+              <GraduationCap className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="font-bold text-base text-[#FAF6F0]">Professeur</div>
+              <p className="text-xs text-[#BAC3CE] mt-1">
+                Concevoir des quiz, créer des examens et gérer les promotions académiques.
+              </p>
+            </div>
+          </button>
+        </div>
+
+        {isSuper && (
+          <div className="p-3.5 rounded-2xl bg-amber-950/40 border border-amber-500/40 flex items-center justify-between text-xs text-amber-200">
+            <span>Privilège super-administrateur détecté ({user.email})</span>
+            <button
+              type="button"
+              onClick={() => setSelectedRole('admin')}
+              className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer ${
+                selectedRole === 'admin'
+                  ? 'bg-amber-500 text-black'
+                  : 'bg-amber-900/50 text-amber-300'
+              }`}
+            >
+              Mode Admin
+            </button>
+          </div>
+        )}
+
+        <button
+          type="button"
+          disabled={loading}
+          onClick={() => onSelectRole(selectedRole)}
+          className="w-full min-h-[48px] rounded-xl bg-[#ECE3D9] hover:bg-[#FAF6F0] text-[#1E242C] font-bold text-sm shadow-xl transition cursor-pointer flex items-center justify-center gap-2 active:scale-98"
+        >
+          {loading ? (
+            <div className="w-5 h-5 border-2 border-[#1E242C] border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <span>Confirmer et accéder à AnatomyZ</span>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function TopNavBar({
+  currentUser,
+  authLoading,
+  activeRole,
+  isAdmin,
+  onOpenAdmin,
+  onOpenFcm,
+  hasFcmToken,
+  onSignIn,
+  onOpenProfile,
+  onGoHome,
+  onOpenAtlas,
+  onOpenSplash,
+}: {
+  currentUser: FirebaseUser | null;
+  authLoading: boolean;
+  activeRole?: AnatomyRole;
+  isAdmin?: boolean;
+  onOpenAdmin?: () => void;
+  onOpenFcm: () => void;
+  hasFcmToken?: boolean;
+  onSignIn: () => void;
+  onOpenProfile: () => void;
+  onGoHome: () => void;
+  onOpenAtlas: () => void;
+  onOpenSplash: () => void;
+}) {
+  return (
+    <header className="sticky top-0 z-40 h-14 border-b border-[#323B46] bg-[#1E242C]/95 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between gap-3">
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={onGoHome}
+          className="flex items-center gap-2.5 text-left cursor-pointer group"
+        >
+          <AnatomyZLogo className="w-8 h-8 rounded-lg shadow-sm group-hover:scale-105 transition" />
+          <span className="font-bold text-sm sm:text-base tracking-tight text-[#FAF6F0] group-hover:text-[#ECE3D9] transition">
+            AnatomyZ
+          </span>
+        </button>
+
+        <span className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#15191E] border border-[#323B46] text-[#DACBA9]">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          Plateforme Académique
+        </span>
+      </div>
+
+      <div className="flex items-center gap-2">
+        {isAdmin && onOpenAdmin && (
+          <button
+            type="button"
+            onClick={onOpenAdmin}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-amber-500/50 bg-amber-950/40 hover:bg-amber-900/50 text-xs font-bold text-amber-300 transition cursor-pointer"
+            title="Panneau Administrateur"
+          >
+            <Shield className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Admin</span>
+          </button>
+        )}
+
+        {/* Notifications FCM button */}
+        <button
+          type="button"
+          onClick={onOpenFcm}
+          className="relative inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-[#455160] bg-[#15191E] hover:border-[#ECE3D9] text-xs font-semibold text-[#ECE3D9] transition cursor-pointer"
+          title="Gestion des Notifications Push (FCM)"
+        >
+          <Bell className="w-3.5 h-3.5 text-[#ECE3D9]" />
+          {hasFcmToken && (
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#1E242C] animate-pulse" />
+          )}
+          <span className="hidden sm:inline">FCM</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={onOpenSplash}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-[#455160] bg-[#15191E] hover:border-[#ECE3D9] text-xs font-medium text-[#FAF6F0] transition cursor-pointer"
+          title="Afficher l'écran splash de l'application"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-[#ECE3D9]" />
+          <span className="hidden sm:inline">Splash</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={onOpenAtlas}
+          className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#455160] bg-[#15191E] hover:border-[#ECE3D9] text-xs font-semibold text-[#FAF6F0] transition cursor-pointer"
+        >
+          <Box className="w-3.5 h-3.5 text-[#ECE3D9]" />
+          <span>Atlas 3D</span>
+        </button>
+
+        {authLoading ? (
+          <div className="w-7 h-7 rounded-full border-2 border-[#ECE3D9] border-t-transparent animate-spin" />
+        ) : currentUser ? (
+          <button
+            type="button"
+            onClick={onOpenProfile}
+            className="flex items-center gap-2 p-1 pl-2 pr-2.5 rounded-xl bg-[#15191E] border border-[#323B46] hover:border-[#ECE3D9] text-xs font-medium transition cursor-pointer"
+          >
+            {currentUser.photoURL ? (
+              <img
+                src={currentUser.photoURL}
+                alt={currentUser.displayName || 'Photo'}
+                className="w-6 h-6 rounded-full"
+              />
+            ) : (
+              <div className="w-6 h-6 rounded-full bg-[#2A323D] text-[#ECE3D9] flex items-center justify-center text-xs font-bold">
+                {(currentUser.displayName || currentUser.email || 'U')[0].toUpperCase()}
+              </div>
+            )}
+            <span className="max-w-[110px] truncate text-[#FAF6F0] hidden sm:inline">
+              {currentUser.displayName?.split(' ')[0] || 'Mon Compte'}
+            </span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#2A323D] text-[#ECE3D9] font-semibold border border-[#455160]">
+              {isAdmin ? 'Admin' : activeRole === AnatomyRole.Professor ? 'Professeur' : 'Étudiant'}
+            </span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onSignIn}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#FAF6F0] hover:bg-[#ECE3D9] text-[#1E242C] text-xs font-semibold shadow-sm transition cursor-pointer active:scale-95"
+          >
+            <GoogleIcon className="w-3.5 h-3.5" />
+            <span>Connexion Google</span>
+          </button>
+        )}
+      </div>
+    </header>
+  );
+}
 
 export function App() {
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [userProfile, setUserProfile] = useState<UserRecord | null>(null);
+  const [needsRoleSelection, setNeedsRoleSelection] = useState<boolean>(false);
+  const [roleSaving, setRoleSaving] = useState<boolean>(false);
+  const [showSplash, setShowSplash] = useState<boolean>(false);
+  const [authLoading, setAuthLoading] = useState<boolean>(true);
+  const [profileModalOpen, setProfileModalOpen] = useState<boolean>(false);
+  const [userRole, setUserRole] = useState<'student' | 'professor' | 'admin'>('student');
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  // FCM Cloud Messaging state
+  const [fcmModalOpen, setFcmModalOpen] = useState<boolean>(false);
+  const [fcmToken, setFcmToken] = useState<string | null>(null);
+  const [fcmTokensList, setFcmTokensList] = useState<FcmTokenRecord[]>([]);
+  const [fcmLoading, setFcmLoading] = useState<boolean>(false);
+  const [fcmError, setFcmError] = useState<string | null>(null);
+  const [activeNotificationToast, setActiveNotificationToast] = useState<{
+    title: string;
+    body: string;
+  } | null>(null);
+
+  const isAdmin =
+    userProfile?.role === 'admin' || isSuperAdminEmail(currentUser?.email);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      setCurrentUser(user);
+      setAuthLoading(false);
+      if (user) {
+        try {
+          const profile = await getUserProfile(user.uid);
+          if (!profile) {
+            // New user: must choose role
+            setNeedsRoleSelection(true);
+          } else {
+            setUserProfile(profile);
+            setUserRole(profile.role);
+            if (profile.fcmToken) {
+              setFcmToken(profile.fcmToken);
+            }
+          }
+        } catch (err: any) {
+          console.error('Erreur chargement profil utilisateur:', err);
+          // Fallback to new user role selection
+          setNeedsRoleSelection(true);
+        }
+
+        // Fetch stored FCM tokens for multi-device sync
+        try {
+          const tokens = await getStoredFcmTokens(user.uid);
+          if (tokens && tokens.length > 0) {
+            setFcmTokensList(tokens);
+            const webTok = tokens.find((t) => t.platform === 'web');
+            if (webTok) {
+              setFcmToken(webTok.token);
+            }
+          }
+        } catch (tokErr) {
+          console.warn('Erreur récupération tokens FCM:', tokErr);
+        }
+      } else {
+        setUserProfile(null);
+        setNeedsRoleSelection(false);
+        setFcmToken(null);
+        setFcmTokensList([]);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  // Foreground FCM message subscription
+  useEffect(() => {
+    let unsubMessaging: (() => void) | null = null;
+    subscribeToForegroundMessages((payload) => {
+      const title =
+        payload?.notification?.title ||
+        payload?.data?.title ||
+        '🔔 Notification AnatomyZ';
+      const body =
+        payload?.notification?.body ||
+        payload?.data?.body ||
+        'Nouveau message push synchronisé.';
+      setActiveNotificationToast({ title, body });
+      setTimeout(() => setActiveNotificationToast(null), 6000);
+    }).then((unsub) => {
+      if (unsub) unsubMessaging = unsub;
+    });
+
+    return () => {
+      if (unsubMessaging) unsubMessaging();
+    };
+  }, []);
+
+  const handleEnableFcm = async () => {
+    setFcmLoading(true);
+    setFcmError(null);
+    try {
+      const res = await requestWebPushPermissionAndToken(currentUser?.uid);
+      if (res.error) {
+        setFcmError(res.error);
+      } else if (res.token) {
+        setFcmToken(res.token);
+        if (currentUser) {
+          const updated = await getStoredFcmTokens(currentUser.uid);
+          setFcmTokensList(updated);
+        }
+      }
+    } catch (err: any) {
+      setFcmError(err?.message || 'Erreur lors de l’activation des notifications FCM.');
+    } finally {
+      setFcmLoading(false);
+    }
+  };
+
+  const handleRefreshFcmTokens = async () => {
+    if (!currentUser) return;
+    try {
+      const list = await getStoredFcmTokens(currentUser.uid);
+      setFcmTokensList(list);
+    } catch (err: any) {
+      console.warn(err);
+    }
+  };
+
+  const handleDeleteFcmToken = async (tokenId: string) => {
+    if (!currentUser) return;
+    try {
+      await deleteStoredFcmToken(currentUser.uid, tokenId);
+      setFcmTokensList((prev) => prev.filter((t) => t.id !== tokenId));
+      if (fcmTokensList.length <= 1) {
+        setFcmToken(null);
+      }
+    } catch (err: any) {
+      setFcmError(err?.message || 'Erreur suppression token');
+    }
+  };
+
+  const handleSendTestNotification = async () => {
+    const targetId = currentUser?.uid || 'guest_demo';
+    const notif = {
+      id: `test_${Date.now()}`,
+      targetUserId: targetId,
+      title: '🔔 AnatomyZ — Push FCM Persisté',
+      body: 'Votre token FCM fonctionne et est synchronisé dans Firestore !',
+      category: 'system' as const,
+      createdAt: new Date().toISOString(),
+    };
+
+    if (currentUser) {
+      try {
+        await createNotificationRecord(notif);
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
+    setActiveNotificationToast({
+      title: notif.title,
+      body: notif.body,
+    });
+    setTimeout(() => setActiveNotificationToast(null), 6000);
+
+    if (
+      typeof window !== 'undefined' &&
+      'Notification' in window &&
+      Notification.permission === 'granted'
+    ) {
+      try {
+        new Notification(notif.title, {
+          body: notif.body,
+          icon: '/icon.png',
+        });
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+  };
+
+  const handleNewUserRoleSelected = async (
+    chosenRole: 'student' | 'professor' | 'admin'
+  ) => {
+    if (!currentUser) return;
+    setRoleSaving(true);
+    try {
+      const record = await registerNewUser(currentUser, chosenRole);
+      setUserProfile(record);
+      setUserRole(record.role);
+      setNeedsRoleSelection(false);
+    } catch (err: any) {
+      setAuthError(err?.message || 'Erreur lors de la création du compte.');
+    } finally {
+      setRoleSaving(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setAuthError(null);
+      await loginWithGoogle();
+    } catch (err: any) {
+      setAuthError(err?.message || 'Erreur lors de la connexion Google');
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await logoutUser();
+      setUserProfile(null);
+      setProfileModalOpen(false);
+    } catch (err: any) {
+      console.error(err);
+    }
+  };
+
   const [historyStack, setHistoryStack] = useState<ScreenState[]>(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.toLowerCase();
@@ -97,11 +602,13 @@ export function App() {
     const onHashChange = () => {
       const hash = window.location.hash.toLowerCase();
       if (hash === '#professor') {
+        setUserRole('professor');
         setHistoryStack([
           { name: 'home' },
           { name: 'academic_dashboard', role: AnatomyRole.Professor },
         ]);
       } else if (hash === '#student') {
+        setUserRole('student');
         setHistoryStack([
           { name: 'home' },
           { name: 'academic_dashboard', role: AnatomyRole.Student },
@@ -119,10 +626,16 @@ export function App() {
   const currentScreen = historyStack[historyStack.length - 1];
 
   const pushScreen = (next: ScreenState) => {
+    if ('role' in next && next.role) {
+      setUserRole(next.role === AnatomyRole.Professor ? 'professor' : 'student');
+    }
     setHistoryStack((prev) => [...prev, next]);
   };
 
   const replaceTopScreen = (next: ScreenState) => {
+    if ('role' in next && next.role) {
+      setUserRole(next.role === AnatomyRole.Professor ? 'professor' : 'student');
+    }
     setHistoryStack((prev) => [...prev.slice(0, -1), next]);
   };
 
@@ -137,7 +650,111 @@ export function App() {
     activeRole !== undefined && currentScreen.name !== 'student_exam';
 
   return (
-    <div className="min-h-screen bg-[#08111f] text-[#eef4ff] flex flex-col">
+    <div className="min-h-screen bg-[#15191E] text-[#FAF6F0] flex flex-col">
+      {showSplash && (
+        <SplashScreen onDismiss={() => setShowSplash(false)} autoClose={false} />
+      )}
+
+      {needsRoleSelection && currentUser && (
+        <NewUserRoleModal
+          user={currentUser}
+          onSelectRole={handleNewUserRoleSelected}
+          loading={roleSaving}
+        />
+      )}
+
+      <TopNavBar
+        currentUser={currentUser}
+        authLoading={authLoading}
+        activeRole={activeRole}
+        isAdmin={isAdmin}
+        onOpenAdmin={() => pushScreen({ name: 'admin_dashboard' })}
+        onOpenFcm={() => setFcmModalOpen(true)}
+        hasFcmToken={!!fcmToken}
+        onSignIn={handleGoogleSignIn}
+        onOpenProfile={() => setProfileModalOpen(true)}
+        onGoHome={() => setHistoryStack([{ name: 'home' }])}
+        onOpenAtlas={() => pushScreen({ name: 'anatomy_home', role: activeRole })}
+        onOpenSplash={() => setShowSplash(true)}
+      />
+
+      {/* Push Notification In-App Toast */}
+      {activeNotificationToast && (
+        <div className="fixed top-16 right-4 z-50 max-w-sm w-full animate-in slide-in-from-top duration-300">
+          <div className="p-4 rounded-2xl bg-[#1E242C] border-2 border-emerald-500 shadow-2xl flex items-start gap-3 text-[#FAF6F0]">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+              <BellRing className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-bold text-xs text-emerald-300">
+                {activeNotificationToast.title}
+              </div>
+              <p className="text-xs text-[#BAC3CE] mt-0.5 leading-snug">
+                {activeNotificationToast.body}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActiveNotificationToast(null)}
+              className="text-[#8C97A5] hover:text-[#FAF6F0] p-1 cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* FCM Notifications Management Modal */}
+      <FcmNotificationsModal
+        isOpen={fcmModalOpen}
+        onClose={() => setFcmModalOpen(false)}
+        currentUser={currentUser}
+        userProfile={userProfile}
+        fcmToken={fcmToken}
+        tokensList={fcmTokensList}
+        onEnableNotifications={handleEnableFcm}
+        onRefreshTokens={handleRefreshFcmTokens}
+        onDeleteToken={handleDeleteFcmToken}
+        onSendTestNotification={handleSendTestNotification}
+        loading={fcmLoading}
+        error={fcmError}
+      />
+
+      {authError && (
+        <div className="bg-rose-950/80 border-b border-rose-500/50 px-4 py-2 text-xs text-rose-200 flex items-center justify-between">
+          <span>{authError}</span>
+          <button
+            type="button"
+            onClick={() => setAuthError(null)}
+            className="text-rose-300 hover:text-white"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {profileModalOpen && currentUser && (
+        <UserProfileModal
+          isOpen={profileModalOpen}
+          onClose={() => setProfileModalOpen(false)}
+          currentUser={currentUser}
+          userProfile={userProfile}
+          onProfileUpdated={(updated) => {
+            setUserProfile(updated);
+          }}
+          isAdmin={isAdmin}
+          onOpenAdmin={() => pushScreen({ name: 'admin_dashboard' })}
+          onOpenNotifications={() => setFcmModalOpen(true)}
+          onSignOut={handleSignOut}
+          onNavigateToExams={() =>
+            pushScreen({
+              name: 'academic_dashboard',
+              role: AnatomyRole.Student,
+            })
+          }
+        />
+      )}
+
       <div
         className={`flex-1 flex flex-col ${
           showMobileBottomNav ? 'pb-16 md:pb-0' : ''
@@ -145,10 +762,20 @@ export function App() {
       >
         {currentScreen.name === 'home' && (
           <HomeScreen
+            currentUser={currentUser}
+            onSignIn={handleGoogleSignIn}
+            onOpenProfile={() => setProfileModalOpen(true)}
             onSelectRole={(role) =>
               pushScreen({ name: 'academic_dashboard', role })
             }
             onOpenAtlas={() => pushScreen({ name: 'anatomy_home' })}
+          />
+        )}
+
+        {currentScreen.name === 'admin_dashboard' && (
+          <AdminDashboard
+            onBack={popScreen}
+            currentAdminEmail={currentUser?.email}
           />
         )}
 
@@ -184,7 +811,11 @@ export function App() {
         )}
 
         {currentScreen.name === 'student_exam' && (
-          <StudentExamScreen exam={currentScreen.exam} onFinish={popScreen} />
+          <StudentExamScreen
+            exam={currentScreen.exam}
+            currentUser={currentUser}
+            onFinish={popScreen}
+          />
         )}
       </div>
 
@@ -264,9 +895,15 @@ export function App() {
 /* -------------------------------------------------------------------------- */
 
 function HomeScreen({
+  currentUser,
+  onSignIn,
+  onOpenProfile,
   onSelectRole,
   onOpenAtlas,
 }: {
+  currentUser: FirebaseUser | null;
+  onSignIn: () => void;
+  onOpenProfile: () => void;
   onSelectRole: (role: AnatomyRole) => void;
   onOpenAtlas: () => void;
 }) {
@@ -286,6 +923,54 @@ function HomeScreen({
           d&apos;un Knowledge Graph anatomique, des ontologies FMA/UBERON et de
           modèles GLB/GLTF vérifiés progressivement.
         </p>
+
+        {/* Google Authentication & Firebase Cloud Sync Card */}
+        <div className="mt-7 p-4 sm:p-5 rounded-2xl border border-[#2c4a70] bg-[#0d1a2b] shadow-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0">
+                <GoogleIcon className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-sm sm:text-base text-white">
+                    {currentUser ? 'Compte Google Connecté' : 'Authentification Google & Cloud'}
+                  </h3>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30">
+                    Session Active
+                  </span>
+                </div>
+                <p className="text-xs text-[#b8c7da] mt-0.5 max-w-xl">
+                  {currentUser
+                    ? `Connecté en tant que ${currentUser.displayName || currentUser.email} · Vos notes, examens et progression sont enregistrés.`
+                    : 'Connectez-vous avec votre compte Google pour enregistrer vos résultats d’examens, compléter votre profil et suivre vos notes.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="shrink-0 flex items-center gap-2">
+              {currentUser ? (
+                <button
+                  type="button"
+                  onClick={onOpenProfile}
+                  className="w-full sm:w-auto min-h-[42px] px-4 py-2 rounded-xl bg-[#13253d] hover:bg-[#1a3252] border border-[#2c4a70] text-xs font-semibold text-[#8fc5ff] inline-flex items-center justify-center gap-2 transition cursor-pointer"
+                >
+                  <User className="w-4 h-4" />
+                  <span>Mon Compte Google</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onSignIn}
+                  className="w-full sm:w-auto min-h-[42px] px-4 py-2 rounded-xl bg-white hover:bg-gray-100 text-gray-900 text-xs font-bold shadow-md inline-flex items-center justify-center gap-2 transition cursor-pointer active:scale-95"
+                >
+                  <GoogleIcon className="w-4 h-4" />
+                  <span>Se connecter avec Google</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
 
         {/* Single Role Selection Section (No duplicate role buttons or pages) */}
         <section aria-labelledby="role-heading" className="mt-8 mb-10">
@@ -1824,9 +2509,11 @@ function ProfessorExamEditorScreen({ onBack }: { onBack: () => void }) {
 
 function StudentExamScreen({
   exam,
+  currentUser,
   onFinish,
 }: {
   exam: AnatomyExam;
+  currentUser?: FirebaseUser | null;
   onFinish: () => void;
 }) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -1871,7 +2558,7 @@ function StudentExamScreen({
       id: `res-${Date.now()}`,
       examId: exam.id,
       assignmentId: `assign-${exam.id}`,
-      studentId: 'student-demo',
+      studentId: currentUser?.uid || 'student-demo',
       submittedAt: new Date(),
       score: earned,
       maxScore: total,
@@ -1880,16 +2567,39 @@ function StudentExamScreen({
     });
     AcademicRepository.instance.markAssignmentSubmitted(
       exam.id,
-      'student-demo'
+      currentUser?.uid || 'student-demo'
     );
     AcademicRepository.instance.addHistory({
       id: `hist-${Date.now()}`,
-      studentId: 'student-demo',
+      studentId: currentUser?.uid || 'student-demo',
       type: AnatomyHistoryType.Exam,
       title: `Examen soumis : ${exam.title} (${earned}/${total} pts)`,
       occurredAt: new Date(),
       score: percentage,
     });
+
+    if (currentUser) {
+      saveExamResult({
+        id: `result_${exam.id}_${Date.now()}`,
+        studentId: currentUser.uid,
+        studentName: currentUser.displayName || 'Étudiant AnatomyZ',
+        studentEmail: currentUser.email || '',
+        examId: exam.id,
+        examTitle: exam.title,
+        score: earned,
+        totalPoints: total,
+        percentage: Math.round(percentage),
+        submittedAt: new Date().toISOString(),
+      }).catch((err) => console.error('Erreur sauvegarde Firestore:', err));
+
+      saveUserHistoryEntry({
+        id: `hist_${Date.now()}`,
+        userId: currentUser.uid,
+        title: `Examen soumis : ${exam.title} (${earned}/${total} pts)`,
+        type: 'exam_submission',
+        timestamp: new Date().toISOString(),
+      }).catch((err) => console.error('Erreur historique Firestore:', err));
+    }
 
     setSubmittedResult({ earned, total });
   };
@@ -2111,6 +2821,16 @@ function StudentExamScreen({
               Résultat : {submittedResult.earned} / {submittedResult.total}{' '}
               points
             </p>
+            {currentUser ? (
+              <div className="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-xs text-emerald-300 flex items-center justify-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Résultat enregistré et synchronisé avec Firestore ({currentUser.email})</span>
+              </div>
+            ) : (
+              <div className="p-2.5 rounded-xl bg-[#08111f] border border-[#203651] text-xs text-[#b8c7da]">
+                Résultat enregistré localement. Connectez-vous avec Google pour l’associer à votre profil universitaire.
+              </div>
+            )}
             <button
               type="button"
               onClick={onFinish}

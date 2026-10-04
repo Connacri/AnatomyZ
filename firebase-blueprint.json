@@ -1,0 +1,93 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile in AnatomyZ",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 256 },
+        "displayName": { "type": "string", "maxLength": 128 },
+        "photoURL": { "type": "string", "maxLength": 512 },
+        "role": { "type": "string", "enum": ["student", "professor", "admin", "guest"], "maxLength": 32 },
+        "matricule": { "type": "string", "maxLength": 64 },
+        "university": { "type": "string", "maxLength": 128 },
+        "academicYear": { "type": "string", "maxLength": 64 },
+        "specialty": { "type": "string", "maxLength": 128 },
+        "bio": { "type": "string", "maxLength": 500 },
+        "phone": { "type": "string", "maxLength": 32 },
+        "fcmToken": { "type": "string", "maxLength": 1024 },
+        "lastTokenUpdatedAt": { "type": "string", "format": "date-time" },
+        "notificationsEnabled": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "FcmToken": {
+      "title": "FcmToken",
+      "description": "Registered FCM token for user device or browser",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "token": { "type": "string", "maxLength": 1024 },
+        "platform": { "type": "string", "enum": ["web", "android", "ios"] },
+        "deviceInfo": { "type": "string", "maxLength": 256 },
+        "notificationsEnabled": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "token", "platform"]
+    },
+    "Exam": {
+      "title": "Exam",
+      "description": "Anatomy exam created by a professor",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "authorId": { "type": "string", "maxLength": 128 },
+        "authorName": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 256 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "targetSystem": { "type": "string", "maxLength": 64 },
+        "isPublished": { "type": "boolean" },
+        "questionsCount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "authorId", "title"]
+    },
+    "ExamResult": {
+      "title": "ExamResult",
+      "description": "Student score and evaluation result",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "studentId": { "type": "string", "maxLength": 128 },
+        "studentName": { "type": "string", "maxLength": 128 },
+        "studentEmail": { "type": "string", "maxLength": 256 },
+        "examId": { "type": "string", "maxLength": 128 },
+        "examTitle": { "type": "string", "maxLength": 256 },
+        "score": { "type": "number" },
+        "totalPoints": { "type": "number" },
+        "percentage": { "type": "number" },
+        "submittedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "studentId", "examId", "score"]
+    },
+    "HistoryEntry": {
+      "title": "HistoryEntry",
+      "description": "Student anatomy study record or quiz bookmark",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 256 },
+        "type": { "type": "string", "maxLength": 64 },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "title"]
+    }
+  }
+}

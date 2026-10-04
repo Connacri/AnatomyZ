@@ -70,6 +70,22 @@ jobs:
           distributionUrl=https\://services.gradle.org/distributions/gradle-8.14-all.zip
           EOF
 
+      - name: Configure Android signing from GitHub Secrets
+        run: |
+          mkdir -p android/app/keystores
+          if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystores/release.jks
+            cat > android/key.properties << EOF
+          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          storeFile=keystores/release.jks
+          EOF
+            echo "Signing keystore configured from GitHub Secrets."
+          else
+            echo "No ANDROID_KEYSTORE_BASE64 secret found; using repository keystore configuration."
+          fi
+
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 
 import 'screens/role_selection.dart';
+import 'services/fcm_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Initialize FCM service and persist device token
+  await FcmService.instance.initialize();
   runApp(const AnatomyZApp());
 }
 
@@ -11,10 +15,19 @@ class AnatomyZApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Theme palette extracted directly from the official AnatomyZ image:
+    // Primary: #DACBA9 / #ECE3D9 (Warm Limestone Ochre)
+    // Surface: #1E242C (Dark Slate Charcoal)
+    // Background: #15191E (Deep Obsidian)
+    // Secondary: #5C656B (Anatomical Slate Gray)
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF4F46E5),
+      seedColor: const Color(0xFFDACBA9),
       brightness: Brightness.dark,
-      surface: const Color(0xFF0D1A2B),
+      surface: const Color(0xFF1E242C),
+      primary: const Color(0xFFDACBA9),
+      onPrimary: const Color(0xFF15191E),
+      secondary: const Color(0xFF646D79),
+      onSecondary: const Color(0xFFFAF6F0),
     );
 
     return MaterialApp(
@@ -24,23 +37,25 @@ class AnatomyZApp extends StatelessWidget {
       darkTheme: ThemeData(
         useMaterial3: true,
         colorScheme: colorScheme,
-        scaffoldBackgroundColor: const Color(0xFF08111F),
+        scaffoldBackgroundColor: const Color(0xFF15191E),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF0D1A2B),
-          foregroundColor: Color(0xFFEEF4FF),
+          backgroundColor: Color(0xFF1E242C),
+          foregroundColor: Color(0xFFFAF6F0),
           elevation: 0,
           centerTitle: false,
         ),
         cardTheme: CardThemeData(
-          color: const Color(0xFF0D1A2B),
+          color: const Color(0xFF1E242C),
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
-            side: const BorderSide(color: Color(0xFF203651)),
+            side: const BorderSide(color: Color(0xFF323B46)),
           ),
         ),
         filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFFDACBA9),
+            foregroundColor: const Color(0xFF15191E),
             minimumSize: const Size(48, 48),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
@@ -49,8 +64,9 @@ class AnatomyZApp extends StatelessWidget {
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xFFFAF6F0),
             minimumSize: const Size(48, 48),
-            side: const BorderSide(color: Color(0xFF2C4A70)),
+            side: const BorderSide(color: Color(0xFF455160)),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
             ),
@@ -58,24 +74,24 @@ class AnatomyZApp extends StatelessWidget {
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: const Color(0xFF060D18),
+          fillColor: const Color(0xFF15191E),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 14,
           ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF203651)),
+            borderSide: const BorderSide(color: Color(0xFF323B46)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF203651)),
+            borderSide: const BorderSide(color: Color(0xFF323B46)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFFDACBA9), width: 1.5),
           ),
         ),
-      ),
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-        useMaterial3: true,
       ),
       home: const RoleSelectionPage(),
     );

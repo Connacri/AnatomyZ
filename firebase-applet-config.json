@@ -1,0 +1,23 @@
+{
+  "projectId": "mega-inscriber-xcbh2",
+  "appId": "1:254886564090:web:e4214f7d6ba7a1a0baf943",
+  "apiKey": "AIzaSyCNKtoSOjKzAf1hS72VLM_flLcPt8PNof8",
+  "authDomain": "mega-inscriber-xcbh2.firebaseapp.com",
+  "firestoreDatabaseId": "ai-studio-anatomyz-9293ceee-b20a-4a07-ad36-4cadd3fe02a5",
+  "storageBucket": "mega-inscriber-xcbh2.firebasestorage.app",
+  "messagingSenderId": "254886564090",
+  "measurementId": "",
+  "oAuthClientId": "254886564090-6lhmpnebecd7ubrudmdett4imakmuagi.apps.googleusercontent.com",
+  "recaptchaSiteKey": "",
+  "android": {
+    "packageName": "com.example.anatomyz",
+    "debug": {
+      "sha1": "E4:29:2E:FA:E0:39:7F:B4:11:EE:A4:B6:88:A2:8F:C7:7F:F8:B7:BE",
+      "sha256": "EB:63:4B:76:FE:B2:DC:33:5B:06:D6:75:EB:B5:B3:88:46:6D:5C:6B:1D:DD:9E:69:EF:21:53:E9:2E:94:CB:F4"
+    },
+    "release": {
+      "sha1": "93:D2:4D:EA:8C:62:C4:46:DE:40:17:7D:DE:EA:FB:0F:0C:F1:7A:38",
+      "sha256": "46:8E:6C:C7:14:94:00:55:BE:FD:DA:DF:DD:24:F0:B7:96:69:7E:24:57:E8:4E:81:E2:08:E2:49:2A:25:D3:9B"
+    }
+  }
+}
