@@ -41,7 +41,8 @@ export const TRANSLATIONS: Record<AppLanguage, Record<string, string>> = {
     adminWorkspaceTitle: 'Panneau d’Administration Institutionnelle',
     adminWorkspaceDesc:
       'Validation des professeurs avec détail profil, attribution des rôles et supervision Firestore.',
-    pendingProfBannerTitle: 'Compte Professeur en attente de validation par l’Administrateur',
+    pendingProfBannerTitle:
+      'Compte Professeur en attente de validation par l’Administrateur',
     pendingProfBannerDesc:
       'Votre compte Professeur doit être validé par l’administrateur. En attendant son acceptation, vous avez uniquement accès aux démonstrations 3D et ne pouvez ni interagir avec les étudiants ni accéder aux autres fonctionnalités.',
     checkRequestStatus: 'Vérifier l’état de la demande',
@@ -93,7 +94,8 @@ export const TRANSLATIONS: Record<AppLanguage, Record<string, string>> = {
     adminWorkspaceTitle: 'Institutional Administration Panel',
     adminWorkspaceDesc:
       'Validate professors with detailed profiles, assign roles, and supervise Firestore.',
-    pendingProfBannerTitle: 'Professor Account Pending Administrator Validation',
+    pendingProfBannerTitle:
+      'Professor Account Pending Administrator Validation',
     pendingProfBannerDesc:
       'Your Professor account must be validated by the administrator. Until accepted, you only have access to 3D demonstrations and cannot interact with students or access other app features.',
     checkRequestStatus: 'Check request status',
@@ -145,7 +147,8 @@ export const TRANSLATIONS: Record<AppLanguage, Record<string, string>> = {
     adminWorkspaceTitle: 'Institutionelles Administrationspanel',
     adminWorkspaceDesc:
       'Professoren mit Profil-Details bestätigen, Rollen zuweisen und Firestore überwachen.',
-    pendingProfBannerTitle: 'Professorenkonto wartet auf Administrator-Freigabe',
+    pendingProfBannerTitle:
+      'Professorenkonto wartet auf Administrator-Freigabe',
     pendingProfBannerDesc:
       'Ihr Professorenkonto muss vom Administrator freigegeben werden. Bis zur Bestätigung haben Sie nur Zugriff auf die 3D-Demos und können weder mit Studierenden interagieren noch andere Funktionen nutzen.',
     checkRequestStatus: 'Status überprüfen',
@@ -167,6 +170,448 @@ export const TRANSLATIONS: Record<AppLanguage, Record<string, string>> = {
     footerAcademic: 'Akademisches Projekt — Professor Zenasni Kamel',
   },
 };
+
+/**
+ * Full-coverage phrase & UI dictionary for automatic translation of all
+ * screens, top/bottom bars, tabs, buttons, modals, and dialogs in FR / EN / DE.
+ */
+const UI_PHRASE_MAP: Array<{ fr: string; en: string; de: string }> = [
+  // Modals & Auth
+  {
+    fr: 'Bienvenue sur AnatomyZ',
+    en: 'Welcome to AnatomyZ',
+    de: 'Willkommen bei AnatomyZ',
+  },
+  {
+    fr: 'Étudiant en médecine',
+    en: 'Medical Student',
+    de: 'Medizinstudent',
+  },
+  {
+    fr: 'Étudiant en Médecine',
+    en: 'Medical Student',
+    de: 'Medizinstudent',
+  },
+  {
+    fr: 'Immédiat',
+    en: 'Instant',
+    de: 'Sofort',
+  },
+  {
+    fr: 'Enseignant / Professeur',
+    en: 'Professor / Faculty',
+    de: 'Professor / Dozent',
+  },
+  {
+    fr: 'Sur validation',
+    en: 'Requires approval',
+    de: 'Mit Freigabe',
+  },
+  {
+    fr: 'Confirmer et accéder',
+    en: 'Confirm and continue',
+    de: 'Bestätigen und öffnen',
+  },
+  {
+    fr: 'Mode Admin',
+    en: 'Admin Mode',
+    de: 'Admin-Modus',
+  },
+  {
+    fr: 'Démos 3D uniquement (Attente Admin)',
+    en: '3D Demos Only (Pending Admin)',
+    de: 'Nur 3D-Demos (Wartet auf Admin)',
+  },
+  // Mobile & Navigation Bars
+  {
+    fr: 'Espace Professeur',
+    en: 'Professor Space',
+    de: 'Professorenbereich',
+  },
+  {
+    fr: 'Espace Étudiant',
+    en: 'Student Space',
+    de: 'Studierendenbereich',
+  },
+  {
+    fr: 'Créer un examen',
+    en: 'Create Exam',
+    de: 'Prüfung erstellen',
+  },
+  {
+    fr: 'Catalogue',
+    en: 'Catalog',
+    de: 'Katalog',
+  },
+  {
+    fr: 'Homme',
+    en: 'Male',
+    de: 'Männlich',
+  },
+  {
+    fr: 'Femme',
+    en: 'Female',
+    de: 'Weiblich',
+  },
+  {
+    fr: 'Réinitialiser',
+    en: 'Reset View',
+    de: 'Zurücksetzen',
+  },
+  {
+    fr: 'Afficher',
+    en: 'Show',
+    de: 'Anzeigen',
+  },
+  {
+    fr: 'Masquer',
+    en: 'Hide',
+    de: 'Ausblenden',
+  },
+  {
+    fr: 'Transparence',
+    en: 'Transparency',
+    de: 'Transparenz',
+  },
+  {
+    fr: 'Fermer',
+    en: 'Close',
+    de: 'Schließen',
+  },
+  {
+    fr: 'Annuler',
+    en: 'Cancel',
+    de: 'Abbrechen',
+  },
+  {
+    fr: 'Enregistrer',
+    en: 'Save',
+    de: 'Speichern',
+  },
+  // Professor Workspace & Student CRUD
+  {
+    fr: 'Compte Professeur en attente d’acceptation par l’Administrateur',
+    en: 'Professor Account Pending Administrator Acceptance',
+    de: 'Professorenkonto wartet auf Administrator-Freigabe',
+  },
+  {
+    fr: 'Entrer mon détail profil pour l’Admin',
+    en: 'Enter My Profile Details for Admin',
+    de: 'Profildetails für Admin eingeben',
+  },
+  {
+    fr: 'Compléter mon profil Professeur',
+    en: 'Complete Professor Profile',
+    de: 'Professorenprofil vervollständigen',
+  },
+  {
+    fr: 'Nouvel Étudiant',
+    en: 'New Student',
+    de: 'Neuer Student',
+  },
+  {
+    fr: 'Création Rapide',
+    en: 'Quick Create',
+    de: 'Schnellerstellung',
+  },
+  {
+    fr: 'Éditeur 3D Complet',
+    en: 'Full 3D Editor',
+    de: 'Vollständiger 3D-Editor',
+  },
+  {
+    fr: 'Étudiants Inscrit(s)',
+    en: 'Enrolled Students',
+    de: 'Eingeschriebene Studierende',
+  },
+  {
+    fr: 'Épreuves Publiées',
+    en: 'Published Exams',
+    de: 'Veröffentlichte Prüfungen',
+  },
+  {
+    fr: 'Copies Corrigées',
+    en: 'Graded Submissions',
+    de: 'Bewertete Prüfungen',
+  },
+  {
+    fr: 'Moyenne Promotion',
+    en: 'Cohort Average',
+    de: 'Jahrgangsdurchschnitt',
+  },
+  {
+    fr: 'Gestion des Étudiants (CRUD Complet)',
+    en: 'Student Management (Full CRUD)',
+    de: 'Studierendenverwaltung (Vollständiges CRUD)',
+  },
+  {
+    fr: '+ Ajouter un Étudiant',
+    en: '+ Add Student',
+    de: '+ Student hinzufügen',
+  },
+  {
+    fr: 'Détail',
+    en: 'Details',
+    de: 'Details',
+  },
+  {
+    fr: 'Modifier',
+    en: 'Edit',
+    de: 'Bearbeiten',
+  },
+  {
+    fr: 'Supprimer',
+    en: 'Delete',
+    de: 'Löschen',
+  },
+  {
+    fr: 'Ajouter un nouvel étudiant',
+    en: 'Add New Student',
+    de: 'Neuen Studierenden hinzufügen',
+  },
+  {
+    fr: 'Modifier le profil étudiant',
+    en: 'Edit Student Profile',
+    de: 'Studierendenprofil bearbeiten',
+  },
+  {
+    fr: 'Ajouter l’étudiant',
+    en: 'Add Student',
+    de: 'Student hinzufügen',
+  },
+  {
+    fr: 'Enregistrer les modifications',
+    en: 'Save Changes',
+    de: 'Änderungen speichern',
+  },
+  {
+    fr: 'Démonstrations 3D d’Amphithéâtre',
+    en: '3D Lecture Hall Demonstrations',
+    de: '3D-Hörsaal-Demonstrationen',
+  },
+  {
+    fr: 'Lancer la Démo 3D en Amphithéâtre',
+    en: 'Launch 3D Lecture Demo',
+    de: '3D-Hörsaal-Demo starten',
+  },
+  // Admin Dashboard
+  {
+    fr: 'Supervision Institutionnelle & Accréditations',
+    en: 'Institutional Supervision & Accreditations',
+    de: 'Institutionelle Aufsicht & Akkreditierungen',
+  },
+  {
+    fr: '+ Ajouter un Professeur',
+    en: '+ Add Professor',
+    de: '+ Professor hinzufügen',
+  },
+  {
+    fr: 'Actualiser',
+    en: 'Refresh',
+    de: 'Aktualisieren',
+  },
+  {
+    fr: 'Liste des Utilisateurs Professeurs à Accepter',
+    en: 'List of Professor Users to Accept',
+    de: 'Liste der freizugebenden Professoren',
+  },
+  {
+    fr: 'Entrer détail profil & Accepter',
+    en: 'Enter Profile Details & Accept',
+    de: 'Profildetails eingeben & Bestätigen',
+  },
+  {
+    fr: 'Accepter Professeur',
+    en: 'Accept Professor',
+    de: 'Professor bestätigen',
+  },
+  {
+    fr: 'Refuser',
+    en: 'Reject',
+    de: 'Ablehnen',
+  },
+  {
+    fr: 'Enregistrer détail & Accepter Professeur',
+    en: 'Save Details & Accept Professor',
+    de: 'Details speichern & Professor bestätigen',
+  },
+  // Student Workspace
+  {
+    fr: 'Mon Profil',
+    en: 'My Profile',
+    de: 'Mein Profil',
+  },
+  {
+    fr: 'Explorer l’Atlas 3D',
+    en: 'Explore 3D Atlas',
+    de: '3D-Atlas erkunden',
+  },
+  {
+    fr: 'Épreuves Disponibles',
+    en: 'Available Exams',
+    de: 'Verfügbare Prüfungen',
+  },
+  {
+    fr: 'Examens Complétés',
+    en: 'Completed Exams',
+    de: 'Abgeschlossene Prüfungen',
+  },
+  {
+    fr: 'Moyenne Générale',
+    en: 'Overall Average',
+    de: 'Gesamtdurchschnitt',
+  },
+  {
+    fr: 'Flashcards Maîtrisées',
+    en: 'Mastered Flashcards',
+    de: 'Gemeisterte Lernkarten',
+  },
+  {
+    fr: 'Examens & QCM',
+    en: 'Exams & Quizzes',
+    de: 'Prüfungen & Quiz',
+  },
+  {
+    fr: 'Systèmes 3D',
+    en: '3D Systems',
+    de: '3D-Systeme',
+  },
+  {
+    fr: 'Flashcards',
+    en: 'Flashcards',
+    de: 'Lernkarten',
+  },
+  {
+    fr: 'Relevé de Notes',
+    en: 'Grade Transcript',
+    de: 'Notenübersicht',
+  },
+  {
+    fr: 'Démarrer l’examen',
+    en: 'Start Exam',
+    de: 'Prüfung starten',
+  },
+  {
+    fr: 'Repasser',
+    en: 'Retake',
+    de: 'Wiederholen',
+  },
+  {
+    fr: 'Question suivante',
+    en: 'Next Question',
+    de: 'Nächste Frage',
+  },
+  {
+    fr: 'Terminer l’examen',
+    en: 'Submit Exam',
+    de: 'Prüfung abschließen',
+  },
+  {
+    fr: 'Examen terminé',
+    en: 'Exam Completed',
+    de: 'Prüfung abgeschlossen',
+  },
+  {
+    fr: 'Retour à mon espace',
+    en: 'Return to Workspace',
+    de: 'Zurück zum Arbeitsbereich',
+  },
+  // Profile & FCM Modals
+  {
+    fr: 'Notifications Firebase (FCM)',
+    en: 'Firebase Push Notifications (FCM)',
+    de: 'Firebase Push-Benachrichtigungen (FCM)',
+  },
+  {
+    fr: 'État des notifications Push',
+    en: 'Push Notification Status',
+    de: 'Status der Push-Benachrichtigungen',
+  },
+  {
+    fr: 'Activer les notifications push Web',
+    en: 'Enable Web Push Notifications',
+    de: 'Web-Push-Benachrichtigungen aktivieren',
+  },
+  {
+    fr: 'Actualiser la synchronisation FCM',
+    en: 'Refresh FCM Sync',
+    de: 'FCM-Synchronisierung aktualisieren',
+  },
+  {
+    fr: 'Tester un push',
+    en: 'Send Test Push',
+    de: 'Test-Push senden',
+  },
+  {
+    fr: 'Se déconnecter',
+    en: 'Sign Out',
+    de: 'Abmelden',
+  },
+  {
+    fr: 'Enregistrer mon profil académique',
+    en: 'Save Academic Profile',
+    de: 'Akademisches Profil speichern',
+  },
+];
+
+const originalTextByNode = new WeakMap<Text, string>();
+const originalAttrByElement = new WeakMap<Element, Record<string, string>>();
+
+function translateString(raw: string, targetLang: AppLanguage): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return raw;
+
+  for (const entry of UI_PHRASE_MAP) {
+    if (trimmed === entry.fr || trimmed === entry.en || trimmed === entry.de) {
+      const replacement = entry[targetLang];
+      return raw.replace(trimmed, replacement);
+    }
+  }
+  return raw;
+}
+
+function applyDomTranslations(targetLang: AppLanguage) {
+  if (typeof document === 'undefined') return;
+  const root = document.getElementById('root');
+  if (!root) return;
+
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let node = walker.nextNode() as Text | null;
+  while (node) {
+    if (!originalTextByNode.has(node)) {
+      originalTextByNode.set(node, node.nodeValue || '');
+    }
+    const base = originalTextByNode.get(node) || node.nodeValue || '';
+    const nextVal =
+      targetLang === 'fr' ? base : translateString(base, targetLang);
+    if (node.nodeValue !== nextVal) {
+      node.nodeValue = nextVal;
+    }
+    node = walker.nextNode() as Text | null;
+  }
+
+  const elements = root.querySelectorAll('[placeholder],[title],[aria-label]');
+  elements.forEach((el) => {
+    let saved = originalAttrByElement.get(el);
+    if (!saved) {
+      saved = {
+        placeholder: el.getAttribute('placeholder') || '',
+        title: el.getAttribute('title') || '',
+        'aria-label': el.getAttribute('aria-label') || '',
+      };
+      originalAttrByElement.set(el, saved);
+    }
+    (['placeholder', 'title', 'aria-label'] as const).forEach((attr) => {
+      const base = saved![attr];
+      if (!base) return;
+      const nextAttr =
+        targetLang === 'fr' ? base : translateString(base, targetLang);
+      if (el.getAttribute(attr) !== nextAttr) {
+        el.setAttribute(attr, nextAttr);
+      }
+    });
+  });
+}
 
 interface AppPreferencesContextValue {
   lang: AppLanguage;
@@ -223,6 +668,20 @@ export const AppPreferencesProvider: React.FC<{ children: React.ReactNode }> = (
     if (typeof document !== 'undefined') {
       document.documentElement.setAttribute('data-theme', resolvedTheme);
       document.documentElement.setAttribute('lang', lang);
+      applyDomTranslations(lang);
+
+      const root = document.getElementById('root');
+      if (!root) return;
+      let rafId = 0;
+      const observer = new MutationObserver(() => {
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(() => applyDomTranslations(lang));
+      });
+      observer.observe(root, { childList: true, subtree: true });
+      return () => {
+        if (rafId) cancelAnimationFrame(rafId);
+        observer.disconnect();
+      };
     }
   }, [resolvedTheme, lang]);
 

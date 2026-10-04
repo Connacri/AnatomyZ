@@ -89,14 +89,22 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
-      - run: flutter build apk --release
-      - run: flutter build appbundle --release
+      - name: Build versioned Android APK & AAB
+        run: |
+          BUILD_NUM="${GITHUB_RUN_NUMBER:-1}"
+          BUILD_NAME="1.0.${BUILD_NUM}"
+          flutter build apk --release --build-name="$BUILD_NAME" --build-number="$BUILD_NUM"
+          flutter build appbundle --release --build-name="$BUILD_NAME" --build-number="$BUILD_NUM"
 
       - name: Prepare Android release binaries (APK & AAB)
         working-directory: .
         run: |
+          BUILD_NUM="${GITHUB_RUN_NUMBER:-1}"
+          VERSION_TAG="v1.0.${BUILD_NUM}"
           cp flutter_app/build/app/outputs/flutter-apk/app-release.apk flutter_app/build/app/outputs/flutter-apk/AnatomyZ-release.apk
+          cp flutter_app/build/app/outputs/flutter-apk/app-release.apk "flutter_app/build/app/outputs/flutter-apk/AnatomyZ-${VERSION_TAG}.apk"
           cp flutter_app/build/app/outputs/bundle/release/app-release.aab flutter_app/build/app/outputs/bundle/release/AnatomyZ-release.aab
+          cp flutter_app/build/app/outputs/bundle/release/app-release.aab "flutter_app/build/app/outputs/bundle/release/AnatomyZ-${VERSION_TAG}.aab"
 
       - name: Build Web Application & bundle Android releases into site/
         working-directory: .
@@ -109,39 +117,53 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: AnatomyZ-android
+          name: AnatomyZ-android-v1.0.${{ github.run_number }}
           path: |
             flutter_app/build/app/outputs/flutter-apk/app-release.apk
             flutter_app/build/app/outputs/flutter-apk/AnatomyZ-release.apk
+            flutter_app/build/app/outputs/flutter-apk/AnatomyZ-v*.apk
             flutter_app/build/app/outputs/bundle/release/app-release.aab
             flutter_app/build/app/outputs/bundle/release/AnatomyZ-release.aab
+            flutter_app/build/app/outputs/bundle/release/AnatomyZ-v*.aab
 
-      - name: Publish APK and AAB to GitHub Releases
+      - name: Publish Versioned APK and AAB to GitHub Releases on every push
         if: github.event_name != 'pull_request'
         working-directory: .
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="${GITHUB_REF_NAME}"
-          if [[ "$TAG" != v* ]]; then
-            TAG="latest"
-          fi
-          TITLE="AnatomyZ Android & Web Release (${GITHUB_SHA::7})"
-          NOTES="Build automatique Android (APK & AAB) et Web généré depuis le commit ${GITHUB_SHA}."
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" \
-              flutter_app/build/app/outputs/flutter-apk/app-release.apk \
-              flutter_app/build/app/outputs/flutter-apk/AnatomyZ-release.apk \
-              flutter_app/build/app/outputs/bundle/release/app-release.aab \
-              flutter_app/build/app/outputs/bundle/release/AnatomyZ-release.aab \
-              --clobber
-            gh release edit "$TAG" --title "$TITLE" --notes "$NOTES" --latest
+          BUILD_NUM="${GITHUB_RUN_NUMBER:-1}"
+          if [[ "${GITHUB_REF_NAME}" == v* ]]; then
+            VERSION_TAG="${GITHUB_REF_NAME}"
           else
-            gh release create "$TAG" \
+            VERSION_TAG="v1.0.${BUILD_NUM}"
+          fi
+          SHORT_SHA="${GITHUB_SHA::7}"
+          COMMIT_MSG="$(git log -1 --pretty=%s)"
+          TITLE="AnatomyZ ${VERSION_TAG} (${SHORT_SHA})"
+          NOTES="### AnatomyZ Release ${VERSION_TAG}
+          - **Commit** : \`${GITHUB_SHA}\` (${COMMIT_MSG})
+          - **Version Android** : \`1.0.${BUILD_NUM}+${BUILD_NUM}\`
+          - **Binaires inclus** : APK Signé (\`AnatomyZ-release.apk\`, \`AnatomyZ-${VERSION_TAG}.apk\`) & Android App Bundle (\`AnatomyZ-release.aab\`, \`AnatomyZ-${VERSION_TAG}.aab\`)"
+
+          if gh release view "$VERSION_TAG" >/dev/null 2>&1; then
+            gh release upload "$VERSION_TAG" \
               flutter_app/build/app/outputs/flutter-apk/app-release.apk \
               flutter_app/build/app/outputs/flutter-apk/AnatomyZ-release.apk \
+              "flutter_app/build/app/outputs/flutter-apk/AnatomyZ-${VERSION_TAG}.apk" \
               flutter_app/build/app/outputs/bundle/release/app-release.aab \
               flutter_app/build/app/outputs/bundle/release/AnatomyZ-release.aab \
+              "flutter_app/build/app/outputs/bundle/release/AnatomyZ-${VERSION_TAG}.aab" \
+              --clobber
+            gh release edit "$VERSION_TAG" --title "$TITLE" --notes "$NOTES" --latest
+          else
+            gh release create "$VERSION_TAG" \
+              flutter_app/build/app/outputs/flutter-apk/app-release.apk \
+              flutter_app/build/app/outputs/flutter-apk/AnatomyZ-release.apk \
+              "flutter_app/build/app/outputs/flutter-apk/AnatomyZ-${VERSION_TAG}.apk" \
+              flutter_app/build/app/outputs/bundle/release/app-release.aab \
+              flutter_app/build/app/outputs/bundle/release/AnatomyZ-release.aab \
+              "flutter_app/build/app/outputs/bundle/release/AnatomyZ-${VERSION_TAG}.aab" \
               --target "${GITHUB_SHA}" \
               --title "$TITLE" \
               --notes "$NOTES" \

@@ -29,7 +29,12 @@ import {
   BellRing,
   AlertCircle,
   RefreshCw,
+  Sun,
+  Moon,
+  Clock3,
+  Globe,
 } from 'lucide-react';
+import { useAppPreferences, AppLanguage, ThemePreference } from './i18n';
 import {
   Bar,
   BarChart,
@@ -100,7 +105,7 @@ type ScreenState =
   | { name: 'home' }
   | { name: 'academic_dashboard'; role: AnatomyRole }
   | { name: 'professor_exam_editor'; role: AnatomyRole }
-  | { name: 'anatomy_home'; role?: AnatomyRole }
+  | { name: 'anatomy_home'; role?: AnatomyRole; initialSystem?: string }
   | { name: 'student_exam'; role: AnatomyRole; exam: AnatomyExam }
   | { name: 'admin_dashboard' };
 
@@ -272,8 +277,23 @@ function TopNavBar({
   onOpenAtlas: () => void;
   onOpenSplash: () => void;
 }) {
+  const {
+    lang,
+    setLang,
+    t,
+    themePreference,
+    setThemePreference,
+    resolvedTheme,
+  } = useAppPreferences();
+
+  const cycleTheme = () => {
+    const order: ThemePreference[] = ['auto', 'light', 'dark'];
+    const next = order[(order.indexOf(themePreference) + 1) % order.length];
+    setThemePreference(next);
+  };
+
   return (
-    <header className="sticky top-0 z-40 h-14 border-b border-[#323B46] bg-[#1E242C]/95 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between gap-3">
+    <header className="sticky top-0 z-40 h-14 border-b border-[#323B46] bg-[#1E242C]/95 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between gap-2">
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -286,22 +306,73 @@ function TopNavBar({
           </span>
         </button>
 
-        <span className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#15191E] border border-[#323B46] text-[#DACBA9]">
+        <span className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#15191E] border border-[#323B46] text-[#DACBA9]">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-          Plateforme Académique
+          {t('academicPlatform')}
         </span>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* Multilingual Selector FR / EN / DE */}
+        <div
+          className="inline-flex items-center rounded-xl border border-[#455160] bg-[#15191E] p-0.5"
+          title="Langue / Language / Sprache (FR · EN · DE)"
+        >
+          <Globe className="w-3.5 h-3.5 text-[#DACBA9] ml-1.5 mr-1 hidden sm:inline" />
+          {(['fr', 'en', 'de'] as AppLanguage[]).map((code) => (
+            <button
+              key={code}
+              type="button"
+              onClick={() => setLang(code)}
+              className={`px-2 py-1 rounded-lg text-[11px] font-bold uppercase transition cursor-pointer ${
+                lang === code
+                  ? 'bg-[#DACBA9] text-[#15191E] shadow-xs'
+                  : 'text-[#BAC3CE] hover:text-[#FAF6F0]'
+              }`}
+            >
+              {code}
+            </button>
+          ))}
+        </div>
+
+        {/* Time-based / Manual Theme Switcher (Original Icon Palette) */}
+        <button
+          type="button"
+          onClick={cycleTheme}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-[#455160] bg-[#15191E] hover:border-[#DACBA9] text-xs font-semibold text-[#DACBA9] transition cursor-pointer"
+          title={`Thème : ${
+            themePreference === 'auto'
+              ? `${t('themeAuto')} (${resolvedTheme === 'light' ? t('themeLight') : t('themeDark')})`
+              : themePreference === 'light'
+              ? t('themeLight')
+              : t('themeDark')
+          }`}
+        >
+          {themePreference === 'auto' ? (
+            <Clock3 className="w-3.5 h-3.5 text-[#DACBA9]" />
+          ) : resolvedTheme === 'light' ? (
+            <Sun className="w-3.5 h-3.5 text-amber-400" />
+          ) : (
+            <Moon className="w-3.5 h-3.5 text-[#DACBA9]" />
+          )}
+          <span className="hidden md:inline">
+            {themePreference === 'auto'
+              ? t('themeAuto')
+              : themePreference === 'light'
+              ? t('themeLight')
+              : t('themeDark')}
+          </span>
+        </button>
+
         {isAdmin && onOpenAdmin && (
           <button
             type="button"
             onClick={onOpenAdmin}
             className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-amber-500/50 bg-amber-950/40 hover:bg-amber-900/50 text-xs font-bold text-amber-300 transition cursor-pointer"
-            title="Panneau Administrateur"
+            title={t('adminWorkspaceTitle')}
           >
             <Shield className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">Admin</span>
+            <span className="hidden sm:inline">{t('admin')}</span>
           </button>
         )}
 
@@ -310,7 +381,7 @@ function TopNavBar({
           type="button"
           onClick={onOpenFcm}
           className="relative inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-[#455160] bg-[#15191E] hover:border-[#ECE3D9] text-xs font-semibold text-[#ECE3D9] transition cursor-pointer"
-          title="Gestion des Notifications Push (FCM)"
+          title="Notifications Push (FCM)"
         >
           <Bell className="w-3.5 h-3.5 text-[#ECE3D9]" />
           {hasFcmToken && (
@@ -322,11 +393,11 @@ function TopNavBar({
         <button
           type="button"
           onClick={onOpenSplash}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-[#455160] bg-[#15191E] hover:border-[#ECE3D9] text-xs font-medium text-[#FAF6F0] transition cursor-pointer"
-          title="Afficher l'écran splash de l'application"
+          className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-[#455160] bg-[#15191E] hover:border-[#ECE3D9] text-xs font-medium text-[#FAF6F0] transition cursor-pointer"
+          title="Splash"
         >
           <Sparkles className="w-3.5 h-3.5 text-[#ECE3D9]" />
-          <span className="hidden sm:inline">Splash</span>
+          <span className="hidden lg:inline">Splash</span>
         </button>
 
         <button
@@ -335,7 +406,7 @@ function TopNavBar({
           className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#455160] bg-[#15191E] hover:border-[#ECE3D9] text-xs font-semibold text-[#FAF6F0] transition cursor-pointer"
         >
           <Box className="w-3.5 h-3.5 text-[#ECE3D9]" />
-          <span>Atlas 3D</span>
+          <span>{t('atlas3d')}</span>
         </button>
 
         {authLoading ? (
@@ -358,25 +429,33 @@ function TopNavBar({
               </div>
             )}
             <span className="max-w-[110px] truncate text-[#FAF6F0] hidden sm:inline">
-              {currentUser.displayName?.split(' ')[0] || 'Mon Compte'}
+              {currentUser.displayName?.split(' ')[0] || t('myAccount')}
             </span>
             <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#2A323D] text-[#ECE3D9] font-semibold border border-[#455160]">
-              {isAdmin ? 'Admin' : activeRole === AnatomyRole.Professor ? 'Professeur' : 'Étudiant'}
+              {isAdmin
+                ? t('roleAdmin')
+                : activeRole === AnatomyRole.Professor || userRoleLabel(activeRole) === 'professor'
+                ? t('roleProfessor')
+                : t('roleStudent')}
             </span>
           </button>
         ) : (
           <button
             type="button"
             onClick={onSignIn}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#FAF6F0] hover:bg-[#ECE3D9] text-[#1E242C] text-xs font-semibold shadow-sm transition cursor-pointer active:scale-95"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#DACBA9] hover:bg-[#ECE3D9] text-[#15191E] text-xs font-bold shadow-sm transition cursor-pointer active:scale-95"
           >
             <GoogleIcon className="w-3.5 h-3.5" />
-            <span>Connexion Google</span>
+            <span>{t('signInGoogle')}</span>
           </button>
         )}
       </div>
     </header>
   );
+}
+
+function userRoleLabel(role?: AnatomyRole): string {
+  return role === AnatomyRole.Professor ? 'professor' : 'student';
 }
 
 export function App() {
@@ -817,12 +896,14 @@ export function App() {
           <AcademicDashboardScreen
             role={currentScreen.role}
             userProfile={userProfile}
+            onProfileUpdated={(updated) => setUserProfile(updated)}
             onBack={() => setHistoryStack([{ name: 'home' }])}
             onOpenProfile={() => setProfileModalOpen(true)}
             onOpenAtlas={(system?: string) =>
               pushScreen({
                 name: 'anatomy_home',
                 role: currentScreen.role,
+                initialSystem: system,
               })
             }
             onOpenExamEditor={() =>
@@ -846,7 +927,10 @@ export function App() {
         )}
 
         {currentScreen.name === 'anatomy_home' && (
-          <AnatomyHomeScreen onBack={popScreen} />
+          <AnatomyHomeScreen
+            onBack={popScreen}
+            initialSystem={currentScreen.initialSystem}
+          />
         )}
 
         {currentScreen.name === 'student_exam' && (
@@ -862,8 +946,11 @@ export function App() {
       {showMobileBottomNav && activeRole && (
         <nav
           aria-label="Navigation mobile"
-          className={`fixed bottom-0 left-0 right-0 z-30 md:hidden bg-[#0d1a2b]/95 backdrop-blur-md border-t border-[#203651] grid ${
-            activeRole === AnatomyRole.Professor ? 'grid-cols-3' : 'grid-cols-2'
+          className={`fixed bottom-0 left-0 right-0 z-30 md:hidden bg-[#1E242C]/95 backdrop-blur-md border-t border-[#323B46] grid ${
+            activeRole === AnatomyRole.Professor &&
+            (isAdmin || (userProfile?.role === 'professor' && userProfile?.status === 'approved'))
+              ? 'grid-cols-3'
+              : 'grid-cols-2'
           } items-center h-16 px-2`}
         >
           <button
@@ -873,8 +960,8 @@ export function App() {
             }
             className={`min-h-[48px] flex flex-col items-center justify-center rounded-xl transition cursor-pointer ${
               currentScreen.name === 'academic_dashboard'
-                ? 'text-[#8fc5ff]'
-                : 'text-[#71839b] hover:text-[#eef4ff]'
+                ? 'text-[#DACBA9]'
+                : 'text-[#BAC3CE] hover:text-[#FAF6F0]'
             }`}
           >
             <Layers className="w-5 h-5" />
@@ -885,27 +972,30 @@ export function App() {
             </span>
           </button>
 
-          {activeRole === AnatomyRole.Professor && (
-            <button
-              type="button"
-              onClick={() =>
-                replaceTopScreen({
-                  name: 'professor_exam_editor',
-                  role: activeRole,
-                })
-              }
-              className={`min-h-[48px] flex flex-col items-center justify-center rounded-xl transition cursor-pointer ${
-                currentScreen.name === 'professor_exam_editor'
-                  ? 'text-[#8fc5ff]'
-                  : 'text-[#71839b] hover:text-[#eef4ff]'
-              }`}
-            >
-              <FilePlus className="w-5 h-5" />
-              <span className="text-[11px] font-medium mt-1 whitespace-nowrap">
-                Créer un examen
-              </span>
-            </button>
-          )}
+          {activeRole === AnatomyRole.Professor &&
+            (isAdmin ||
+              (userProfile?.role === 'professor' &&
+                userProfile?.status === 'approved')) && (
+              <button
+                type="button"
+                onClick={() =>
+                  replaceTopScreen({
+                    name: 'professor_exam_editor',
+                    role: activeRole,
+                  })
+                }
+                className={`min-h-[48px] flex flex-col items-center justify-center rounded-xl transition cursor-pointer ${
+                  currentScreen.name === 'professor_exam_editor'
+                    ? 'text-[#DACBA9]'
+                    : 'text-[#BAC3CE] hover:text-[#FAF6F0]'
+                }`}
+              >
+                <FilePlus className="w-5 h-5" />
+                <span className="text-[11px] font-medium mt-1 whitespace-nowrap">
+                  Créer un examen
+                </span>
+              </button>
+            )}
 
           <button
             type="button"
@@ -914,8 +1004,8 @@ export function App() {
             }
             className={`min-h-[48px] flex flex-col items-center justify-center rounded-xl transition cursor-pointer ${
               currentScreen.name === 'anatomy_home'
-                ? 'text-[#8fc5ff]'
-                : 'text-[#71839b] hover:text-[#eef4ff]'
+                ? 'text-[#DACBA9]'
+                : 'text-[#BAC3CE] hover:text-[#FAF6F0]'
             }`}
           >
             <Box className="w-5 h-5" />
@@ -952,89 +1042,114 @@ function HomeScreen({
   onRefreshProfile?: () => void;
   onOpenAdmin?: () => void;
 }) {
+  const { t } = useAppPreferences();
   const isSuper = isSuperAdminEmail(currentUser?.email);
   const isAdmin = userProfile?.role === 'admin' || isSuper;
-  const isPendingProf = userProfile?.status === 'pending_approval';
+  const isPendingProf =
+    !isAdmin &&
+    (userProfile?.status === 'pending_approval' ||
+      (userProfile?.requestedRole === 'professor' &&
+        userProfile?.role !== 'professor'));
+  const isProfRole =
+    userProfile?.role === 'professor' ||
+    userProfile?.requestedRole === 'professor';
   const isApprovedProf =
-    (userProfile?.role === 'professor' || isSuper) &&
-    userProfile?.status !== 'pending_approval';
+    isAdmin ||
+    (userProfile?.role === 'professor' &&
+      userProfile?.status !== 'pending_approval');
+
+  // Strict Role-Based Workspace Card Visibility (Request #9):
+  // - Admin sees ALL cards (Student + Professor + Admin)
+  // - Professor (approved or pending) sees ONLY the Professor card
+  // - Student sees ONLY the Student card
+  const showStudentCard = isAdmin || (!isProfRole && !isAdmin);
+  const showProfessorCard = isAdmin || isProfRole;
+  const showAdminCard = isAdmin && Boolean(onOpenAdmin);
 
   return (
-    <div className="flex-1 bg-[#0F1318] text-[#F5F7FA]">
+    <div className="flex-1 bg-[#15191E] text-[#FAF6F0]">
       <main className="max-w-[1000px] mx-auto px-6 py-10 sm:py-16 space-y-8">
         <div>
-          <span className="inline-block px-3.5 py-1.5 border border-[#263140] bg-[#161C24] rounded-xl text-xs text-[#E5DCD0] font-medium">
-            AnatomyZ · Atlas Anatomique Humain 3D
+          <span className="inline-block px-3.5 py-1.5 border border-[#323B46] bg-[#1E242C] rounded-xl text-xs text-[#DACBA9] font-semibold">
+            {t('appBadge')}
           </span>
 
-          <h1 className="text-[clamp(40px,7vw,72px)] font-bold leading-tight mt-5 mb-3 text-[#F5F7FA]">
+          <h1 className="text-[clamp(40px,7vw,72px)] font-bold leading-tight mt-5 mb-3 text-[#FAF6F0]">
             AnatomyZ
           </h1>
 
-          <p className="text-base sm:text-[18px] leading-[1.7] text-[#8F9CAE] max-w-3xl">
-            Atlas anatomique 3D haute fidélité pour étudiants et professeurs de médecine,
-            articulé autour d’un Knowledge Graph certifié, des ontologies FMA/UBERON et d'évaluations cliniques.
+          <p className="text-base sm:text-[18px] leading-[1.7] text-[#BAC3CE] max-w-3xl">
+            {t('appSubtitle')}
           </p>
         </div>
 
         {/* 1. Unauthenticated Visitor Barrier */}
         {!currentUser ? (
-          <section className="p-6 sm:p-8 rounded-2xl border border-[#263140] bg-[#161C24] shadow-xl space-y-6">
+          <section className="p-6 sm:p-8 rounded-2xl border border-[#323B46] bg-[#1E242C] shadow-xl space-y-6">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-[#232C3A] text-[#E5DCD0] flex items-center justify-center shrink-0">
+              <div className="w-12 h-12 rounded-xl bg-[#15191E] border border-[#323B46] text-[#DACBA9] flex items-center justify-center shrink-0">
                 <Lock className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <h2 className="text-lg font-bold text-[#F5F7FA]">
-                  Authentification Universitaire Requise
+                <h2 className="text-lg font-bold text-[#FAF6F0]">
+                  {t('authRequiredTitle')}
                 </h2>
-                <p className="text-xs sm:text-sm text-[#8F9CAE] leading-relaxed">
-                  L'accès aux espaces de travail <strong>Étudiant</strong> et <strong>Professeur</strong>, la passation des examens et la consultation des relevés de notes nécessitent une connexion préalable.
+                <p className="text-xs sm:text-sm text-[#BAC3CE] leading-relaxed">
+                  {t('authRequiredDesc')}
                 </p>
-                <p className="text-xs text-[#8F9CAE] pt-1">
-                  Les profils Étudiants sont validés immédiatement. Les profils Enseignants sont soumis à l'approbation administrative de <span className="text-[#E5DCD0]">forslog@gmail.com</span>.
+                <p className="text-xs text-[#BAC3CE] pt-1">
+                  {t('authRequiredSub')}
                 </p>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-3 pt-2 border-t border-[#263140]">
+            <div className="flex flex-col sm:flex-row items-center gap-3 pt-2 border-t border-[#323B46]">
               <button
                 type="button"
                 onClick={onSignIn}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#E5DCD0] hover:bg-[#F5EFEB] text-[#0F1318] text-xs font-bold shadow-md inline-flex items-center justify-center gap-2 transition cursor-pointer active:scale-95"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#DACBA9] hover:bg-[#ECE3D9] text-[#15191E] text-xs font-bold shadow-md inline-flex items-center justify-center gap-2 transition cursor-pointer active:scale-95"
               >
                 <GoogleIcon className="w-4 h-4" />
-                <span>Se connecter avec Google pour accéder aux rôles</span>
+                <span>{t('signInToAccessRoles')}</span>
               </button>
               <button
                 type="button"
                 onClick={onOpenAtlas}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#1D2530] hover:bg-[#232C3A] border border-[#263140] text-xs font-semibold text-[#BCC7D5] hover:text-[#F5F7FA] inline-flex items-center justify-center gap-2 transition cursor-pointer"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#15191E] hover:bg-[#232C3A] border border-[#323B46] text-xs font-semibold text-[#ECE3D9] hover:text-[#FAF6F0] inline-flex items-center justify-center gap-2 transition cursor-pointer"
               >
-                <Box className="w-4 h-4 text-[#E5DCD0]" />
-                <span>Explorer l'Atlas 3D en mode démonstration</span>
+                <Box className="w-4 h-4 text-[#DACBA9]" />
+                <span>{t('exploreAtlasDemo')}</span>
               </button>
             </div>
           </section>
         ) : (
           /* 2. Authenticated Session Card */
-          <div className="p-5 rounded-2xl border border-[#263140] bg-[#161C24] shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="p-5 rounded-2xl border border-[#323B46] bg-[#1E242C] shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
-              <div className="w-11 h-11 rounded-xl bg-[#232C3A] text-[#E5DCD0] flex items-center justify-center font-bold text-lg shrink-0">
+              <div className="w-11 h-11 rounded-xl bg-[#15191E] border border-[#323B46] text-[#DACBA9] flex items-center justify-center font-bold text-lg shrink-0">
                 {(currentUser.displayName || currentUser.email || 'U')[0].toUpperCase()}
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-sm text-[#F5F7FA]">
+                  <h3 className="font-bold text-sm text-[#FAF6F0]">
                     {currentUser.displayName || currentUser.email}
                   </h3>
                   <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3" />
-                    <span>Session Active</span>
+                    <span>{t('activeSession')}</span>
                   </span>
                 </div>
-                <div className="text-xs text-[#8F9CAE] mt-0.5 flex items-center gap-2">
-                  <span>Rôle actuel : <strong className="text-[#E5DCD0] capitalize">{userProfile?.role || 'Étudiant'}</strong></span>
+                <div className="text-xs text-[#BAC3CE] mt-0.5 flex items-center gap-2 flex-wrap">
+                  <span>
+                    {t('currentRole')} :{' '}
+                    <strong className="text-[#DACBA9]">
+                      {isAdmin
+                        ? t('roleAdmin')
+                        : isProfRole
+                        ? `${t('roleProfessor')}${isPendingProf ? ' (En attente Admin)' : ''}`
+                        : t('roleStudent')}
+                    </strong>
+                  </span>
                   {userProfile?.matricule && (
                     <>
                       <span aria-hidden="true">·</span>
@@ -1049,142 +1164,140 @@ function HomeScreen({
               <button
                 type="button"
                 onClick={onOpenProfile}
-                className="px-3.5 py-2 rounded-xl bg-[#1D2530] hover:bg-[#232C3A] border border-[#263140] text-xs font-semibold text-[#BCC7D5] hover:text-[#F5F7FA] transition cursor-pointer"
+                className="px-3.5 py-2 rounded-xl bg-[#15191E] hover:bg-[#232C3A] border border-[#323B46] text-xs font-semibold text-[#ECE3D9] hover:text-[#FAF6F0] transition cursor-pointer"
               >
-                Gérer mon profil
+                {t('manageProfile')}
               </button>
             </div>
           </div>
         )}
 
-        {/* 3. Pending Professor Approval Notice */}
+        {/* 3. Pending Professor Approval Notice (Strict Demo-only until Admin accepts) */}
         {currentUser && isPendingProf && (
-          <div className="p-6 rounded-2xl bg-[#161C24] border border-amber-500/30 space-y-4">
+          <div className="p-6 rounded-2xl bg-[#1E242C] border-2 border-amber-500/50 space-y-4">
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
               <div className="space-y-1">
-                <h3 className="text-sm font-bold text-[#F5F7FA]">
-                  Demande d'accréditation Enseignant en attente
+                <h3 className="text-sm font-bold text-[#FAF6F0]">
+                  {t('pendingProfBannerTitle')}
                 </h3>
-                <p className="text-xs text-[#8F9CAE] leading-relaxed">
-                  Votre demande pour le rôle <strong>Professeur</strong> est en cours d'instruction par l'administrateur (<span className="text-[#E5DCD0]">forslog@gmail.com</span>).
-                  Dès que votre accès sera validé, l'espace enseignant sera automatiquement débloqué.
+                <p className="text-xs text-[#BAC3CE] leading-relaxed">
+                  {t('pendingProfBannerDesc')}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 pt-2 border-t border-[#263140] flex-wrap">
+            <div className="flex items-center gap-3 pt-2 border-t border-[#323B46] flex-wrap">
               {onRefreshProfile && (
                 <button
                   type="button"
                   onClick={onRefreshProfile}
-                  className="px-3.5 py-1.5 text-xs font-semibold text-[#0F1318] bg-[#E5DCD0] hover:bg-[#F5EFEB] rounded-xl transition cursor-pointer inline-flex items-center gap-1.5"
+                  className="px-3.5 py-2 text-xs font-bold text-[#15191E] bg-[#DACBA9] hover:bg-[#ECE3D9] rounded-xl transition cursor-pointer inline-flex items-center gap-1.5"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Vérifier l'état de la demande</span>
+                  <span>{t('checkRequestStatus')}</span>
                 </button>
               )}
               <button
                 type="button"
-                onClick={() => onSelectRole(AnatomyRole.Student)}
-                className="px-3.5 py-1.5 text-xs font-semibold text-[#BCC7D5] hover:text-[#F5F7FA] bg-[#1D2530] hover:bg-[#232C3A] border border-[#263140] rounded-xl transition cursor-pointer"
+                onClick={() => onSelectRole(AnatomyRole.Professor)}
+                className="px-3.5 py-2 text-xs font-semibold text-[#ECE3D9] hover:text-[#FAF6F0] bg-[#15191E] hover:bg-[#232C3A] border border-[#323B46] rounded-xl transition cursor-pointer"
               >
-                Utiliser le profil Étudiant en attendant
+                {t('openDemoSpace')}
               </button>
             </div>
           </div>
         )}
 
-        {/* 4. Authorized Workspaces Grid (Only visible when logged in) */}
+        {/* 4. Authorized Workspaces Grid (Strictly filtered by role: each role sees only its own card, except Admin who sees all) */}
         {currentUser && (
           <section aria-labelledby="role-heading" className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 id="role-heading" className="text-sm font-bold text-[#F5F7FA]">
-                Vos espaces autorisés
+              <h2 id="role-heading" className="text-sm font-bold text-[#FAF6F0]">
+                {isAdmin ? t('authorizedWorkspacesAdmin') : t('authorizedWorkspaces')}
               </h2>
-              <span className="text-xs text-[#8F9CAE]">Sélectionnez pour accéder</span>
+              <span className="text-xs text-[#BAC3CE]">{t('selectToAccess')}</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Student Workspace Card (Accessible to students, approved profs, and admins) */}
-              <button
-                type="button"
-                onClick={() => onSelectRole(AnatomyRole.Student)}
-                className="text-left p-5 rounded-2xl border border-[#263140] bg-[#161C24] hover:border-[#384659] hover:bg-[#1D2530] transition flex items-center justify-between gap-4 group cursor-pointer"
-              >
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-12 h-12 rounded-xl bg-sky-500/10 text-sky-300 flex items-center justify-center shrink-0">
-                    <User className="w-6 h-6" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-base font-bold text-[#F5F7FA] group-hover:text-[#E5DCD0] transition">
-                      Espace Étudiant en Médecine
+            <div
+              className={`grid grid-cols-1 ${
+                isAdmin ? 'sm:grid-cols-2' : 'sm:grid-cols-1'
+              } gap-4`}
+            >
+              {/* Student Workspace Card — Visible ONLY to Student or Admin */}
+              {showStudentCard && (
+                <button
+                  type="button"
+                  onClick={() => onSelectRole(AnatomyRole.Student)}
+                  className="text-left p-5 rounded-2xl border border-[#323B46] bg-[#1E242C] hover:border-[#DACBA9] hover:bg-[#232C3A] transition flex items-center justify-between gap-4 group cursor-pointer"
+                >
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="w-12 h-12 rounded-xl bg-[#DACBA9]/15 text-[#DACBA9] flex items-center justify-center shrink-0">
+                      <User className="w-6 h-6" />
                     </div>
-                    <p className="text-xs text-[#8F9CAE] mt-0.5 truncate">
-                      Évaluations cliniques, flashcards d'anatomie et carnet de notes.
-                    </p>
+                    <div className="min-w-0">
+                      <div className="text-base font-bold text-[#FAF6F0] group-hover:text-[#DACBA9] transition">
+                        {t('studentWorkspaceTitle')}
+                      </div>
+                      <p className="text-xs text-[#BAC3CE] mt-0.5 truncate">
+                        {t('studentWorkspaceDesc')}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-[#8F9CAE] group-hover:text-[#E5DCD0] shrink-0 transition" />
-              </button>
+                  <ChevronRight className="w-5 h-5 text-[#BAC3CE] group-hover:text-[#DACBA9] shrink-0 transition" />
+                </button>
+              )}
 
-              {/* Professor Workspace Card (Only clickable if approved or admin) */}
-              {isApprovedProf ? (
+              {/* Professor Workspace Card — Visible ONLY to Professor or Admin */}
+              {showProfessorCard && (
                 <button
                   type="button"
                   onClick={() => onSelectRole(AnatomyRole.Professor)}
-                  className="text-left p-5 rounded-2xl border border-[#263140] bg-[#161C24] hover:border-[#384659] hover:bg-[#1D2530] transition flex items-center justify-between gap-4 group cursor-pointer"
+                  className="text-left p-5 rounded-2xl border border-[#323B46] bg-[#1E242C] hover:border-[#DACBA9] hover:bg-[#232C3A] transition flex items-center justify-between gap-4 group cursor-pointer"
                 >
                   <div className="flex items-center gap-4 min-w-0">
-                    <div className="w-12 h-12 rounded-xl bg-[#E5DCD0]/10 text-[#E5DCD0] flex items-center justify-center shrink-0">
+                    <div className="w-12 h-12 rounded-xl bg-[#DACBA9]/15 text-[#DACBA9] flex items-center justify-center shrink-0">
                       <GraduationCap className="w-6 h-6" />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-base font-bold text-[#F5F7FA] group-hover:text-[#E5DCD0] transition">
-                        Espace Enseignant / Professeur
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-base font-bold text-[#FAF6F0] group-hover:text-[#DACBA9] transition">
+                          {t('professorWorkspaceTitle')}
+                        </span>
+                        {!isApprovedProf && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-md bg-amber-950/60 border border-amber-500/40 text-amber-300 font-bold">
+                            Démos 3D uniquement (Attente Admin)
+                          </span>
+                        )}
                       </div>
-                      <p className="text-xs text-[#8F9CAE] mt-0.5 truncate">
-                        Créer des examens, suivre les promotions et projeter l'Atlas 3D.
+                      <p className="text-xs text-[#BAC3CE] mt-0.5 truncate">
+                        {isApprovedProf
+                          ? t('professorWorkspaceDesc')
+                          : t('professorPendingDesc')}
                       </p>
                     </div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-[#8F9CAE] group-hover:text-[#E5DCD0] shrink-0 transition" />
+                  <ChevronRight className="w-5 h-5 text-[#BAC3CE] group-hover:text-[#DACBA9] shrink-0 transition" />
                 </button>
-              ) : (
-                <div className="text-left p-5 rounded-2xl border border-[#263140]/60 bg-[#161C24]/50 flex items-center justify-between gap-4 opacity-75">
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div className="w-12 h-12 rounded-xl bg-[#232C3A] text-[#8F9CAE] flex items-center justify-center shrink-0">
-                      <Lock className="w-5 h-5" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-base font-bold text-[#8F9CAE]">
-                        Espace Enseignant / Professeur
-                      </div>
-                      <p className="text-xs text-[#8F9CAE] mt-0.5 truncate">
-                        {isPendingProf ? 'En attente de validation par forslog@gmail.com' : 'Réservé aux enseignants accrédités'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
               )}
 
-              {/* Admin Panel Card (If super-admin or admin) */}
-              {isAdmin && onOpenAdmin && (
+              {/* Admin Panel Card — Visible ONLY to Admin */}
+              {showAdminCard && onOpenAdmin && (
                 <button
                   type="button"
                   onClick={onOpenAdmin}
-                  className="sm:col-span-2 text-left p-5 rounded-2xl border border-amber-500/30 bg-[#161C24] hover:border-amber-500/50 hover:bg-[#1D2530] transition flex items-center justify-between gap-4 group cursor-pointer"
+                  className="sm:col-span-2 text-left p-5 rounded-2xl border border-amber-500/40 bg-[#1E242C] hover:border-amber-500/70 hover:bg-[#232C3A] transition flex items-center justify-between gap-4 group cursor-pointer"
                 >
                   <div className="flex items-center gap-4 min-w-0">
-                    <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-300 flex items-center justify-center shrink-0">
+                    <div className="w-12 h-12 rounded-xl bg-amber-500/15 text-amber-300 flex items-center justify-center shrink-0">
                       <Shield className="w-6 h-6" />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-base font-bold text-[#F5F7FA] group-hover:text-amber-300 transition">
-                        Panneau d'Administration Institutionnelle
+                      <div className="text-base font-bold text-[#FAF6F0] group-hover:text-amber-300 transition">
+                        {t('adminWorkspaceTitle')}
                       </div>
-                      <p className="text-xs text-[#8F9CAE] mt-0.5 truncate">
-                        Validation des demandes d'accès Enseignants, attribution des rôles et supervision Firestore (forslog@gmail.com).
+                      <p className="text-xs text-[#BAC3CE] mt-0.5 truncate">
+                        {t('adminWorkspaceDesc')}
                       </p>
                     </div>
                   </div>
@@ -1200,79 +1313,79 @@ function HomeScreen({
           <button
             type="button"
             onClick={onOpenAtlas}
-            className="w-full sm:w-auto px-5 py-3 rounded-xl border border-[#263140] bg-[#161C24] hover:bg-[#1D2530] hover:border-[#384659] text-[#F5F7FA] font-semibold text-xs inline-flex items-center justify-center gap-2.5 transition cursor-pointer"
+            className="w-full sm:w-auto px-5 py-3 rounded-xl border border-[#323B46] bg-[#1E242C] hover:bg-[#232C3A] hover:border-[#DACBA9] text-[#FAF6F0] font-semibold text-xs inline-flex items-center justify-center gap-2.5 transition cursor-pointer"
           >
-            <Box className="w-4 h-4 text-[#E5DCD0]" />
-            <span>Explorer directement l’atlas anatomique 3D</span>
+            <Box className="w-4 h-4 text-[#DACBA9]" />
+            <span>{t('exploreAtlasDirect')}</span>
           </button>
         </div>
 
         {/* 6. Knowledge Architecture Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-[#263140]">
-          <section className="p-5 border border-[#263140] rounded-2xl bg-[#161C24] space-y-1.5">
-            <h3 className="text-sm font-bold text-[#F5F7FA]">🧠 Knowledge Graph</h3>
-            <p className="text-xs leading-relaxed text-[#8F9CAE]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-[#323B46]">
+          <section className="p-5 border border-[#323B46] rounded-2xl bg-[#1E242C] space-y-1.5">
+            <h3 className="text-sm font-bold text-[#FAF6F0]">🧠 Knowledge Graph</h3>
+            <p className="text-xs leading-relaxed text-[#BAC3CE]">
               Structures, synonymes et relations ontologiques FMA/UBERON.
             </p>
           </section>
 
-          <section className="p-5 border border-[#263140] rounded-2xl bg-[#161C24] space-y-1.5">
-            <h3 className="text-sm font-bold text-[#F5F7FA]">🦴 3D Anatomy</h3>
-            <p className="text-xs leading-relaxed text-[#8F9CAE]">
+          <section className="p-5 border border-[#323B46] rounded-2xl bg-[#1E242C] space-y-1.5">
+            <h3 className="text-sm font-bold text-[#FAF6F0]">🦴 3D Anatomy</h3>
+            <p className="text-xs leading-relaxed text-[#BAC3CE]">
               Modèles 3D interactifs, dissection par couches et repérage.
             </p>
           </section>
 
-          <section className="p-5 border border-[#263140] rounded-2xl bg-[#161C24] space-y-1.5">
-            <h3 className="text-sm font-bold text-[#F5F7FA]">🔗 Mapping Engine</h3>
-            <p className="text-xs leading-relaxed text-[#8F9CAE]">
+          <section className="p-5 border border-[#323B46] rounded-2xl bg-[#1E242C] space-y-1.5">
+            <h3 className="text-sm font-bold text-[#FAF6F0]">🔗 Mapping Engine</h3>
+            <p className="text-xs leading-relaxed text-[#BAC3CE]">
               Correspondances exactes, xrefs et mappings certifiés.
             </p>
           </section>
 
-          <section className="p-5 border border-[#263140] rounded-2xl bg-[#161C24] space-y-1.5">
-            <h3 className="text-sm font-bold text-[#F5F7FA]">🎓 Éducation Médicale</h3>
-            <p className="text-xs leading-relaxed text-[#8F9CAE]">
+          <section className="p-5 border border-[#323B46] rounded-2xl bg-[#1E242C] space-y-1.5">
+            <h3 className="text-sm font-bold text-[#FAF6F0]">🎓 Éducation Médicale</h3>
+            <p className="text-xs leading-relaxed text-[#BAC3CE]">
               Examens cliniques, QCM, repérage 3D et suivi des promotions.
             </p>
           </section>
         </div>
 
-        <div className="flex flex-wrap items-center gap-6 text-xs text-[#8F9CAE]">
+        <div className="flex flex-wrap items-center gap-6 text-xs text-[#BAC3CE]">
           <a
             href="https://github.com/Connacri/AnatomyZ/releases/latest/download/AnatomyZ-release.apk"
             target="_blank"
             rel="noreferrer"
-            className="text-[#E5DCD0] hover:underline font-semibold"
+            className="text-[#DACBA9] hover:underline font-semibold"
           >
-            → Télécharger APK (Release)
+            {t('downloadApk')}
           </a>
           <a
             href="https://github.com/Connacri/AnatomyZ/releases/latest/download/AnatomyZ-release.aab"
             target="_blank"
             rel="noreferrer"
-            className="text-[#E5DCD0] hover:underline font-semibold"
+            className="text-[#DACBA9] hover:underline font-semibold"
           >
-            → Télécharger AAB (Release)
+            {t('downloadAab')}
           </a>
           <a
             href="./catalog/index.json"
-            className="text-[#8F9CAE] hover:text-[#F5F7FA] hover:underline"
+            className="text-[#BAC3CE] hover:text-[#FAF6F0] hover:underline"
           >
-            → Catalogue anatomique
+            {t('anatomyCatalog')}
           </a>
           <a
             href="https://github.com/Connacri/AnatomyZ"
             target="_blank"
             rel="noreferrer"
-            className="text-[#8F9CAE] hover:text-[#F5F7FA] hover:underline"
+            className="text-[#BAC3CE] hover:text-[#FAF6F0] hover:underline"
           >
-            → Dépôt GitHub
+            {t('githubRepo')}
           </a>
         </div>
 
-        <footer className="mt-12 text-sm text-[#8F9CAE]">
-          Projet académique — Professeur Zenasni Kamel
+        <footer className="mt-12 text-sm text-[#BAC3CE]">
+          {t('footerAcademic')}
         </footer>
       </main>
     </div>
@@ -1288,12 +1401,22 @@ const localCatalog = new AnatomyCatalogRepository();
 const remoteCatalog = new RemoteAnatomyCatalogRepository();
 const relationRepo = new RemoteAnatomyRelationRepository();
 
-function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
+function AnatomyHomeScreen({
+  onBack,
+  initialSystem,
+}: {
+  onBack: () => void;
+  initialSystem?: string;
+}) {
   const viewerControllerRef = useRef<Interactive3DControllerHandle | null>(null);
 
   const [sex, setSex] = useState<AnatomySex>(AnatomySex.Male);
   const [selectedSystem, setSelectedSystem] = useState<AnatomySystemInfo | null>(
-    modelRepo.systems.find((s) => s.id === 'cardiovascular') || null
+    () =>
+      (initialSystem &&
+        modelRepo.systems.find((s) => s.id === initialSystem)) ||
+      modelRepo.systems.find((s) => s.id === 'cardiovascular') ||
+      null
   );
   const [selectedEntity, setSelectedEntity] = useState<EntityData | null>(null);
   const [partHidden, setPartHidden] = useState<boolean>(false);
@@ -1880,6 +2003,7 @@ function AnatomyHomeScreen({ onBack }: { onBack: () => void }) {
 function AcademicDashboardScreen({
   role,
   userProfile,
+  onProfileUpdated,
   onBack,
   onOpenProfile,
   onOpenAtlas,
@@ -1888,12 +2012,14 @@ function AcademicDashboardScreen({
 }: {
   role: AnatomyRole;
   userProfile: UserRecord | null;
+  onProfileUpdated?: (updated: UserRecord) => void;
   onBack: () => void;
   onOpenProfile: () => void;
   onOpenAtlas: (system?: string) => void;
   onOpenExamEditor: () => void;
   onStartExam: (exam: AnatomyExam) => void;
 }) {
+  const { t } = useAppPreferences();
   const isProf = role === AnatomyRole.Professor;
   const exams = AnatomyExamRepository.instance.exams;
   const academicRepo = AcademicRepository.instance;
@@ -1903,26 +2029,26 @@ function AcademicDashboardScreen({
   const results = academicRepo.resultsForStudent(studentUid);
 
   return (
-    <div className="flex-1 flex flex-col bg-[#0F1318]">
-      <header className="sticky top-0 z-30 h-14 border-b border-[#232B35] bg-[#161C24]/95 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between gap-3">
+    <div className="flex-1 flex flex-col bg-[#15191E]">
+      <header className="sticky top-0 z-30 h-14 border-b border-[#323B46] bg-[#1E242C]/95 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <button
             type="button"
             onClick={onBack}
-            className="min-h-[40px] px-3 py-1.5 rounded-xl bg-[#1D2530] hover:bg-[#232C3A] text-[#BCC7D5] hover:text-[#F5F7FA] border border-[#263140] flex items-center gap-1.5 transition text-xs font-semibold cursor-pointer"
+            className="min-h-[40px] px-3 py-1.5 rounded-xl bg-[#15191E] hover:bg-[#232C3A] text-[#ECE3D9] hover:text-[#FAF6F0] border border-[#323B46] flex items-center gap-1.5 transition text-xs font-semibold cursor-pointer"
             title="Revenir au choix de rôle / accueil"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">Accueil</span>
+            <span className="hidden sm:inline">{t('home')}</span>
           </button>
           <div className="flex items-center gap-2">
             <span
               className={`w-2 h-2 rounded-full ${
-                isProf ? 'bg-sky-400' : 'bg-amber-400'
+                isProf ? 'bg-[#DACBA9]' : 'bg-emerald-400'
               }`}
             />
-            <h1 className="font-bold text-sm sm:text-base text-[#F5F7FA] truncate">
-              {isProf ? 'Espace Enseignant & Pédagogie' : 'Espace Étudiant Médical'}
+            <h1 className="font-bold text-sm sm:text-base text-[#FAF6F0] truncate">
+              {isProf ? t('professorWorkspaceTitle') : t('studentWorkspaceTitle')}
             </h1>
           </div>
         </div>
@@ -1932,7 +2058,7 @@ function AcademicDashboardScreen({
             <button
               type="button"
               onClick={onOpenProfile}
-              className="text-xs text-[#8F9CAE] hover:text-[#F5F7FA] flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1D2530] border border-[#263140] transition cursor-pointer"
+              className="text-xs text-[#BAC3CE] hover:text-[#FAF6F0] flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#15191E] border border-[#323B46] transition cursor-pointer"
             >
               <User className="w-3.5 h-3.5" />
               <span className="hidden md:inline font-mono">
@@ -1943,10 +2069,10 @@ function AcademicDashboardScreen({
           <button
             type="button"
             onClick={() => onOpenAtlas()}
-            className="px-3 py-1.5 rounded-xl border border-[#263140] bg-[#161C24] hover:border-sky-400/50 text-xs font-semibold text-sky-400 inline-flex items-center gap-1.5 transition cursor-pointer"
+            className="px-3 py-1.5 rounded-xl border border-[#323B46] bg-[#DACBA9] hover:bg-[#ECE3D9] text-xs font-bold text-[#15191E] inline-flex items-center gap-1.5 transition cursor-pointer"
           >
             <Box className="w-3.5 h-3.5" />
-            <span>Atlas 3D</span>
+            <span>{t('atlas3d')}</span>
           </button>
         </div>
       </header>
@@ -1962,6 +2088,7 @@ function AcademicDashboardScreen({
             onOpenExamEditor={onOpenExamEditor}
             onOpenProfile={onOpenProfile}
             onPreviewExam={onStartExam}
+            onProfileUpdated={onProfileUpdated}
           />
         ) : (
           <StudentWorkspace
