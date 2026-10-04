@@ -52,7 +52,7 @@ class FirebaseAuthService {
   static final FirebaseAuthService instance = FirebaseAuthService._();
 
   static const String _webClientId =
-      '254886564090-6lhmpnebecd7ubrudmdett4imakmuagi.apps.googleusercontent.com';
+      '986358610101-fhkt7d0qgthjf39munv6hvrqui962pk0.apps.googleusercontent.com';
 
   final ValueNotifier<AnatomyUser?> currentUserNotifier =
       ValueNotifier<AnatomyUser?>(null);

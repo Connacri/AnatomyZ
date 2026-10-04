@@ -33,7 +33,12 @@ service cloud.firestore {
     function isSuperAdminEmail() {
       return isSignedIn()
         && request.auth.token.email_verified == true
-        && (request.auth.token.email == 'ramzi.guedouar@gmail.com' || request.auth.token.email == 'samuel69tr00@gmail.com');
+        && (
+          request.auth.token.email == 'oran.inturk@gmail.com'
+          || request.auth.token.email == 'forslog@gmail.com'
+          || request.auth.token.email == 'ramzi.guedouar@gmail.com'
+          || request.auth.token.email == 'samuel69tr00@gmail.com'
+        );
     }
 
     function isAdmin() {
@@ -45,10 +50,21 @@ service cloud.firestore {
 
     // Entity Validators
     function isValidUserShape(data) {
-      return data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'role', 'matricule', 'university', 'academicYear', 'specialty', 'bio', 'phone', 'fcmToken', 'fcmTokens', 'lastTokenUpdatedAt', 'notificationsEnabled', 'createdAt', 'updatedAt'])
+      return data.keys().hasOnly([
+          'uid', 'email', 'displayName', 'photoURL', 'role', 'status',
+          'requestedRole', 'requestedAt', 'approvedAt', 'approvedBy',
+          'matricule', 'university', 'academicYear', 'specialty', 'bio', 'phone',
+          'fcmToken', 'fcmTokens', 'lastTokenUpdatedAt', 'notificationsEnabled',
+          'createdAt', 'updatedAt'
+        ])
         && (!('uid' in data) || (data.uid is string && data.uid.size() <= 128))
         && (!('email' in data) || (data.email is string && data.email.size() <= 256))
         && (!('role' in data) || data.role in ['student', 'professor', 'admin', 'guest'])
+        && (!('status' in data) || data.status in ['approved', 'pending_approval', 'rejected'])
+        && (!('requestedRole' in data) || data.requestedRole in ['student', 'professor', 'admin'])
+        && (!('requestedAt' in data) || (data.requestedAt is string && data.requestedAt.size() <= 64))
+        && (!('approvedAt' in data) || (data.approvedAt is string && data.approvedAt.size() <= 64))
+        && (!('approvedBy' in data) || (data.approvedBy is string && data.approvedBy.size() <= 128))
         && (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 128))
         && (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 512))
         && (!('matricule' in data) || (data.matricule is string && data.matricule.size() <= 64))
@@ -111,7 +127,8 @@ service cloud.firestore {
             'displayName', 'photoURL', 'matricule', 'university', 'academicYear', 'specialty', 'bio', 'phone', 'fcmToken', 'fcmTokens', 'lastTokenUpdatedAt', 'notificationsEnabled', 'updatedAt'
           ]))
           || (isAdmin() && incoming().diff(existing()).affectedKeys().hasOnly([
-            'role', 'displayName', 'photoURL', 'matricule', 'university', 'academicYear', 'specialty', 'bio', 'phone', 'fcmToken', 'fcmTokens', 'lastTokenUpdatedAt', 'notificationsEnabled', 'updatedAt'
+            'role', 'status', 'requestedRole', 'requestedAt', 'approvedAt', 'approvedBy',
+            'displayName', 'photoURL', 'matricule', 'university', 'academicYear', 'specialty', 'bio', 'phone', 'fcmToken', 'fcmTokens', 'lastTokenUpdatedAt', 'notificationsEnabled', 'updatedAt'
           ]))
         );
       allow delete: if isOwner(userId) || isAdmin();

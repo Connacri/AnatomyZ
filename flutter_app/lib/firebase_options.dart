@@ -36,19 +36,19 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCNKtoSOjKzAf1hS72VLM_flLcPt8PNof8',
-    appId: '1:254886564090:web:e4214f7d6ba7a1a0baf943',
-    messagingSenderId: '254886564090',
-    projectId: 'mega-inscriber-xcbh2',
-    authDomain: 'mega-inscriber-xcbh2.firebaseapp.com',
-    storageBucket: 'mega-inscriber-xcbh2.firebasestorage.app',
+    apiKey: 'AIzaSyAhQIRfoN39v_5xuESaacbsZmgMlmdqz5U',
+    appId: '1:986358610101:web:c5207407fb1477d666a6fc',
+    messagingSenderId: '986358610101',
+    projectId: 'gen-lang-client-0479958060',
+    authDomain: 'gen-lang-client-0479958060.firebaseapp.com',
+    storageBucket: 'gen-lang-client-0479958060.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCNKtoSOjKzAf1hS72VLM_flLcPt8PNof8',
-    appId: '1:254886564090:android:3b29c9fe8713aa67',
-    messagingSenderId: '254886564090',
-    projectId: 'mega-inscriber-xcbh2',
-    storageBucket: 'mega-inscriber-xcbh2.firebasestorage.app',
+    apiKey: 'AIzaSyAhQIRfoN39v_5xuESaacbsZmgMlmdqz5U',
+    appId: '1:986358610101:web:c5207407fb1477d666a6fc',
+    messagingSenderId: '986358610101',
+    projectId: 'gen-lang-client-0479958060',
+    storageBucket: 'gen-lang-client-0479958060.firebasestorage.app',
   );
 }

@@ -53,7 +53,7 @@ class FcmService {
 
   static const String _firestoreDatabaseId =
       'ai-studio-anatomyz-9293ceee-b20a-4a07-ad36-4cadd3fe02a5';
-  static const String _projectId = 'mega-inscriber-xcbh2';
+  static const String _projectId = 'gen-lang-client-0479958060';
 
   /// Initialize FCM on device and synchronize token with Firestore
   Future<void> initialize({AnatomyUser? user}) async {

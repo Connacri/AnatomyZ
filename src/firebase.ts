@@ -68,6 +68,7 @@ export async function getFirebaseMessaging(): Promise<Messaging | null> {
 }
 
 export const SUPER_ADMIN_EMAILS = [
+  'oran.inturk@gmail.com',
   'forslog@gmail.com',
   'samuel69tr00@gmail.com',
   'ramzi.guedouar@gmail.com',
@@ -214,6 +215,15 @@ export async function loginWithGoogle(): Promise<FirebaseUser | null> {
       await signInWithRedirect(auth, googleProvider);
       return null;
     }
+    if (err?.code === 'auth/unauthorized-domain') {
+      const host =
+        typeof window !== 'undefined' ? window.location.hostname : 'ce domaine';
+      const customErr: any = new Error(
+        `Domaine "${host}" non autorisé dans Firebase Auth (${firebaseConfig.projectId}). Ajoutez "${host}" dans Firebase Console > Authentication > Settings > Authorized domains, ou utilisez le mode session locale.`
+      );
+      customErr.code = 'auth/unauthorized-domain';
+      throw customErr;
+    }
     console.error('Erreur Google Sign-In:', err);
     throw err;
   }
@@ -259,8 +269,12 @@ export async function registerNewUser(
     status: effectiveStatus,
     requestedRole: chosenRole,
     requestedAt: now,
-    approvedAt: isApproved ? now : undefined,
-    approvedBy: isSuper ? 'SuperAdmin' : (isInstantStudent ? 'AutoValidation' : undefined),
+    ...(isApproved ? { approvedAt: now } : {}),
+    ...(isSuper
+      ? { approvedBy: 'SuperAdmin' }
+      : isInstantStudent
+        ? { approvedBy: 'AutoValidation' }
+        : {}),
     notificationsEnabled: true,
     createdAt: now,
     updatedAt: now,
