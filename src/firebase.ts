@@ -3,6 +3,8 @@ import {
   GoogleAuthProvider,
   getAuth,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut,
   onAuthStateChanged,
   User as FirebaseUser,
@@ -33,6 +35,14 @@ export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+// Complete a redirect-based Google Sign-In if one is pending
+// (used as fallback when popups are blocked). Errors are surfaced
+// through authStateChanged / the next loginWithGoogle() call.
+getRedirectResult(auth).catch((err) => {
+  console.error('Erreur lors du retour de la connexion Google (redirect):', err);
+});
 
 // Lazy messaging initialization to support environments where ServiceWorker or Notification is restricted
 let messagingInstance: Messaging | null = null;
@@ -186,7 +196,22 @@ export async function loginWithGoogle(): Promise<FirebaseUser | null> {
   try {
     const result = await signInWithPopup(auth, googleProvider);
     return result.user;
-  } catch (err) {
+  } catch (err: any) {
+    if (
+      err?.code === 'auth/popup-closed-by-user' ||
+      err?.code === 'auth/cancelled-popup-request'
+    ) {
+      return null;
+    }
+    if (
+      err?.code === 'auth/popup-blocked' ||
+      err?.code === 'auth/web-storage-unsupported' ||
+      err?.code === 'auth/operation-not-supported-in-this-environment'
+    ) {
+      console.warn('Popup bloquée, bascule vers la redirection Google Sign-In.');
+      await signInWithRedirect(auth, googleProvider);
+      return null;
+    }
     console.error('Erreur Google Sign-In:', err);
     throw err;
   }
