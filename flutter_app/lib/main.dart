@@ -1,7 +1,9 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'firebase_options.dart';
+import 'l10n/app_localizations.dart';
 import 'screens/role_selection.dart';
 import 'services/fcm_service.dart';
 import 'services/firebase_auth_service.dart';
@@ -54,6 +56,14 @@ class AnatomyZApp extends StatelessWidget {
               title: 'AnatomyZ',
               debugShowCheckedModeBanner: false,
               themeMode: authService.resolvedThemeMode,
+              locale: lang == AppLanguage.en ? const Locale('en') : const Locale('fr'),
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [Locale('fr'), Locale('en')],
               theme: ThemeData(
                 useMaterial3: true,
                 colorScheme: lightScheme,

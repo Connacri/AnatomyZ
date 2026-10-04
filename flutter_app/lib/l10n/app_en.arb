@@ -1,0 +1,20 @@
+{
+  "@@locale": "en",
+  "chooseRole": "Choose your role",
+  "authorizedSpace": "Your Authorized Workspace",
+  "allSpacesAdmin": "All Workspaces (Admin Supervision)",
+  "subtitle": "3D human anatomical atlas, FMA/UBERON Knowledge Graph, and secure academic workspace.",
+  "professor": "Professor",
+  "professorSub": "Manage students (CRUD), create exams, and project the 3D Atlas",
+  "professorPendingSub": "Restricted to 3D demonstrations only until validated by the administrator",
+  "student": "Student",
+  "studentSub": "View assigned exams, take assessments, and track grades",
+  "adminPanel": "Institutional Administration",
+  "adminSub": "Pending professors list to accept with profile details entry & supervision",
+  "exploreAtlas": "Explore the 3D Atlas directly",
+  "pendingBannerTitle": "Professor Account Pending Administrator Validation",
+  "pendingBannerDesc": "Your Professor account is validated solely by the administrator. Until accepted, you only have access to 3D demonstrations and cannot interact with students or access other features.",
+  "themeAuto": "Auto Schedule",
+  "themeLight": "Light",
+  "themeDark": "Dark"
+}

@@ -71,9 +71,9 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
                   ],
                 ),
                 actions: [
-                  // Multilingual selector FR / EN / DE
+                  // Multilingual selector FR / EN
                   PopupMenuButton<AppLanguage>(
-                    tooltip: 'Langue (FR / EN / DE)',
+                    tooltip: 'Langue (FR / EN)',
                     icon: const Icon(Icons.language, size: 20),
                     onSelected: _authService.setLanguage,
                     itemBuilder: (context) => const [
@@ -84,10 +84,6 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
                       PopupMenuItem(
                         value: AppLanguage.en,
                         child: Text('EN — English'),
-                      ),
-                      PopupMenuItem(
-                        value: AppLanguage.de,
-                        child: Text('DE — Deutsch'),
                       ),
                     ],
                   ),

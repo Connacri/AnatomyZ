@@ -1,11 +1,12 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-enum AppLanguage { fr, en, de }
+enum AppLanguage { fr, en }
 
 enum ThemeScheduleMode { auto, light, dark }
 
@@ -296,31 +297,6 @@ class FirebaseAuthService {
         'themeLight': 'Light',
         'themeDark': 'Dark',
       },
-      AppLanguage.de: {
-        'chooseRole': 'Wählen Sie Ihre Rolle',
-        'authorizedSpace': 'Ihr autorisierter Arbeitsbereich',
-        'allSpacesAdmin': 'Alle Arbeitsbereiche (Admin-Aufsicht)',
-        'subtitle':
-            '3D-Anatomieatlas, FMA/UBERON Knowledge Graph und geschützter akademischer Bereich.',
-        'professor': 'Professor',
-        'professorSub':
-            'Studierende verwalten (CRUD), Prüfungen erstellen und 3D-Atlas projizieren',
-        'professorPendingSub':
-            'Bis zur Bestätigung durch den Administrator nur Zugriff auf 3D-Demonstrationen',
-        'student': 'Student',
-        'studentSub': 'Zugewiesene Prüfungen absolvieren und Noten verfolgen',
-        'adminPanel': 'Institutionelle Administration',
-        'adminSub':
-            'Professorenliste mit Profil-Details bestätigen und überwachen',
-        'exploreAtlas': '3D-Atlas direkt öffnen',
-        'pendingBannerTitle':
-            'Professorenkonto wartet auf Administrator-Freigabe',
-        'pendingBannerDesc':
-            'Ihr Professorenkonto wird ausschließlich vom Administrator freigegeben. Bis zur Bestätigung haben Sie nur Zugriff auf 3D-Demos und können nicht mit Studierenden interagieren.',
-        'themeAuto': 'Auto-Zeitplan',
-        'themeLight': 'Hell',
-        'themeDark': 'Dunkel',
-      },
     };
     return map[lang]?[key] ?? map[AppLanguage.fr]![key] ?? key;
   }
@@ -401,18 +377,128 @@ class FirebaseAuthService {
     return studentUser;
   }
 
+  static const String _firestoreDatabaseId =
+      'ai-studio-anatomyz-9293ceee-b20a-4a07-ad36-4cadd3fe02a5';
+
+  FirebaseFirestore get _firestore => FirebaseFirestore.instanceFor(
+        app: Firebase.app(),
+        databaseId: _firestoreDatabaseId,
+      );
+
+  /// Resolve the authoritative AnatomyZ profile from Firestore.
+  /// - Existing Firestore profile -> returned as-is (never mixed with another role)
+  /// - Missing -> created once with the requested role rules shared with the website
+  Future<AnatomyUser> _resolveFirestoreProfile(
+    fb.User firebaseUser, {
+    String requestedRole = 'student',
+  }) async {
+    try {
+      final docRef =
+          _firestore.collection('users').doc(firebaseUser.uid);
+      final snap = await docRef.get();
+      if (snap.exists && snap.data() != null) {
+        final data = snap.data()!;
+        return AnatomyUser(
+          uid: firebaseUser.uid,
+          email: (data['email'] as String?)?.isNotEmpty == true
+              ? data['email'] as String
+              : (firebaseUser.email ?? ''),
+          displayName: (data['displayName'] as String?) ??
+              firebaseUser.displayName ??
+              'Utilisateur AnatomyZ',
+          photoUrl: (data['photoURL'] as String?) ?? firebaseUser.photoURL,
+          role: (data['role'] as String?) ?? 'student',
+          status: (data['status'] as String?) ?? 'approved',
+          requestedRole: data['requestedRole'] as String?,
+          matricule: (data['matricule'] as String?) ?? '',
+          university: (data['university'] as String?) ?? 'Faculté de Médecine',
+          academicYear: (data['academicYear'] as String?) ?? 'DFGSM 2 (2ème année)',
+          specialty: (data['specialty'] as String?) ?? 'Anatomie Générale',
+          phone: (data['phone'] as String?) ?? '',
+          bio: (data['bio'] as String?) ?? '',
+        );
+      }
+
+      // No profile yet: create it with the shared role rules
+      final email = firebaseUser.email ?? '';
+      final lower = email.toLowerCase();
+      const superAdmins = [
+        'oran.inturk@gmail.com',
+        'forslog@gmail.com',
+        'ramzi.guedouar@gmail.com',
+        'samuel69tr00@gmail.com',
+      ];
+      final isSuper = superAdmins.contains(lower);
+      final now = DateTime.now().toUtc().toIso8601String();
+
+      late final AnatomyUser created;
+      if (isSuper) {
+        created = AnatomyUser(
+          uid: firebaseUser.uid,
+          email: email,
+          displayName: firebaseUser.displayName ?? 'Utilisateur AnatomyZ',
+          photoUrl: firebaseUser.photoURL,
+          role: 'admin',
+          status: 'approved',
+          requestedRole: 'admin',
+          academicYear: 'Direction Académique',
+        );
+      } else if (requestedRole == 'professor') {
+        created = AnatomyUser(
+          uid: firebaseUser.uid,
+          email: email,
+          displayName: firebaseUser.displayName ?? 'Utilisateur AnatomyZ',
+          photoUrl: firebaseUser.photoURL,
+          role: 'student',
+          status: 'pending_approval',
+          requestedRole: 'professor',
+          university: 'Faculté de Médecine',
+          academicYear: 'Praticien Hospitalier / Enseignant',
+        );
+      } else {
+        created = AnatomyUser(
+          uid: firebaseUser.uid,
+          email: email,
+          displayName: firebaseUser.displayName ?? 'Utilisateur AnatomyZ',
+          photoUrl: firebaseUser.photoURL,
+          role: 'student',
+          status: 'approved',
+          requestedRole: 'student',
+        );
+      }
+
+      await docRef.set({
+        ...created.toMap(),
+        'createdAt': now,
+        'notificationsEnabled': true,
+      });
+      return created;
+    } catch (e) {
+      debugPrint('[Auth] Firestore profile error, fallback local: $e');
+      return _buildUserWithRoleRules(
+        uid: firebaseUser.uid,
+        email: firebaseUser.email ?? '',
+        displayName: firebaseUser.displayName ?? 'Utilisateur AnatomyZ',
+        photoUrl: firebaseUser.photoURL,
+        requestedRole: requestedRole,
+      );
+    }
+  }
+
   void _onAuthStateChanged(fb.User? firebaseUser) {
     if (firebaseUser == null) {
       currentUserNotifier.value = null;
       return;
     }
-    currentUserNotifier.value = _buildUserWithRoleRules(
-      uid: firebaseUser.uid,
-      email: firebaseUser.email ?? '',
-      displayName: firebaseUser.displayName ?? 'Utilisateur AnatomyZ',
-      photoUrl: firebaseUser.photoURL,
-      requestedRole: 'student',
-    );
+    final cached = _profilesByUid[firebaseUser.uid];
+    if (cached != null) {
+      currentUserNotifier.value = cached;
+      return;
+    }
+    _resolveFirestoreProfile(firebaseUser).then((profile) {
+      _profilesByUid[firebaseUser.uid] = profile;
+      currentUserNotifier.value = profile;
+    });
   }
 
   /// Trigger Google Sign-In flow

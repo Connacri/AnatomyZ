@@ -20,3 +20,9 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+
+# Firebase
+.firebase/`n
+# Gradle
+flutter_app/android/.gradle/
+**/.gradle/

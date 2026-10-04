@@ -1,0 +1,20 @@
+{
+  "@@locale": "fr",
+  "chooseRole": "Choisissez votre rôle",
+  "authorizedSpace": "Votre espace autorisé",
+  "allSpacesAdmin": "Tous les espaces (Supervision Admin)",
+  "subtitle": "Atlas anatomique humain 3D, Knowledge Graph FMA/UBERON et espace pédagogique sécurisé.",
+  "professor": "Professeur",
+  "professorSub": "Gérer les étudiants (CRUD), créer des examens et projeter l’Atlas 3D",
+  "professorPendingSub": "Accès limité aux démonstrations 3D jusqu’à validation par l’administrateur",
+  "student": "Étudiant",
+  "studentSub": "Consulter les examens assignés, les passer et suivre ses notes",
+  "adminPanel": "Administration Institutionnelle",
+  "adminSub": "Liste des professeurs à accepter avec entrée détail profil et supervision",
+  "exploreAtlas": "Explorer directement l’atlas 3D",
+  "pendingBannerTitle": "Compte Professeur en attente de validation par l’Administrateur",
+  "pendingBannerDesc": "Votre compte Professeur est validé uniquement par l’administrateur. En attendant son acceptation, vous avez uniquement accès aux démonstrations 3D et ne pouvez ni interagir avec vos étudiants ni accéder aux autres fonctionnalités.",
+  "themeAuto": "Horaire Auto",
+  "themeLight": "Clair",
+  "themeDark": "Sombre"
+}

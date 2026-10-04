@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "986358610101",
+    "project_id": "gen-lang-client-0479958060",
+    "storage_bucket": "gen-lang-client-0479958060.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:986358610101:android:177d08db6ac9bc8b66a6fc",
+        "android_client_info": {
+          "package_name": "com.example.anatomyz"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "986358610101-fhkt7d0qgthjf39munv6hvrqui962pk0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyClZG48rgZGfB9t3MEyE6ua_egmQMBDLQE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "986358610101-fhkt7d0qgthjf39munv6hvrqui962pk0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

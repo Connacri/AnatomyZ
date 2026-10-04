@@ -441,8 +441,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <h1 className="text-xl md:text-2xl font-bold tracking-tight text-[#FAF6F0]">
                   {lang === 'en'
                     ? 'Admin Governance & Professor Validation'
-                    : lang === 'de'
-                    ? 'Admin-Verwaltung & Professoren-Freigabe'
                     : 'Administration & Validation des Professeurs'}
                 </h1>
                 <span className="text-xs font-semibold px-2.5 py-0.5 rounded-lg bg-[#DACBA9]/20 text-[#DACBA9] border border-[#DACBA9]/40">

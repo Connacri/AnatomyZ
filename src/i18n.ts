@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-export type AppLanguage = 'fr' | 'en' | 'de';
+export type AppLanguage = 'fr' | 'en';
 export type ThemePreference = 'auto' | 'light' | 'dark';
 
 export function getTimeBasedTheme(): 'light' | 'dark' {
@@ -116,441 +116,314 @@ export const TRANSLATIONS: Record<AppLanguage, Record<string, string>> = {
     githubRepo: '→ GitHub Repository',
     footerAcademic: 'Academic Project — Professor Zenasni Kamel',
   },
-  de: {
-    appBadge: 'AnatomyZ · 3D-Atlas der menschlichen Anatomie',
-    appSubtitle:
-      'Hochpräziser 3D-Anatomieatlas für Medizinstudierende und Professoren, basierend auf einem zertifizierten Knowledge Graph, FMA/UBERON-Ontologien und klinischen Prüfungen.',
-    academicPlatform: 'Akademische Plattform',
-    signInGoogle: 'Google-Anmeldung',
-    signInToAccessRoles: 'Mit Google anmelden, um auf Bereiche zuzugreifen',
-    exploreAtlasDemo: '3D-Atlas im Demo-Modus erkunden',
-    exploreAtlasDirect: '3D-Anatomieatlas direkt öffnen',
-    authRequiredTitle: 'Universitäre Authentifizierung erforderlich',
-    authRequiredDesc:
-      'Der Zugriff auf die Arbeitsbereiche für Studierende und Professoren, Prüfungen und Notenübersichten erfordert eine vorherige Anmeldung.',
-    authRequiredSub:
-      'Studierendenprofile werden sofort freigeschaltet. Professorenprofile erfordern die Bestätigung durch den Administrator.',
-    activeSession: 'Aktive Sitzung',
-    currentRole: 'Aktuelle Rolle',
-    manageProfile: 'Profil verwalten',
-    authorizedWorkspaces: 'Ihr autorisierter Arbeitsbereich',
-    authorizedWorkspacesAdmin: 'Alle Arbeitsbereiche (Admin-Aufsicht)',
-    selectToAccess: 'Auswählen zum Öffnen',
-    studentWorkspaceTitle: 'Arbeitsbereich Medizinstudierende',
-    studentWorkspaceDesc:
-      'Klinische Prüfungen, Anatomie-Lernkarten und Notenbuch.',
-    professorWorkspaceTitle: 'Arbeitsbereich Professoren / Dozenten',
-    professorWorkspaceDesc:
-      'Studierende verwalten (CRUD), Prüfungen erstellen und 3D-Atlas projizieren.',
-    professorPendingDesc:
-      'Bis zur Bestätigung durch den Administrator nur Zugriff auf 3D-Demonstrationen.',
-    adminWorkspaceTitle: 'Institutionelles Administrationspanel',
-    adminWorkspaceDesc:
-      'Professoren mit Profil-Details bestätigen, Rollen zuweisen und Firestore überwachen.',
-    pendingProfBannerTitle:
-      'Professorenkonto wartet auf Administrator-Freigabe',
-    pendingProfBannerDesc:
-      'Ihr Professorenkonto muss vom Administrator freigegeben werden. Bis zur Bestätigung haben Sie nur Zugriff auf die 3D-Demos und können weder mit Studierenden interagieren noch andere Funktionen nutzen.',
-    checkRequestStatus: 'Status überprüfen',
-    openDemoSpace: '3D-Demonstrationen öffnen (Eingeschränkter Modus)',
-    themeAuto: 'Auto-Zeitplan',
-    themeLight: 'Hell',
-    themeDark: 'Dunkel',
-    home: 'Startseite',
-    atlas3d: '3D-Atlas',
-    admin: 'Admin',
-    myAccount: 'Mein Konto',
-    roleStudent: 'Student',
-    roleProfessor: 'Professor',
-    roleAdmin: 'Admin',
-    downloadApk: '→ APK herunterladen (Release)',
-    downloadAab: '→ AAB herunterladen (Release)',
-    anatomyCatalog: '→ Anatomischer Katalog',
-    githubRepo: '→ GitHub-Repository',
-    footerAcademic: 'Akademisches Projekt — Professor Zenasni Kamel',
-  },
 };
 
 /**
  * Full-coverage phrase & UI dictionary for automatic translation of all
- * screens, top/bottom bars, tabs, buttons, modals, and dialogs in FR / EN / DE.
+ * screens, top/bottom bars, tabs, buttons, modals, and dialogs in FR / EN.
  */
-const UI_PHRASE_MAP: Array<{ fr: string; en: string; de: string }> = [
+const UI_PHRASE_MAP: Array<{ fr: string; en: string }> = [
   // Modals & Auth
   {
     fr: 'Bienvenue sur AnatomyZ',
     en: 'Welcome to AnatomyZ',
-    de: 'Willkommen bei AnatomyZ',
   },
   {
     fr: 'Étudiant en médecine',
     en: 'Medical Student',
-    de: 'Medizinstudent',
   },
   {
     fr: 'Étudiant en Médecine',
     en: 'Medical Student',
-    de: 'Medizinstudent',
   },
   {
     fr: 'Immédiat',
     en: 'Instant',
-    de: 'Sofort',
   },
   {
     fr: 'Enseignant / Professeur',
     en: 'Professor / Faculty',
-    de: 'Professor / Dozent',
   },
   {
     fr: 'Sur validation',
     en: 'Requires approval',
-    de: 'Mit Freigabe',
   },
   {
     fr: 'Confirmer et accéder',
     en: 'Confirm and continue',
-    de: 'Bestätigen und öffnen',
   },
   {
     fr: 'Mode Admin',
     en: 'Admin Mode',
-    de: 'Admin-Modus',
   },
   {
     fr: 'Démos 3D uniquement (Attente Admin)',
     en: '3D Demos Only (Pending Admin)',
-    de: 'Nur 3D-Demos (Wartet auf Admin)',
   },
   // Mobile & Navigation Bars
   {
     fr: 'Espace Professeur',
     en: 'Professor Space',
-    de: 'Professorenbereich',
   },
   {
     fr: 'Espace Étudiant',
     en: 'Student Space',
-    de: 'Studierendenbereich',
   },
   {
     fr: 'Créer un examen',
     en: 'Create Exam',
-    de: 'Prüfung erstellen',
   },
   {
     fr: 'Catalogue',
     en: 'Catalog',
-    de: 'Katalog',
   },
   {
     fr: 'Homme',
     en: 'Male',
-    de: 'Männlich',
   },
   {
     fr: 'Femme',
     en: 'Female',
-    de: 'Weiblich',
   },
   {
     fr: 'Réinitialiser',
     en: 'Reset View',
-    de: 'Zurücksetzen',
   },
   {
     fr: 'Afficher',
     en: 'Show',
-    de: 'Anzeigen',
   },
   {
     fr: 'Masquer',
     en: 'Hide',
-    de: 'Ausblenden',
   },
   {
     fr: 'Transparence',
     en: 'Transparency',
-    de: 'Transparenz',
   },
   {
     fr: 'Fermer',
     en: 'Close',
-    de: 'Schließen',
   },
   {
     fr: 'Annuler',
     en: 'Cancel',
-    de: 'Abbrechen',
   },
   {
     fr: 'Enregistrer',
     en: 'Save',
-    de: 'Speichern',
   },
   // Professor Workspace & Student CRUD
   {
     fr: 'Compte Professeur en attente d’acceptation par l’Administrateur',
     en: 'Professor Account Pending Administrator Acceptance',
-    de: 'Professorenkonto wartet auf Administrator-Freigabe',
   },
   {
     fr: 'Entrer mon détail profil pour l’Admin',
     en: 'Enter My Profile Details for Admin',
-    de: 'Profildetails für Admin eingeben',
   },
   {
     fr: 'Compléter mon profil Professeur',
     en: 'Complete Professor Profile',
-    de: 'Professorenprofil vervollständigen',
   },
   {
     fr: 'Nouvel Étudiant',
     en: 'New Student',
-    de: 'Neuer Student',
   },
   {
     fr: 'Création Rapide',
     en: 'Quick Create',
-    de: 'Schnellerstellung',
   },
   {
     fr: 'Éditeur 3D Complet',
     en: 'Full 3D Editor',
-    de: 'Vollständiger 3D-Editor',
   },
   {
     fr: 'Étudiants Inscrit(s)',
     en: 'Enrolled Students',
-    de: 'Eingeschriebene Studierende',
   },
   {
     fr: 'Épreuves Publiées',
     en: 'Published Exams',
-    de: 'Veröffentlichte Prüfungen',
   },
   {
     fr: 'Copies Corrigées',
     en: 'Graded Submissions',
-    de: 'Bewertete Prüfungen',
   },
   {
     fr: 'Moyenne Promotion',
     en: 'Cohort Average',
-    de: 'Jahrgangsdurchschnitt',
   },
   {
     fr: 'Gestion des Étudiants (CRUD Complet)',
     en: 'Student Management (Full CRUD)',
-    de: 'Studierendenverwaltung (Vollständiges CRUD)',
   },
   {
     fr: '+ Ajouter un Étudiant',
     en: '+ Add Student',
-    de: '+ Student hinzufügen',
   },
   {
     fr: 'Détail',
     en: 'Details',
-    de: 'Details',
   },
   {
     fr: 'Modifier',
     en: 'Edit',
-    de: 'Bearbeiten',
   },
   {
     fr: 'Supprimer',
     en: 'Delete',
-    de: 'Löschen',
   },
   {
     fr: 'Ajouter un nouvel étudiant',
     en: 'Add New Student',
-    de: 'Neuen Studierenden hinzufügen',
   },
   {
     fr: 'Modifier le profil étudiant',
     en: 'Edit Student Profile',
-    de: 'Studierendenprofil bearbeiten',
   },
   {
     fr: 'Ajouter l’étudiant',
     en: 'Add Student',
-    de: 'Student hinzufügen',
   },
   {
     fr: 'Enregistrer les modifications',
     en: 'Save Changes',
-    de: 'Änderungen speichern',
   },
   {
     fr: 'Démonstrations 3D d’Amphithéâtre',
     en: '3D Lecture Hall Demonstrations',
-    de: '3D-Hörsaal-Demonstrationen',
   },
   {
     fr: 'Lancer la Démo 3D en Amphithéâtre',
     en: 'Launch 3D Lecture Demo',
-    de: '3D-Hörsaal-Demo starten',
   },
   // Admin Dashboard
   {
     fr: 'Supervision Institutionnelle & Accréditations',
     en: 'Institutional Supervision & Accreditations',
-    de: 'Institutionelle Aufsicht & Akkreditierungen',
   },
   {
     fr: '+ Ajouter un Professeur',
     en: '+ Add Professor',
-    de: '+ Professor hinzufügen',
   },
   {
     fr: 'Actualiser',
     en: 'Refresh',
-    de: 'Aktualisieren',
   },
   {
     fr: 'Liste des Utilisateurs Professeurs à Accepter',
     en: 'List of Professor Users to Accept',
-    de: 'Liste der freizugebenden Professoren',
   },
   {
     fr: 'Entrer détail profil & Accepter',
     en: 'Enter Profile Details & Accept',
-    de: 'Profildetails eingeben & Bestätigen',
   },
   {
     fr: 'Accepter Professeur',
     en: 'Accept Professor',
-    de: 'Professor bestätigen',
   },
   {
     fr: 'Refuser',
     en: 'Reject',
-    de: 'Ablehnen',
   },
   {
     fr: 'Enregistrer détail & Accepter Professeur',
     en: 'Save Details & Accept Professor',
-    de: 'Details speichern & Professor bestätigen',
   },
   // Student Workspace
   {
     fr: 'Mon Profil',
     en: 'My Profile',
-    de: 'Mein Profil',
   },
   {
     fr: 'Explorer l’Atlas 3D',
     en: 'Explore 3D Atlas',
-    de: '3D-Atlas erkunden',
   },
   {
     fr: 'Épreuves Disponibles',
     en: 'Available Exams',
-    de: 'Verfügbare Prüfungen',
   },
   {
     fr: 'Examens Complétés',
     en: 'Completed Exams',
-    de: 'Abgeschlossene Prüfungen',
   },
   {
     fr: 'Moyenne Générale',
     en: 'Overall Average',
-    de: 'Gesamtdurchschnitt',
   },
   {
     fr: 'Flashcards Maîtrisées',
     en: 'Mastered Flashcards',
-    de: 'Gemeisterte Lernkarten',
   },
   {
     fr: 'Examens & QCM',
     en: 'Exams & Quizzes',
-    de: 'Prüfungen & Quiz',
   },
   {
     fr: 'Systèmes 3D',
     en: '3D Systems',
-    de: '3D-Systeme',
   },
   {
     fr: 'Flashcards',
     en: 'Flashcards',
-    de: 'Lernkarten',
   },
   {
     fr: 'Relevé de Notes',
     en: 'Grade Transcript',
-    de: 'Notenübersicht',
   },
   {
     fr: 'Démarrer l’examen',
     en: 'Start Exam',
-    de: 'Prüfung starten',
   },
   {
     fr: 'Repasser',
     en: 'Retake',
-    de: 'Wiederholen',
   },
   {
     fr: 'Question suivante',
     en: 'Next Question',
-    de: 'Nächste Frage',
   },
   {
     fr: 'Terminer l’examen',
     en: 'Submit Exam',
-    de: 'Prüfung abschließen',
   },
   {
     fr: 'Examen terminé',
     en: 'Exam Completed',
-    de: 'Prüfung abgeschlossen',
   },
   {
     fr: 'Retour à mon espace',
     en: 'Return to Workspace',
-    de: 'Zurück zum Arbeitsbereich',
   },
   // Profile & FCM Modals
   {
     fr: 'Notifications Firebase (FCM)',
     en: 'Firebase Push Notifications (FCM)',
-    de: 'Firebase Push-Benachrichtigungen (FCM)',
   },
   {
     fr: 'État des notifications Push',
     en: 'Push Notification Status',
-    de: 'Status der Push-Benachrichtigungen',
   },
   {
     fr: 'Activer les notifications push Web',
     en: 'Enable Web Push Notifications',
-    de: 'Web-Push-Benachrichtigungen aktivieren',
   },
   {
     fr: 'Actualiser la synchronisation FCM',
     en: 'Refresh FCM Sync',
-    de: 'FCM-Synchronisierung aktualisieren',
   },
   {
     fr: 'Tester un push',
     en: 'Send Test Push',
-    de: 'Test-Push senden',
   },
   {
     fr: 'Se déconnecter',
     en: 'Sign Out',
-    de: 'Abmelden',
   },
   {
     fr: 'Enregistrer mon profil académique',
     en: 'Save Academic Profile',
-    de: 'Akademisches Profil speichern',
   },
 ];
 
@@ -562,7 +435,7 @@ function translateString(raw: string, targetLang: AppLanguage): string {
   if (!trimmed) return raw;
 
   for (const entry of UI_PHRASE_MAP) {
-    if (trimmed === entry.fr || trimmed === entry.en || trimmed === entry.de) {
+    if (trimmed === entry.fr || trimmed === entry.en) {
       const replacement = entry[targetLang];
       return raw.replace(trimmed, replacement);
     }
@@ -637,7 +510,7 @@ export const AppPreferencesProvider: React.FC<{ children: React.ReactNode }> = (
   const [lang, setLangState] = useState<AppLanguage>(() => {
     if (typeof window !== 'undefined') {
       const saved = window.localStorage.getItem('anatomyz_lang');
-      if (saved === 'fr' || saved === 'en' || saved === 'de') return saved;
+      if (saved === 'fr' || saved === 'en') return saved;
     }
     return 'fr';
   });

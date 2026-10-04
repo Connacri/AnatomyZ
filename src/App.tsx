@@ -313,13 +313,13 @@ function TopNavBar({
       </div>
 
       <div className="flex items-center gap-1.5 sm:gap-2">
-        {/* Multilingual Selector FR / EN / DE */}
+        {/* Multilingual Selector FR / EN */}
         <div
           className="inline-flex items-center rounded-xl border border-[#455160] bg-[#15191E] p-0.5"
-          title="Langue / Language / Sprache (FR · EN · DE)"
+          title="Langue / Language (FR · EN)"
         >
           <Globe className="w-3.5 h-3.5 text-[#DACBA9] ml-1.5 mr-1 hidden sm:inline" />
-          {(['fr', 'en', 'de'] as AppLanguage[]).map((code) => (
+          {(['fr', 'en'] as AppLanguage[]).map((code) => (
             <button
               key={code}
               type="button"
