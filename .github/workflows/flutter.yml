@@ -36,19 +36,28 @@ jobs:
       # native Android host so Flutter cannot overwrite custom security code.
       - name: Bootstrap Gradle wrapper without replacing native host
         run: |
-          if [ ! -f android/gradlew ]; then
+          if [ ! -f android/gradlew ] || [ ! -f android/gradle/wrapper/gradle-wrapper.jar ]; then
             tmpdir="$(mktemp -d)"
             flutter create --platforms=android .
             cp android/gradlew "$tmpdir/gradlew"
             cp android/gradlew.bat "$tmpdir/gradlew.bat"
-            cp -R android/gradle "$tmpdir/gradle"
+            cp -R android/gradle/wrapper "$tmpdir/wrapper"
             git checkout -- android
             rm -f android/local.properties
             cp "$tmpdir/gradlew" android/gradlew
             cp "$tmpdir/gradlew.bat" android/gradlew.bat
-            cp -R "$tmpdir/gradle" android/gradle
+            mkdir -p android/gradle/wrapper
+            cp -f "$tmpdir/wrapper/gradle-wrapper.jar" android/gradle/wrapper/gradle-wrapper.jar
             chmod +x android/gradlew
           fi
+          mkdir -p android/gradle/wrapper
+          cat > android/gradle/wrapper/gradle-wrapper.properties << 'EOF'
+          distributionBase=GRADLE_USER_HOME
+          distributionPath=wrapper/dists
+          zipStoreBase=GRADLE_USER_HOME
+          zipStorePath=wrapper/dists
+          distributionUrl=https\://services.gradle.org/distributions/gradle-8.14-all.zip
+          EOF
 
       - run: flutter pub get
       - run: flutter analyze
