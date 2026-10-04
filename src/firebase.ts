@@ -553,6 +553,7 @@ export async function updateUserProfile(
     specialty?: string;
     bio?: string;
     phone?: string;
+    photoURL?: string | null;
   }
 ): Promise<void> {
   const userRef = doc(db, 'users', uid);

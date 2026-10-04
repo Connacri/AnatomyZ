@@ -72,12 +72,13 @@ class AnatomyUser {
     String? specialty,
     String? phone,
     String? bio,
+    String? photoUrl,
   }) {
     return AnatomyUser(
       uid: uid,
       email: email ?? this.email,
       displayName: displayName ?? this.displayName,
-      photoUrl: photoUrl,
+      photoUrl: photoUrl ?? this.photoUrl,
       role: role ?? this.role,
       status: status ?? this.status,
       requestedRole: requestedRole ?? this.requestedRole,
@@ -558,6 +559,7 @@ class FirebaseAuthService {
         await fb.FirebaseAuth.instance.signOut();
       } catch (_) {}
     }
+    _profilesByUid.clear();
     currentUserNotifier.value = null;
   }
 
@@ -696,6 +698,94 @@ class FirebaseAuthService {
     pendingProfessorsNotifier.value = pendingProfessorsNotifier.value
         .where((p) => p.uid != uid)
         .toList(growable: false);
+  }
+
+  /// Admin: definiti une nouvelle role pour un utilisateur (persiste Firestore)
+  Future<void> setUserRole({required String uid, required String newRole}) async {
+    final approvedStatus = newRole == 'professor' ? 'pending_approval' : 'approved';
+    // Remove any stale cache entry; Firestore is the source of truth.
+    _profilesByUid.remove(uid);
+    pendingProfessorsNotifier.value = pendingProfessorsNotifier.value
+        .where((p) => p.uid != uid)
+        .toList(growable: false);
+    try {
+      await _firestore.collection('users').doc(uid).set({
+        'role': newRole,
+        'status': approvedStatus,
+        'requestedRole': newRole,
+        'updatedAt': DateTime.now().toUtc().toIso8601String(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('[Auth] setUserRole Firestore error: $e');
+    }
+    final current = currentUserNotifier.value;
+    if (current != null && current.uid == uid) {
+      currentUserNotifier.value = current.copyWith(
+        role: newRole,
+        status: approvedStatus,
+        requestedRole: newRole,
+      );
+    }
+  }
+
+  /// Admin: aprouve un professor depuis Firestore (synchronise l'utilisateur courant)
+  Future<void> approveProfessorWithDetailsSync({
+    required String uid,
+    required String displayName,
+    required String email,
+    required String matricule,
+    required String university,
+    required String academicYear,
+    required String specialty,
+    required String phone,
+    required String bio,
+  }) async {
+    approveProfessorWithDetails(
+      uid: uid,
+      displayName: displayName,
+      email: email,
+      matricule: matricule,
+      university: university,
+      academicYear: academicYear,
+      specialty: specialty,
+      phone: phone,
+      bio: bio,
+    );
+    try {
+      await _firestore.collection('users').doc(uid).set({
+        'role': 'professor',
+        'status': 'approved',
+        'requestedRole': 'professor',
+        'displayName': displayName,
+        'email': email,
+        'matricule': matricule,
+        'university': university,
+        'academicYear': academicYear,
+        'specialty': specialty,
+        'phone': phone,
+        'bio': bio,
+        'approvedAt': DateTime.now().toUtc().toIso8601String(),
+        'updatedAt': DateTime.now().toUtc().toIso8601String(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('[Auth] approveProfessorWithDetails Firestore error: $e');
+    }
+  }
+
+  /// Update the user's profile photo (base64 data URL stored in Firestore)
+  Future<void> updatePhotoUrl(String? dataUrl) async {
+    final current = currentUserNotifier.value;
+    if (current == null) return;
+    currentUserNotifier.value = current.copyWith(photoUrl: dataUrl);
+    _profilesByUid[current.uid] = currentUserNotifier.value!;
+    try {
+      await _firestore.collection('users').doc(current.uid).set({
+        'photoURL': dataUrl,
+        'updatedAt': DateTime.now().toUtc().toIso8601String(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('[Auth] updatePhotoUrl Firestore error: $e');
+    }
   }
 
   // ---------------------------------------------------------------------------

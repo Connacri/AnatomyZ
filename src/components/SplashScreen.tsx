@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { AnatomyZLogo } from './AnatomyZLogo';
 import splashUrl from '../assets/images/anatomyz_splash_1791101122723.jpg';
 import { Sparkles, X } from 'lucide-react';
@@ -67,7 +67,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
           Atlas anatomique humain 3D & Knowledge Graph
         </p>
         <p className="text-xs text-[#8C97A5] mt-1">
-          Faculté de Médecine · Professeur Zenasni Kamel
+          Faculté de Médecine · AnatomyZ
         </p>
 
         {/* Minimalist progress bar */}

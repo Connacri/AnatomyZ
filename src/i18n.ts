@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+﻿import React, { createContext, useContext, useEffect, useState } from 'react';
 
 export type AppLanguage = 'fr' | 'en';
 export type ThemePreference = 'auto' | 'light' | 'dark';
@@ -61,7 +61,6 @@ export const TRANSLATIONS: Record<AppLanguage, Record<string, string>> = {
     downloadAab: '→ Télécharger AAB (Release)',
     anatomyCatalog: '→ Catalogue anatomique',
     githubRepo: '→ Dépôt GitHub',
-    footerAcademic: 'Projet académique — Professeur Zenasni Kamel',
   },
   en: {
     appBadge: 'AnatomyZ · 3D Human Anatomical Atlas',
@@ -114,7 +113,6 @@ export const TRANSLATIONS: Record<AppLanguage, Record<string, string>> = {
     downloadAab: '→ Download AAB (Release)',
     anatomyCatalog: '→ Anatomical Catalog',
     githubRepo: '→ GitHub Repository',
-    footerAcademic: 'Academic Project — Professor Zenasni Kamel',
   },
 };
 

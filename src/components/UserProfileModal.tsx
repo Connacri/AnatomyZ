@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
 import {
   User,
@@ -78,6 +78,13 @@ export function UserProfileModal({
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  // Profile photo state (Firestore-backed via users/{uid}.photoURL)
+  const [photoURL, setPhotoURL] = useState<string | null>(
+    userProfile?.photoURL || currentUser.photoURL || null
+  );
+  const [photoSaving, setPhotoSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   // Exam History state
   const [examResults, setExamResults] = useState<ExamResultRecord[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
@@ -92,8 +99,41 @@ export function UserProfileModal({
       if (userProfile.specialty) setSpecialty(userProfile.specialty);
       if (userProfile.phone) setPhone(userProfile.phone);
       if (userProfile.bio) setBio(userProfile.bio);
+      if (userProfile.photoURL !== undefined) setPhotoURL(userProfile.photoURL || null);
     }
   }, [userProfile]);
+
+  const handlePhotoSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoSaving(true);
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      setPhotoURL(dataUrl);
+      await updateUserProfile(currentUser.uid, { photoURL: dataUrl });
+      if (userProfile) onProfileUpdated({ ...userProfile, photoURL: dataUrl });
+    } catch (err: any) {
+      setSaveError(err?.message || 'Erreur lors du téléchargement de la photo.');
+    } finally {
+      setPhotoSaving(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handlePhotoRemoved = async () => {
+    setPhotoURL(null);
+    try {
+      await updateUserProfile(currentUser.uid, { photoURL: null });
+      if (userProfile) onProfileUpdated({ ...userProfile, photoURL: undefined });
+    } catch (err: any) {
+      setSaveError(err?.message || 'Erreur lors de la suppression de la photo.');
+    }
+  };
 
   // Fetch student exam history
   useEffect(() => {
@@ -168,9 +208,9 @@ export function UserProfileModal({
         {/* Modal Header */}
         <div className="px-6 pt-6 pb-4 border-b border-[#323B46] bg-[#1E242C] flex items-center justify-between">
           <div className="flex items-center gap-3.5">
-            {currentUser.photoURL ? (
+            {photoURL ? (
               <img
-                src={currentUser.photoURL}
+                src={photoURL}
                 alt={displayName || 'Photo de profil'}
                 className="w-14 h-14 rounded-2xl border-2 border-[#D8CCBF] object-cover shadow-md"
               />
@@ -250,6 +290,47 @@ export function UserProfileModal({
 
         {/* Tab Content Body */}
         <div className="p-6 overflow-y-auto flex-1 space-y-6">
+          {/* Profile photo CRUD block (shared by both tabs) */}
+          <div className="p-4 rounded-2xl bg-[#15191E] border border-[#323B46] flex items-center gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-[#1E242C] border-2 border-[#D8CCBF]/50 overflow-hidden flex items-center justify-center text-2xl font-bold text-[#DACBA9] shrink-0">
+              {photoURL ? (
+                <img src={photoURL} alt="Photo de profil" className="w-full h-full object-cover" />
+              ) : (
+                (displayName || currentUser.email || 'U')[0].toUpperCase()
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-bold text-sm text-[#FAF6F0]">Photo de profil</div>
+              <p className="text-[11px] text-[#8C97A5]">Choisissez une photo depuis votre appareil, ou supprimez-la.</p>
+              <div className="flex items-center gap-2 mt-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  ref={fileInputRef}
+                  onChange={handlePhotoSelected}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={photoSaving}
+                  className="py-1.5 px-3 rounded-xl bg-[#DACBA9] text-[#15191E] text-xs font-bold transition cursor-pointer disabled:opacity-50"
+                >
+                  {photoSaving ? 'Envoi…' : 'Choisir une photo'}
+                </button>
+                {photoURL && (
+                  <button
+                    type="button"
+                    onClick={handlePhotoRemoved}
+                    className="py-1.5 px-3 rounded-xl bg-rose-950/40 border border-rose-500/40 text-rose-300 text-xs font-semibold transition cursor-pointer"
+                  >
+                    Supprimer
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
           {activeTab === 'profile' && (
             <form onSubmit={handleSaveProfile} className="space-y-5">
               {/* Role Protection Banner */}

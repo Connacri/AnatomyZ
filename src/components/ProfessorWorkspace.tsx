@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+﻿import React, { useState, useMemo, useEffect } from 'react';
 import {
   FilePlus,
   Users,
@@ -605,7 +605,7 @@ export function ProfessorWorkspace({
             <div className="space-y-1">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-xl md:text-2xl font-bold tracking-tight text-[#FAF6F0]">
-                  {userProfile?.displayName || 'Professeur Zenasni Kamel'}
+                  {userProfile?.displayName || 'Professeur'}
                 </h1>
                 <span
                   className={`text-xs font-semibold px-2.5 py-0.5 rounded-lg border ${

@@ -15,12 +15,12 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.example.anatomyz"
+    namespace = "com.anatomy.dz"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
     defaultConfig {
-        applicationId = "com.example.anatomyz"
+        applicationId = "com.anatomy.dz"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -38,7 +38,7 @@ android {
 
     signingConfigs {
         create("release") {
-            keyAlias = keystoreProperties.getProperty("keyAlias") ?: "anatomyz_release_key"
+            keyAlias = keystoreProperties.getProperty("keyAlias") ?: "anatomyz_release"
             keyPassword = keystoreProperties.getProperty("keyPassword") ?: "anatomyz_release_secret_2026"
             storeFile = file(keystoreProperties.getProperty("storeFile") ?: "keystores/release.jks")
             storePassword = keystoreProperties.getProperty("storePassword") ?: "anatomyz_release_secret_2026"

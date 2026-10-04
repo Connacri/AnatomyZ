@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../models/anatomy_role.dart';
+import '../screens/profile_history_page.dart';
 import '../services/fcm_service.dart';
 import '../services/firebase_auth_service.dart';
 import 'academic_dashboard.dart';
@@ -150,9 +151,19 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
                               ],
                             ),
                           ),
-                          const PopupMenuDivider(),
-                          const PopupMenuItem(
-                            value: 'fcm',
+                      const PopupMenuDivider(),
+                      const PopupMenuItem(
+                        value: 'profile',
+                        child: Row(
+                          children: [
+                            Icon(Icons.person_outline, size: 18, color: Colors.blueAccent),
+                            SizedBox(width: 8),
+                            Text('Mon Profil & Historique'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'fcm',
                             child: Row(
                               children: [
                                 Icon(Icons.cloud_sync,
@@ -179,6 +190,13 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
                             _authService.signOut();
                           } else if (value == 'fcm') {
                             _showFcmDialog(context, user);
+                          } else if (value == 'profile') {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ProfileHistoryPage(),
+                              ),
+                            );
                           }
                         },
                       ),

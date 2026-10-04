@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:986358610101:android:177d08db6ac9bc8b66a6fc",
+        "mobilesdk_app_id": "1:986358610101:android:500be7a53116953666a6fc",
         "android_client_info": {
-          "package_name": "com.example.anatomyz"
+          "package_name": "com.anatomy.dz"
         }
       },
       "oauth_client": [

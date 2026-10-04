@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+﻿import React, { useEffect, useState, useMemo } from 'react';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -930,7 +930,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   required
                   value={editDisplayName}
                   onChange={(e) => setEditDisplayName(e.target.value)}
-                  placeholder="Ex: Pr. Kamel Zenasni"
+                  placeholder="Ex: Pr. Dupont"
                   className="w-full px-3 py-2 rounded-xl bg-[#15191E] border border-[#323B46] text-[#FAF6F0]"
                 />
               </div>

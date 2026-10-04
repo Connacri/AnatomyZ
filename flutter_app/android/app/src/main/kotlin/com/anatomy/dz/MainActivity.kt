@@ -1,4 +1,4 @@
-package com.example.anatomyz
+package com.anatomy.dz
 
 import android.os.Bundle
 import android.view.WindowManager

@@ -773,6 +773,19 @@ export function App() {
         />
       )}
 
+      {/* App download banner */}
+      <div className="bg-gradient-to-r from-[#DACBA9] via-[#ECE3D9] to-[#DACBA9] text-[#15191E] px-4 py-2 text-xs sm:text-sm font-semibold flex flex-wrap items-center justify-center gap-2 text-center">
+        <span>📱 AnatomyZ est aussi disponible sur Android</span>
+        <a
+          href="https://github.com/Connacri/AnatomyZ/releases/latest/download/AnatomyZ-release.apk"
+          target="_blank"
+          rel="noreferrer"
+          className="underline underline-offset-2 font-bold hover:opacity-80"
+        >
+          Télécharger l'application (APK)
+        </a>
+      </div>
+
       <TopNavBar
         currentUser={currentUser}
         authLoading={authLoading}
@@ -1351,42 +1364,6 @@ function HomeScreen({
           </section>
         </div>
 
-        <div className="flex flex-wrap items-center gap-6 text-xs text-[#BAC3CE]">
-          <a
-            href="https://github.com/Connacri/AnatomyZ/releases/latest/download/AnatomyZ-release.apk"
-            target="_blank"
-            rel="noreferrer"
-            className="text-[#DACBA9] hover:underline font-semibold"
-          >
-            {t('downloadApk')}
-          </a>
-          <a
-            href="https://github.com/Connacri/AnatomyZ/releases/latest/download/AnatomyZ-release.aab"
-            target="_blank"
-            rel="noreferrer"
-            className="text-[#DACBA9] hover:underline font-semibold"
-          >
-            {t('downloadAab')}
-          </a>
-          <a
-            href="./catalog/index.json"
-            className="text-[#BAC3CE] hover:text-[#FAF6F0] hover:underline"
-          >
-            {t('anatomyCatalog')}
-          </a>
-          <a
-            href="https://github.com/Connacri/AnatomyZ"
-            target="_blank"
-            rel="noreferrer"
-            className="text-[#BAC3CE] hover:text-[#FAF6F0] hover:underline"
-          >
-            {t('githubRepo')}
-          </a>
-        </div>
-
-        <footer className="mt-12 text-sm text-[#BAC3CE]">
-          {t('footerAcademic')}
-        </footer>
       </main>
     </div>
   );

@@ -1,0 +1,72 @@
+Flutter crash report.
+Please report a bug at https://github.com/flutter/flutter/issues.
+
+## command
+
+flutter analyze
+
+## exception
+
+_Exception: Exception: analysis server exited with code -1073740791 and output:
+[stdout] {"id":1,"jsonrpc":"2.0","result":{"capabilities":{"callHierarchyProvider":true,"codeActionProvider":true,"codeLensProvider":{},"colorProvider":{"documentSelector":[{"language":"dart","scheme":"file"}]},"completionProvider":{"completionItem":{"labelDetailsSupport":true},"resolveProvider":true,"triggerCharacters":[".","=","(","$","\"","'","{","/",":"]},"definitionProvider":true,"documentFormattingProvider":true,"documentHighlightProvider":true,"documentLinkProvider":{"resolveProvider":false},"documentOnTypeFormattingProvider":{"firstTriggerCharacter":"}","moreTriggerCharacter":[";"]},"documentRangeFormattingProvider":true,"documentSymbolProvider":true,"executeCommandProvider":{"commands":["dart.edit.codeAction.apply","dart.edit.sortMembers","dart.edit.organizeImports","dart.edit.fixAll","dart.edit.fixAllInWorkspace.preview","dart.edit.fixAllInWorkspace","dart.edit.sendWorkspaceEdit","refactor.perform","refactor.validate","dart.logAction","dart.refactor.add_constructor_name","dart.refactor.convert_all_formal_parameters_to_named","dart.refactor.convert_selected_formal_parameters_to_named","dart.refactor.move_selected_formal_parameters_left","dart.refactor.move_top_level_to_file","dart.refactor.remove_constructor_name"],"workDoneProgress":true},"experimental":{"updateDiagnosticInformation":{},"textDocument":{"super":{},"augmented":{},"augmentation":{}}},"foldingRangeProvider":true,"hoverProvider":true,"implementationProvider":true,"inlayHintProvider":{"resolveProvider":false},"inlineValueProvider":true,"referencesProvider":true,"renameProvider":true,"selectionRangeProvider":true,"semanticTokensProvider":{"full":{"delta":false},"legend":{"tokenModifiers":["documentation","constructor","declaration","importPrefix","instance","static","escape","annotation","control","label","interpolation","void","wildcard"],"tokenTypes":["annotation","class","comment","method","variable","parameter","enum","enumMember","type","source","property","keyword","label","namespace","boolean","number","string","function","typeParameter"]},"range":true},"signatureHelpProvider":{"retriggerCharacters":[","],"triggerCharacters":["("]},"textDocumentSync":{"change":2,"openClose":true,"willSave":false,"willSaveWaitUntil":false},"typeDefinitionProvider":true,"typeHierarchyProvider":true,"workspace":{"fileOperations":{"willRename":{"filters":[{"pattern":{"glob":"**/*.dart","matches":"file"},"scheme":"file"},{"pattern":{"glob":"**/","matches":"folder"},"scheme":"file"}]}},"workspaceFolders":{"changeNotifications":true,"supported":true}},"workspaceSymbolProvider":true},"serverInfo":{"name":"Dart SDK LSP Analysis Server","version":"3.12.0"}}}
+[stdout] {"id":1,"jsonrpc":"2.0","method":"window/workDoneProgress/create","params":{"token":"ANALYZING"}}
+[stdout] {"jsonrpc":"2.0","method":"$/progress","params":{"token":"ANALYZING","value":{"kind":"begin","title":"Analyzing…"}}}
+[stderr] 
+[stderr] ===== CRASH =====
+[stderr] ExceptionCode=-1073741819, ExceptionFlags=0, ExceptionAddress=00007FF7509372FC
+[stderr] version=3.12.0 (stable) (Fri May 8 01:51:14 2026 -0700) on "windows_x64"
+[stderr] pid=1860, thread=18888, isolate_group=main(00000173C016C160), isolate=(nil)(0000000000000000)
+[stderr] os=windows, arch=x64, comp=no, sim=no
+[stderr] isolate_instructions=173c1e6ec00, vm_instructions=173be4d8000
+[stderr] fp=173cc0449f8, sp=239a0ffbf0, pc=7ff7509372fc
+[stderr] Stack dump aborted because GetAndValidateThreadStackBounds failed.
+[stderr]   pc 0x00007ff7509372fc fp 0x00000173cc0449f8 Dart_IsolateRunnableHeapSizeMetric+0x7b56c
+
+```
+```
+
+## flutter doctor
+
+```
+[✓] Flutter (Channel stable, 3.44.0, on Microsoft Windows [version 10.0.19045.6466], locale fr-FR) [931ms]
+    • Flutter version 3.44.0 on channel stable at C:\flutter
+    • Upstream repository https://github.com/flutter/flutter.git
+    • Framework revision 559ffa3f75 (5 months ago), 2026-05-15 14:13:13 -0700
+    • Engine revision 4c525dac5e
+    • Dart version 3.12.0
+    • DevTools version 2.57.0
+    • Feature flags: enable-web, enable-linux-desktop, enable-macos-desktop, enable-windows-desktop, enable-android, enable-ios, cli-animations, enable-native-assets, enable-swift-package-manager, omit-legacy-version-file, enable-lldb-debugging, enable-uiscene-migration
+
+[✓] Windows Version (10 Famille 64-bit, 22H2, 2009) [8,3s]
+
+[!] Android toolchain - develop for Android devices (Android SDK version 37.0.0) [6,5s]
+    • Android SDK at C:\Users\gzers\AppData\Local\Android\Sdk
+    • Emulator version 37.2.12.0 (build_id 16428233) (CL:N/A)
+    • Platform android-CinnamonBun-ext23, build-tools 37.0.0
+    • ANDROID_HOME = C:\Users\gzers\AppData\Local\Android\Sdk
+    • Java binary at: C:\Program Files\Java\jdk-17\bin\java
+      This JDK is specified in your Flutter configuration.
+      To change the current JDK, run: `flutter config --jdk-dir="path/to/jdk"`.
+    • Java version Java(TM) SE Runtime Environment (build 17.0.12+8-LTS-286)
+    ✗ Android license status unknown.
+      Run `flutter doctor --android-licenses` to accept the SDK licenses.
+      See https://flutter.dev/to/windows-android-setup for more details.
+
+[✓] Chrome - develop for the web [310ms]
+    • Chrome at C:\Program Files\Google\Chrome\Application\chrome.exe
+
+[✓] Visual Studio - develop Windows apps (Visual Studio Community 2022 17.14.10) [307ms]
+    • Visual Studio at C:\Program Files\Microsoft Visual Studio\2022\Community
+    • Visual Studio Community 2022 version 17.14.36327.8
+    • Windows 10 SDK version 10.0.26100.0
+
+[✓] Connected device (3 available) [5,4s]
+    • Windows (desktop) • windows • windows-x64    • Microsoft Windows [version 10.0.19045.6466]
+    • Chrome (web)      • chrome  • web-javascript • Google Chrome 149.0.7827.201
+    • Edge (web)        • edge    • web-javascript • Microsoft Edge 154.0.4258.37
+
+[✓] Network resources [5,4s]
+    • All expected network resources are available.
+
+! Doctor found issues in 1 category.
+```

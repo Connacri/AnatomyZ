@@ -8,6 +8,10 @@
     ],
     "rewrites": [
       {
+        "source": "/security-policy",
+        "destination": "/security-policy/index.html"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
