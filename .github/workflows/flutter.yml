@@ -1,17 +1,24 @@
-name: AnatomyZ CI
+name: AnatomyZ CI & Release
 
 on:
   push:
     branches: [master]
+    tags: ['v*']
   pull_request:
     branches: [master]
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "anatomyz-ci-${{ github.ref }}"
+  cancel-in-progress: true
 
 jobs:
-  flutter:
+  flutter-and-web:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -28,6 +35,10 @@ jobs:
         with:
           channel: stable
           cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
 
       - name: Verify native Android host
         run: test -f android/app/build.gradle.kts
@@ -65,9 +76,58 @@ jobs:
       - run: flutter build apk --release
       - run: flutter build appbundle --release
 
+      - name: Prepare Android release binaries (APK & AAB)
+        working-directory: .
+        run: |
+          cp flutter_app/build/app/outputs/flutter-apk/app-release.apk flutter_app/build/app/outputs/flutter-apk/AnatomyZ-release.apk
+          cp flutter_app/build/app/outputs/bundle/release/app-release.aab flutter_app/build/app/outputs/bundle/release/AnatomyZ-release.aab
+
+      - name: Build Web Application & bundle Android releases into site/
+        working-directory: .
+        run: |
+          npm install
+          npm run build
+          mkdir -p site/releases
+          cp flutter_app/build/app/outputs/flutter-apk/AnatomyZ-release.apk site/releases/AnatomyZ-release.apk
+          cp flutter_app/build/app/outputs/bundle/release/AnatomyZ-release.aab site/releases/AnatomyZ-release.aab
+
       - uses: actions/upload-artifact@v4
         with:
           name: AnatomyZ-android
           path: |
             flutter_app/build/app/outputs/flutter-apk/app-release.apk
+            flutter_app/build/app/outputs/flutter-apk/AnatomyZ-release.apk
             flutter_app/build/app/outputs/bundle/release/app-release.aab
+            flutter_app/build/app/outputs/bundle/release/AnatomyZ-release.aab
+
+      - name: Publish APK and AAB to GitHub Releases
+        if: github.event_name != 'pull_request'
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if [[ "$TAG" != v* ]]; then
+            TAG="latest"
+          fi
+          TITLE="AnatomyZ Android & Web Release (${GITHUB_SHA::7})"
+          NOTES="Build automatique Android (APK & AAB) et Web généré depuis le commit ${GITHUB_SHA}."
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" \
+              flutter_app/build/app/outputs/flutter-apk/app-release.apk \
+              flutter_app/build/app/outputs/flutter-apk/AnatomyZ-release.apk \
+              flutter_app/build/app/outputs/bundle/release/app-release.aab \
+              flutter_app/build/app/outputs/bundle/release/AnatomyZ-release.aab \
+              --clobber
+            gh release edit "$TAG" --title "$TITLE" --notes "$NOTES" --latest
+          else
+            gh release create "$TAG" \
+              flutter_app/build/app/outputs/flutter-apk/app-release.apk \
+              flutter_app/build/app/outputs/flutter-apk/AnatomyZ-release.apk \
+              flutter_app/build/app/outputs/bundle/release/app-release.aab \
+              flutter_app/build/app/outputs/bundle/release/AnatomyZ-release.aab \
+              --target "${GITHUB_SHA}" \
+              --title "$TITLE" \
+              --notes "$NOTES" \
+              --latest
+          fi

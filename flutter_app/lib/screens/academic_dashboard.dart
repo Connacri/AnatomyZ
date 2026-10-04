@@ -2,34 +2,63 @@ import 'package:flutter/material.dart';
 
 import '../data/academic_repository.dart';
 import '../data/exam_repository.dart';
-import '../models/anatomy_exam_assignment.dart';
 import '../models/anatomy_exam_result.dart';
 import '../models/anatomy_history_entry.dart';
 import '../models/anatomy_role.dart';
+import 'anatomy_home.dart';
+import 'professor_exam_editor.dart';
+import 'student_exam.dart';
 
-class AcademicDashboardPage extends StatelessWidget {
+class AcademicDashboardPage extends StatefulWidget {
   const AcademicDashboardPage({super.key, required this.role});
   final AnatomyRole role;
 
   @override
+  State<AcademicDashboardPage> createState() => _AcademicDashboardPageState();
+}
+
+class _AcademicDashboardPageState extends State<AcademicDashboardPage> {
+  @override
   Widget build(BuildContext context) {
+    final isProf = widget.role == AnatomyRole.professor;
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          role == AnatomyRole.professor
-              ? 'Espace professeur'
-              : 'Espace étudiant',
-        ),
+        title: Text(isProf ? 'Espace Professeur' : 'Espace Étudiant'),
+        actions: [
+          if (isProf)
+            IconButton(
+              tooltip: 'Créer un examen',
+              icon: const Icon(Icons.add_task),
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ProfessorExamEditor(),
+                  ),
+                );
+                if (mounted) setState(() {});
+              },
+            ),
+          IconButton(
+            tooltip: 'Atlas 3D',
+            icon: const Icon(Icons.view_in_ar),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AnatomyHomePage()),
+            ),
+          ),
+        ],
       ),
-      body: role == AnatomyRole.professor
-          ? const _ProfessorDashboard()
-          : const _StudentDashboard(),
+      body: isProf
+          ? _ProfessorDashboard(onRefresh: () => setState(() {}))
+          : _StudentDashboard(onRefresh: () => setState(() {})),
     );
   }
 }
 
 class _ProfessorDashboard extends StatelessWidget {
-  const _ProfessorDashboard();
+  const _ProfessorDashboard({required this.onRefresh});
+  final VoidCallback onRefresh;
 
   @override
   Widget build(BuildContext context) {
@@ -44,17 +73,26 @@ class _ProfessorDashboard extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        const Text('Pilotage pédagogique', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        const Text(
+          'Pilotage pédagogique',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 6),
-        const Text('Classes, étudiants, examens assignés et résultats réunis au même endroit.'),
+        const Text(
+          'Classes, étudiants, création d’examens et suivi réunis dans un seul espace.',
+        ),
         const SizedBox(height: 20),
         Row(
           children: [
-            Expanded(child: _StatCard(label: 'Classes', value: '${classes.length}')),
+            Expanded(
+              child: _StatCard(label: 'Classes', value: '${classes.length}'),
+            ),
             const SizedBox(width: 10),
             Expanded(child: _StatCard(label: 'Étudiants', value: '$students')),
             const SizedBox(width: 10),
-            Expanded(child: _StatCard(label: 'Examens', value: '${exams.length}')),
+            Expanded(
+              child: _StatCard(label: 'Examens', value: '${exams.length}'),
+            ),
           ],
         ),
         const SizedBox(height: 20),
@@ -62,31 +100,46 @@ class _ProfessorDashboard extends StatelessWidget {
           title: 'Mes classes',
           icon: Icons.groups,
           child: Column(
-            children: classes.map((item) => ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const CircleAvatar(child: Icon(Icons.school)),
-              title: Text(item.name),
-              subtitle: Text('${item.studentIds.length} étudiant(s)'),
-              trailing: const Icon(Icons.chevron_right),
-            )).toList(growable: false),
+            children: classes
+                .map(
+                  (item) => ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const CircleAvatar(child: Icon(Icons.school)),
+                    title: Text(item.name),
+                    subtitle: Text('${item.studentIds.length} étudiant(s)'),
+                  ),
+                )
+                .toList(growable: false),
           ),
         ),
         _SectionCard(
-          title: 'Examens',
+          title: 'Examens publiés',
           icon: Icons.assignment,
-          child: Column(
-            children: exams.map((exam) => ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.quiz),
-              title: Text(exam.title),
-              subtitle: Text('${exam.questions.length} question(s) · ${exam.durationMinutes} min'),
-            )).toList(growable: false),
+          trailing: FilledButton.tonalIcon(
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('Nouvel examen'),
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ProfessorExamEditor()),
+              );
+              onRefresh();
+            },
           ),
-        ),
-        const _SectionCard(
-          title: 'Fonctions pédagogiques',
-          icon: Icons.auto_graph,
-          child: Text('Banque de questions · assignation par classe · calendrier · notes · statistiques · correction · export · parcours pédagogiques.'),
+          child: Column(
+            children: exams
+                .map(
+                  (exam) => ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.quiz),
+                    title: Text(exam.title),
+                    subtitle: Text(
+                      '${exam.questions.length} question(s) · ${exam.durationMinutes} min',
+                    ),
+                  ),
+                )
+                .toList(growable: false),
+          ),
         ),
       ],
     );
@@ -94,44 +147,73 @@ class _ProfessorDashboard extends StatelessWidget {
 }
 
 class _StudentDashboard extends StatelessWidget {
-  const _StudentDashboard();
+  const _StudentDashboard({required this.onRefresh});
+  final VoidCallback onRefresh;
 
   @override
   Widget build(BuildContext context) {
     final repository = AcademicRepository.instance;
-    final assignments = repository.assignmentsForStudent('student-demo');
+    final exams = AnatomyExamRepository.instance.exams;
     final results = repository.resultsForStudent('student-demo');
     final history = repository.historyForStudent('student-demo');
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        const Text('Mon espace', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        const Text(
+          'Mon espace',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 6),
-        const Text('Examens assignés, résultats, notes et historique d’apprentissage.'),
+        const Text(
+          'Examens disponibles, résultats, notes et historique d’apprentissage.',
+        ),
         const SizedBox(height: 20),
         Row(
           children: [
-            Expanded(child: _StatCard(label: 'Assignés', value: '${assignments.length}')),
+            Expanded(
+              child: _StatCard(label: 'Examens', value: '${exams.length}'),
+            ),
             const SizedBox(width: 10),
-            Expanded(child: _StatCard(label: 'Résultats', value: '${results.length}')),
+            Expanded(
+              child: _StatCard(label: 'Résultats', value: '${results.length}'),
+            ),
             const SizedBox(width: 10),
-            Expanded(child: _StatCard(label: 'Activités', value: '${history.length}')),
+            Expanded(
+              child: _StatCard(label: 'Activités', value: '${history.length}'),
+            ),
           ],
         ),
         const SizedBox(height: 20),
         _SectionCard(
-          title: 'Examens assignés',
+          title: 'Examens disponibles',
           icon: Icons.assignment_turned_in,
-          child: assignments.isEmpty
-              ? const Text('Aucun examen assigné pour le moment.')
+          child: exams.isEmpty
+              ? const Text('Aucun examen disponible pour le moment.')
               : Column(
-                  children: assignments.map((assignment) => ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.pending_actions),
-                    title: Text('Examen ${assignment.examId}'),
-                    subtitle: Text(_statusLabel(assignment.status)),
-                  )).toList(growable: false),
+                  children: exams
+                      .map(
+                        (exam) => ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(exam.title),
+                          subtitle: Text(
+                            '${exam.questions.length} question(s) · ${exam.durationMinutes} min',
+                          ),
+                          trailing: FilledButton(
+                            onPressed: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => StudentExamPage(exam: exam),
+                                ),
+                              );
+                              onRefresh();
+                            },
+                            child: const Text('Passer'),
+                          ),
+                        ),
+                      )
+                      .toList(growable: false),
                 ),
         ),
         _SectionCard(
@@ -145,11 +227,15 @@ class _StudentDashboard extends StatelessWidget {
                     _StudentScoreBarChart(results: results),
                     const SizedBox(height: 12),
                     const Divider(),
-                    ...results.map((result) => ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text('Examen ${result.examId}'),
-                      subtitle: Text('${result.score}/${result.maxScore} · ${result.percentage.toStringAsFixed(1)} % · ${result.grade}'),
-                    )),
+                    ...results.map(
+                      (result) => ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text('Examen ${result.examId}'),
+                        subtitle: Text(
+                          '${result.score}/${result.maxScore} · ${result.percentage.toStringAsFixed(1)} % · ${result.grade}',
+                        ),
+                      ),
+                    ),
                   ],
                 ),
         ),
@@ -159,29 +245,20 @@ class _StudentDashboard extends StatelessWidget {
           child: history.isEmpty
               ? const Text('Votre historique apparaîtra ici.')
               : Column(
-                  children: history.map((entry) => ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(_historyIcon(entry.type)),
-                    title: Text(entry.title),
-                    subtitle: Text(entry.occurredAt.toLocal().toString()),
-                  )).toList(growable: false),
+                  children: history
+                      .map(
+                        (entry) => ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(_historyIcon(entry.type)),
+                          title: Text(entry.title),
+                          subtitle: Text(entry.occurredAt.toLocal().toString()),
+                        ),
+                      )
+                      .toList(growable: false),
                 ),
         ),
       ],
     );
-  }
-
-  static String _statusLabel(ExamAssignmentStatus status) {
-    switch (status) {
-      case ExamAssignmentStatus.assigned:
-        return 'À faire';
-      case ExamAssignmentStatus.started:
-        return 'En cours';
-      case ExamAssignmentStatus.submitted:
-        return 'Soumis';
-      case ExamAssignmentStatus.expired:
-        return 'Expiré';
-    }
   }
 
   static IconData _historyIcon(AnatomyHistoryType type) {
@@ -207,44 +284,70 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Card(
-    child: Padding(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        children: [
-          Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          Text(label, textAlign: TextAlign.center),
-        ],
-      ),
-    ),
-  );
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(label, textAlign: TextAlign.center),
+            ],
+          ),
+        ),
+      );
 }
 
 class _SectionCard extends StatelessWidget {
-  const _SectionCard({required this.title, required this.icon, required this.child});
+  const _SectionCard({
+    required this.title,
+    required this.icon,
+    required this.child,
+    this.trailing,
+  });
   final String title;
   final IconData icon;
   final Widget child;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) => Card(
-    margin: const EdgeInsets.only(bottom: 12),
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            Icon(icon),
-            const SizedBox(width: 8),
-            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-          ]),
-          const SizedBox(height: 10),
-          child,
-        ],
-      ),
-    ),
-  );
+        margin: const EdgeInsets.only(bottom: 12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(icon),
+                      const SizedBox(width: 8),
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (trailing != null) trailing!,
+                ],
+              ),
+              const SizedBox(height: 10),
+              child,
+            ],
+          ),
+        ),
+      );
 }
 
 class _StudentScoreBarChart extends StatelessWidget {

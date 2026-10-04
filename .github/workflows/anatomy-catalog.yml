@@ -1,25 +1,20 @@
-name: Build AnatomyZ anatomy catalog
+name: Build AnatomyZ anatomy catalog & Deploy Web
 
 on:
   push:
     branches: [master]
-    paths:
-      - "scripts/**"
-      - "docs/ANATOMY_CATALOG_PIPELINE.md"
-      - ".github/workflows/anatomy-catalog.yml"
-      - "site/**"
-      - "src/**"
-      - "index.html"
-      - "package.json"
-      - "vite.config.ts"
   workflow_dispatch:
   schedule:
     - cron: "0 3 * * 0"
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
   build-catalog:
@@ -29,15 +24,26 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
 
-      - name: Build web application with roles into site/
+      - name: Build web application into site/
         run: |
           npm install
           npm run build
+          touch site/.nojekyll
+          cp site/index.html site/404.html
+
+      - name: Attach latest Android APK & AAB releases into site/releases/
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p site/releases
+          gh release download latest --pattern "*.apk" --pattern "*.aab" --dir site/releases --clobber || true
 
       - uses: actions/setup-python@v5
         with:
@@ -47,8 +53,15 @@ jobs:
 
       - run: pip install -r scripts/requirements.txt
       - run: python scripts/build_mesh_manifest.py
-      - run: python scripts/import_ontologies.py
-      - run: python scripts/verify_mesh_mappings.py
+
+      - name: Build or reuse FMA/UBERON ontology catalog
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ] || git diff --name-only HEAD~1 HEAD | grep -E '^(scripts/import_ontologies\.py|scripts/verify_mesh_mappings\.py|data/)' >/dev/null 2>&1; then
+            python scripts/import_ontologies.py
+            python scripts/verify_mesh_mappings.py
+          else
+            python scripts/sync_deployed_catalog.py || (python scripts/import_ontologies.py && python scripts/verify_mesh_mappings.py)
+          fi
 
       - uses: actions/configure-pages@v5
 
@@ -56,6 +69,6 @@ jobs:
         with:
           path: site
 
-      - name: Deploy catalog
+      - name: Deploy catalog & web app to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

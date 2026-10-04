@@ -14,9 +14,63 @@
       content="Atlas anatomique humain 3D interactif basé sur un Knowledge Graph (FMA/UBERON), des modèles GLB/GLTF vérifiés et un espace pédagogique Professeur/Étudiant."
     />
     <meta property="og:type" content="website" />
+    <style>
+      :root { color-scheme: dark; }
+      body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, sans-serif; background: #08111f; color: #eef4ff; }
+      .site-fallback-main { max-width: 1000px; margin: auto; padding: 64px 24px; }
+      .site-fallback-badge { display: inline-block; padding: 8px 14px; border: 1px solid #2c4a70; border-radius: 999px; color: #8fc5ff; font-size: 14px; }
+      .site-fallback-h1 { font-size: clamp(40px, 7vw, 72px); margin: 20px 0 12px; font-weight: 700; }
+      .site-fallback-p { font-size: 18px; line-height: 1.7; color: #b8c7da; }
+      .site-fallback-roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 28px; }
+      .site-fallback-role-card { display: block; padding: 20px; border-radius: 18px; border: 1px solid #203651; background: #0d1a2b; color: #eef4ff; text-decoration: none; }
+      .site-fallback-role-card strong { display: block; font-size: 18px; margin-bottom: 4px; color: #8fc5ff; }
+      .site-fallback-role-card span { font-size: 14px; color: #b8c7da; }
+      .site-fallback-btn { display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; padding: 12px 20px; border-radius: 14px; font-weight: 600; font-size: 14px; text-decoration: none; border: 1px solid #2c4a70; background: #0d1a2b; color: #eef4ff; }
+      .site-fallback-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 36px 0; }
+      .site-fallback-card { padding: 22px; border: 1px solid #203651; border-radius: 18px; background: #0d1a2b; }
+      .site-fallback-card h2 { margin-top: 0; margin-bottom: 8px; font-size: 18px; }
+      .site-fallback-card p { font-size: 15px; line-height: 1.6; color: #b8c7da; margin: 0; }
+      .site-fallback-links { display: flex; flex-wrap: wrap; gap: 24px; }
+      .site-fallback-link { color: #8fc5ff; text-decoration: none; font-size: 16px; }
+      .site-fallback-footer { margin-top: 48px; color: #71839b; font-size: 14px; }
+    </style>
   </head>
   <body class="bg-[#08111f] text-[#eef4ff] antialiased selection:bg-indigo-500 selection:text-white">
-    <div id="root"></div>
+    <div id="root">
+      <main class="site-fallback-main">
+        <span class="site-fallback-badge">AnatomyZ · Human 3D Anatomy</span>
+        <h1 class="site-fallback-h1">AnatomyZ</h1>
+        <p class="site-fallback-p">
+          Un atlas anatomique humain 3D natif Flutter et Web, construit autour d'un
+          Knowledge Graph anatomique, des ontologies FMA/UBERON et de modèles
+          GLB/GLTF vérifiés progressivement.
+        </p>
+        <div class="site-fallback-roles">
+          <a href="#professor" class="site-fallback-role-card">
+            <strong>Professeur</strong>
+            <span>Créer des quiz, gérer les classes et publier des examens</span>
+          </a>
+          <a href="#student" class="site-fallback-role-card">
+            <strong>Étudiant</strong>
+            <span>Consulter les examens assignés, les passer et suivre ses notes</span>
+          </a>
+        </div>
+        <a href="#atlas" class="site-fallback-btn">Explorer directement l’atlas 3D</a>
+        <div class="site-fallback-grid">
+          <section class="site-fallback-card"><h2>🧠 Knowledge Graph</h2><p>Structures, synonymes et relations anatomiques.</p></section>
+          <section class="site-fallback-card"><h2>🦴 3D Anatomy</h2><p>Modèles GLB/GLTF, sélection, visibilité et matériaux.</p></section>
+          <section class="site-fallback-card"><h2>🔗 Mapping Engine</h2><p>Correspondances exactes, xrefs et mappings vérifiés.</p></section>
+          <section class="site-fallback-card"><h2>🎓 Education</h2><p>Professeur, étudiant, quiz, questions et mode examen sécurisé.</p></section>
+        </div>
+        <div class="site-fallback-links">
+          <a class="site-fallback-link" href="https://github.com/Connacri/AnatomyZ/releases/latest/download/AnatomyZ-release.apk">→ Télécharger APK (Release)</a>
+          <a class="site-fallback-link" href="https://github.com/Connacri/AnatomyZ/releases/latest/download/AnatomyZ-release.aab">→ Télécharger AAB (Release)</a>
+          <a class="site-fallback-link" href="./catalog/index.json">→ Catalogue anatomique</a>
+          <a class="site-fallback-link" href="https://github.com/Connacri/AnatomyZ">→ Dépôt GitHub</a>
+        </div>
+        <footer class="site-fallback-footer">Projet académique — Professeur Zenasni Kamel</footer>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

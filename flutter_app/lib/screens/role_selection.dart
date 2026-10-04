@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../models/anatomy_role.dart';
+import 'academic_dashboard.dart';
 import 'anatomy_home.dart';
-import 'role_home.dart';
 
 class RoleSelectionPage extends StatelessWidget {
   const RoleSelectionPage({super.key});
@@ -12,21 +12,6 @@ class RoleSelectionPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('AnatomyZ'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: OutlinedButton.icon(
-              icon: const Icon(Icons.view_in_ar, size: 18),
-              label: const Text('Atlas 3D'),
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const AnatomyHomePage(),
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
       body: SafeArea(
         child: Center(
@@ -36,7 +21,7 @@ class RoleSelectionPage extends StatelessWidget {
               shrinkWrap: true,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               children: [
-                const Icon(Icons.biotech, size: 68, color: Color(0xFF8FC5FF)),
+                const Icon(Icons.biotech, size: 64, color: Color(0xFF8FC5FF)),
                 const SizedBox(height: 12),
                 Text(
                   'Choisissez votre rôle',
@@ -57,11 +42,11 @@ class RoleSelectionPage extends StatelessWidget {
                 _RoleCard(
                   icon: Icons.school,
                   title: 'Professeur',
-                  subtitle: 'Créer des quiz et des questions d’examen',
+                  subtitle: 'Créer des quiz, gérer les classes et publier des examens',
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const RoleHomePage(
+                      builder: (_) => const AcademicDashboardPage(
                         role: AnatomyRole.professor,
                       ),
                     ),
@@ -71,11 +56,11 @@ class RoleSelectionPage extends StatelessWidget {
                 _RoleCard(
                   icon: Icons.person,
                   title: 'Étudiant',
-                  subtitle: 'Consulter les examens et les passer',
+                  subtitle: 'Consulter les examens assignés, les passer et suivre ses notes',
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const RoleHomePage(
+                      builder: (_) => const AcademicDashboardPage(
                         role: AnatomyRole.student,
                       ),
                     ),
