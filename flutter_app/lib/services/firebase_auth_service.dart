@@ -19,6 +19,7 @@ class AnatomyUser {
 
   bool get isProfessor => role == 'professor';
   bool get isStudent => role == 'student';
+  bool get isAdmin => role == 'admin' || email.toLowerCase() == 'forslog@gmail.com';
 
   Map<String, dynamic> toMap() {
     return {

@@ -106,7 +106,15 @@ export interface AnatomyExam {
   questions: AnatomyExamQuestion[];
   durationMinutes: number;
   hideAnatomy: boolean;
+  targetSystem?: string;
+  isPublished?: boolean;
+  targetCohort?: string;
+  passingScore?: number;
 }
+
+export type ExamAssignment = AnatomyExamAssignment;
+export type StudentExamResult = AnatomyExamResult;
+export type AcademicClass = AnatomyClass;
 
 export interface AnatomyClass {
   id: string;

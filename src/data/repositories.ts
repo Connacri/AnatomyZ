@@ -522,36 +522,165 @@ export class AnatomyExamRepository {
   private examsList: AnatomyExam[] = [
     {
       id: 'demo-cardiovascular',
-      title: 'Évaluation — Système cardiovasculaire',
-      description: 'Quiz de démonstration AnatomyZ.',
+      title: 'Évaluation Clinique — Système Cardiovasculaire & Grands Vaisseaux',
+      description: 'Anatomie du myocarde, vascularisation coronaire et anatomie topographique médiastinale.',
       durationMinutes: 30,
       hideAnatomy: true,
+      targetSystem: 'Cardiovasculaire',
+      isPublished: true,
+      targetCohort: 'DFGSM 2',
+      passingScore: 12,
       questions: [
         {
           id: 'q1',
-          text: 'Quel organe pompe le sang dans la circulation ?',
+          text: 'Quel organe musculaire creux assure la propulsion systémique du sang dans la grande circulation ?',
           type: ExamQuestionType.Quiz,
-          options: ['Le cœur', 'Le foie', 'Le rein', 'Le poumon'],
+          options: ['Le ventricule gauche et le myocarde', 'Le foie lobulaire', 'Le diaphragme thoraco-abdominal', 'La rate hémo-lymphatique'],
           correctOptionIndex: 0,
-          points: 1,
+          points: 2,
           conceptId: 'FMA:55675',
           conceptNameFr: 'Cœur',
           conceptNameEn: 'Heart',
-          tags: ['cardiovasculaire'],
+          tags: ['cardiovasculaire', 'myocarde'],
           difficulty: 1,
         },
         {
           id: 'q2',
-          text: 'Quel est le tronc artériel principal partant du ventricule gauche ?',
+          text: 'Quel est le tronc artériel principal émergeant du ventricule gauche au-dessus des valves sigmoïdes ?',
           type: ExamQuestionType.Question,
           options: [],
           expectedAnswer: 'Aorte',
-          points: 1,
+          points: 2,
           conceptId: 'FMA:3734',
           conceptNameFr: 'Aorte',
           conceptNameEn: 'Aorta',
-          tags: ['cardiovasculaire'],
+          tags: ['cardiovasculaire', 'artères'],
           difficulty: 1,
+        },
+        {
+          id: 'q3',
+          text: 'Identifier l’oreillette droite (atrium droit) recevant le sang désoxygéné par les veines caves.',
+          type: ExamQuestionType.Identify3D,
+          options: ['Atrium droit', 'Atrium gauche', 'Ventricule droit', 'Tronc pulmonaire'],
+          correctOptionIndex: 0,
+          points: 3,
+          conceptId: 'FMA:7098',
+          conceptNameFr: 'Atrium droit',
+          conceptNameEn: 'Right atrium',
+          meshSex: 'male',
+          meshFile: 'cardiovascular_male.glb',
+          meshNode: 'Right atrium',
+          tags: ['cardiovasculaire', '3D', 'oreillette'],
+          difficulty: 2,
+        },
+      ],
+    },
+    {
+      id: 'demo-neuro',
+      title: 'Neuro-anatomie — Tronc Cérébral & Nerfs Crâniens',
+      description: 'Émergence des paires crâniennes, foramen jugulaire et étage moyen de la base du crâne.',
+      durationMinutes: 45,
+      hideAnatomy: false,
+      targetSystem: 'Nerveux',
+      isPublished: true,
+      targetCohort: 'DFGSM 2',
+      passingScore: 10,
+      questions: [
+        {
+          id: 'qn1',
+          text: 'Quel nerf crânien traverse le foramen ovale de la grande aile du sphénoïde ?',
+          type: ExamQuestionType.Quiz,
+          options: ['Nerf mandibulaire (V3)', 'Nerf maxillaire (V2)', 'Nerf ophtalmique (V1)', 'Nerf facial (VII)'],
+          correctOptionIndex: 0,
+          points: 2,
+          conceptId: 'FMA:52627',
+          conceptNameFr: 'Nerf mandibulaire (V3)',
+          conceptNameEn: 'Mandibular nerve',
+          tags: ['neuro', 'base-du-crane'],
+          difficulty: 2,
+        },
+        {
+          id: 'qn2',
+          text: 'Quel nerf crânien émerge de la face postérieure du tronc cérébral (sous les colliculi inférieurs) ?',
+          type: ExamQuestionType.Quiz,
+          options: ['Nerf trochléaire (IV)', 'Nerf abducens (VI)', 'Nerf oculomoteur (III)', 'Nerf trijumeau (V)'],
+          correctOptionIndex: 0,
+          points: 2,
+          conceptId: 'FMA:52625',
+          conceptNameFr: 'Nerf trochléaire (IV)',
+          conceptNameEn: 'Trochlear nerve',
+          tags: ['neuro', 'tronc-cerebral'],
+          difficulty: 3,
+        },
+      ],
+    },
+    {
+      id: 'demo-osteo',
+      title: 'Ostéologie & Biomécanique du Rachis',
+      description: 'Morphologie des vertèbres cervicales, jonction cervico-occipitale et courbures physiologiques.',
+      durationMinutes: 25,
+      hideAnatomy: true,
+      targetSystem: 'Squelettique',
+      isPublished: true,
+      targetCohort: 'DFGSM 2',
+      passingScore: 10,
+      questions: [
+        {
+          id: 'qo1',
+          text: 'Quelle vertèbre cervicale est caractérisée par son apophyse odontoïde (dent de l’axis) ?',
+          type: ExamQuestionType.Quiz,
+          options: ['Axis (C2)', 'Atlas (C1)', 'Vertèbre proéminente (C7)', 'C3'],
+          correctOptionIndex: 0,
+          points: 2,
+          conceptId: 'FMA:13478',
+          conceptNameFr: 'Axis (C2)',
+          conceptNameEn: 'Axis',
+          tags: ['osteo', 'rachis'],
+          difficulty: 1,
+        },
+        {
+          id: 'qo2',
+          text: 'Quel foramen vertébral est traversé par les artères vertébrales dans le rachis cervical ?',
+          type: ExamQuestionType.Quiz,
+          options: ['Foramen transversaire', 'Foramen intervertébral', 'Foramen magnum', 'Canal sacré'],
+          correctOptionIndex: 0,
+          points: 2,
+          conceptId: 'FMA:13480',
+          conceptNameFr: 'Foramen transversaire',
+          conceptNameEn: 'Transverse foramen',
+          tags: ['osteo', 'cervical'],
+          difficulty: 2,
+        },
+      ],
+    },
+    {
+      id: 'demo-viscera',
+      title: 'Splanchnologie — Viscères Abdominaux & Péritoine',
+      description: 'Anatomie hépatique, carrefour biliopancréatique et rétro-cavité des épiploons.',
+      durationMinutes: 40,
+      hideAnatomy: false,
+      targetSystem: 'Digestif',
+      isPublished: false,
+      targetCohort: 'DFGSM 3',
+      passingScore: 12,
+      questions: [
+        {
+          id: 'qv1',
+          text: 'Quelles sont les trois branches principales issues directement du tronc cœliaque ?',
+          type: ExamQuestionType.Quiz,
+          options: [
+            'Artère gastrique gauche, artère hépatique commune, artère splénique',
+            'Artère mésentérique supérieure, artère rénale gauche, aorte',
+            'Artère iliaque commune, artère cystique, artère hépatique propre',
+            'Artère gastro-duodénale, artère splénique, artère phrénique'
+          ],
+          correctOptionIndex: 0,
+          points: 3,
+          conceptId: 'FMA:14757',
+          conceptNameFr: 'Tronc cœliaque',
+          conceptNameEn: 'Celiac trunk',
+          tags: ['digestif', 'vaisseaux'],
+          difficulty: 2,
         },
       ],
     },
@@ -562,7 +691,20 @@ export class AnatomyExamRepository {
   }
 
   add(exam: AnatomyExam): void {
-    this.examsList.push(exam);
+    this.examsList.unshift(exam);
+  }
+
+  update(exam: AnatomyExam): void {
+    const idx = this.examsList.findIndex((e) => e.id === exam.id);
+    if (idx !== -1) {
+      this.examsList[idx] = exam;
+    } else {
+      this.examsList.unshift(exam);
+    }
+  }
+
+  delete(id: string): void {
+    this.examsList = this.examsList.filter((e) => e.id !== id);
   }
 }
 

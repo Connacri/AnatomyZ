@@ -95,9 +95,9 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
                         ),
                       ),
                       const PopupMenuDivider(),
-                      PopupMenuItem(
+                      const PopupMenuItem(
                         value: 'fcm',
-                        child: const Row(
+                        child: Row(
                           children: [
                             Icon(Icons.cloud_sync, size: 18, color: Colors.blueAccent),
                             SizedBox(width: 8),
@@ -105,9 +105,9 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
                           ],
                         ),
                       ),
-                      PopupMenuItem(
+                      const PopupMenuItem(
                         value: 'signout',
-                        child: const Row(
+                        child: Row(
                           children: [
                             Icon(Icons.logout, size: 18, color: Colors.redAccent),
                             SizedBox(width: 8),
@@ -215,39 +215,77 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
                       },
                     ),
                     const SizedBox(height: 18),
-                    _RoleCard(
-                      icon: Icons.school,
-                      title: 'Professeur',
-                      subtitle: 'Créer des quiz, gérer les classes et publier des examens',
-                      onTap: () {
-                        if (user != null) _authService.setRole('professor');
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const AcademicDashboardPage(
-                              role: AnatomyRole.professor,
+                    if (user == null) ...[
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF161C24),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFF263140)),
+                        ),
+                        child: Column(
+                          children: [
+                            const Icon(Icons.lock_outline, size: 42, color: Color(0xFFE5DCD0)),
+                            const SizedBox(height: 10),
+                            const Text(
+                              'Authentification Requise',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    _RoleCard(
-                      icon: Icons.person,
-                      title: 'Étudiant',
-                      subtitle: 'Consulter les examens assignés, les passer et suivre ses notes',
-                      onTap: () {
-                        if (user != null) _authService.setRole('student');
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const AcademicDashboardPage(
-                              role: AnatomyRole.student,
+                            const SizedBox(height: 6),
+                            const Text(
+                              'Connectez-vous pour choisir votre rôle et accéder aux espaces de travail. Profil étudiant instantané, enseignant soumis à validation par forslog@gmail.com.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 12, color: Color(0xFF8F9CAE)),
                             ),
-                          ),
-                        );
-                      },
-                    ),
+                            const SizedBox(height: 14),
+                            ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFE5DCD0),
+                                foregroundColor: const Color(0xFF0F1318),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              icon: const Icon(Icons.login),
+                              label: const Text('Se connecter avec Google'),
+                              onPressed: () => _authService.signInWithGoogle(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ] else ...[
+                      _RoleCard(
+                        icon: Icons.school,
+                        title: 'Professeur',
+                        subtitle: 'Créer des quiz, gérer les classes et publier des examens',
+                        onTap: () {
+                          _authService.setRole('professor');
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AcademicDashboardPage(
+                                role: AnatomyRole.professor,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      _RoleCard(
+                        icon: Icons.person,
+                        title: 'Étudiant',
+                        subtitle: 'Consulter les examens assignés, les passer et suivre ses notes',
+                        onTap: () {
+                          _authService.setRole('student');
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AcademicDashboardPage(
+                                role: AnatomyRole.student,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     OutlinedButton.icon(
                       icon: const Icon(Icons.view_in_ar),

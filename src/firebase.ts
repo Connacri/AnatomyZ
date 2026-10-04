@@ -56,6 +56,7 @@ export async function getFirebaseMessaging(): Promise<Messaging | null> {
 }
 
 export const SUPER_ADMIN_EMAILS = [
+  'forslog@gmail.com',
   'samuel69tr00@gmail.com',
   'ramzi.guedouar@gmail.com',
 ];
@@ -138,6 +139,11 @@ export interface UserRecord {
   displayName: string;
   photoURL?: string;
   role: 'student' | 'professor' | 'admin';
+  status?: 'approved' | 'pending_approval' | 'rejected';
+  requestedRole?: 'student' | 'professor' | 'admin';
+  requestedAt?: string;
+  approvedAt?: string;
+  approvedBy?: string;
   matricule?: string;
   university?: string;
   academicYear?: string;
@@ -208,16 +214,29 @@ export async function registerNewUser(
   chosenRole: 'student' | 'professor' | 'admin'
 ): Promise<UserRecord> {
   const userRef = doc(db, 'users', user.uid);
-  const effectiveRole = isSuperAdminEmail(user.email) ? 'admin' : chosenRole;
+  const isSuper = isSuperAdminEmail(user.email);
+  const isInstantStudent = chosenRole === 'student';
+
+  // Student is instantly approved; Professor and Admin require admin approval unless super admin
+  const isApproved = isSuper || isInstantStudent;
+  const effectiveRole = isSuper ? 'admin' : (isApproved ? chosenRole : 'student');
+  const effectiveStatus: 'approved' | 'pending_approval' = isApproved ? 'approved' : 'pending_approval';
+
+  const now = new Date().toISOString();
   const payload: UserRecord = {
     uid: user.uid,
     email: user.email || '',
     displayName: user.displayName || 'Utilisateur AnatomyZ',
     photoURL: user.photoURL || '',
     role: effectiveRole,
+    status: effectiveStatus,
+    requestedRole: chosenRole,
+    requestedAt: now,
+    approvedAt: isApproved ? now : undefined,
+    approvedBy: isSuper ? 'SuperAdmin' : (isInstantStudent ? 'AutoValidation' : undefined),
     notificationsEnabled: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: now,
+    updatedAt: now,
   };
 
   try {
@@ -225,6 +244,41 @@ export async function registerNewUser(
     return payload;
   } catch (error) {
     handleFirestoreError(error, OperationType.CREATE, `users/${user.uid}`);
+  }
+}
+
+export async function approveUserRequest(
+  targetUid: string,
+  approvedRole: 'student' | 'professor' | 'admin',
+  adminEmail?: string
+): Promise<void> {
+  const userRef = doc(db, 'users', targetUid);
+  try {
+    await updateDoc(userRef, {
+      role: approvedRole,
+      status: 'approved',
+      approvedAt: new Date().toISOString(),
+      approvedBy: adminEmail || 'Administrateur',
+      updatedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, `users/${targetUid}`);
+  }
+}
+
+export async function rejectUserRequest(
+  targetUid: string,
+  adminEmail?: string
+): Promise<void> {
+  const userRef = doc(db, 'users', targetUid);
+  try {
+    await updateDoc(userRef, {
+      role: 'student',
+      status: 'rejected',
+      updatedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, `users/${targetUid}`);
   }
 }
 
@@ -236,6 +290,7 @@ export async function updateUserRole(
   try {
     await updateDoc(userRef, {
       role: newRole,
+      status: 'approved',
       updatedAt: new Date().toISOString(),
     });
   } catch (error) {
