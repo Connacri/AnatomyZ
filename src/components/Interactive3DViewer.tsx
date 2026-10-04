@@ -23,6 +23,32 @@ import {
   FlipVertical,
 } from 'lucide-react';
 import { EntityData } from '../types';
+import { AnatomyCatalogRepository } from '../data/repositories';
+
+const catalogRepo = new AnatomyCatalogRepository();
+const structureNameLookup = new Map<string, { fr: string; en: string }>();
+catalogRepo.all.forEach((s) => {
+  [s.nameEn, s.nameFr, ...(s.synonymsEn || []), ...(s.synonymsFr || [])].forEach(
+    (key) => {
+      structureNameLookup.set(key.toLowerCase().trim(), {
+        fr: s.nameFr,
+        en: s.nameEn,
+      });
+    }
+  );
+});
+
+function lookupBilingualName(name: string): { fr: string; en: string } {
+  const hit = structureNameLookup.get(name.toLowerCase().trim());
+  if (hit) return hit;
+  const loose = Array.from(structureNameLookup.keys()).find(
+    (k) =>
+      k.includes(name.toLowerCase()) || name.toLowerCase().includes(k)
+  );
+  return loose
+    ? structureNameLookup.get(loose)!
+    : { fr: name, en: name };
+}
 
 export interface Interactive3DControllerHandle {
   clearSelections: () => void;
@@ -67,6 +93,13 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
   const [nodesTrayOpen, setNodesTrayOpen] = useState<boolean>(false);
   const [showControlsPad, setShowControlsPad] = useState<boolean>(true);
   const [activePreset, setActivePreset] = useState<string>('front');
+  const [interactionMode, setInteractionMode] = useState<'rotate' | 'pan'>(
+    'rotate'
+  );
+  const [selectedBilingual, setSelectedBilingual] = useState<{
+    fr: string;
+    en: string;
+  } | null>(null);
 
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -139,6 +172,7 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
 
     activeNodeRef.current = name;
     setActiveNodeName(name);
+    setSelectedBilingual(name ? lookupBilingualName(name) : null);
     if (name) {
       applyHighlightMaterial(name);
       if (focusCamera) {
@@ -377,9 +411,9 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.06;
-    controls.rotateSpeed = 0.95;
-    controls.zoomSpeed = 1.15;
-    controls.panSpeed = 0.9;
+    controls.rotateSpeed = 0.75;
+    controls.zoomSpeed = 0.45;
+    controls.panSpeed = 0.7;
     controls.enableRotate = true;
     controls.enablePan = true;
     controls.screenSpacePanning = true; // Pan up/down/left/right in screen plane
@@ -613,6 +647,34 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
     };
   }, [modelUrl, preselectedEntityName]);
 
+  // Switch the primary drag between 3D rotation and 2D panning
+  useEffect(() => {
+    const controls = controlsRef.current;
+    if (!controls) return;
+    if (interactionMode === 'pan') {
+      controls.mouseButtons = {
+        LEFT: THREE.MOUSE.PAN,
+        MIDDLE: THREE.MOUSE.DOLLY,
+        RIGHT: THREE.MOUSE.PAN,
+      };
+      controls.touches = {
+        ONE: THREE.TOUCH.PAN,
+        TWO: THREE.TOUCH.DOLLY_PAN,
+      };
+    } else {
+      controls.mouseButtons = {
+        LEFT: THREE.MOUSE.ROTATE,
+        MIDDLE: THREE.MOUSE.DOLLY,
+        RIGHT: THREE.MOUSE.PAN,
+      };
+      controls.touches = {
+        ONE: THREE.TOUCH.ROTATE,
+        TWO: THREE.TOUCH.DOLLY_PAN,
+      };
+    }
+    controls.update();
+  }, [interactionMode, modelUrl]);
+
   const filteredNodes = nodeFilter.trim()
     ? availableNodes.filter((n) =>
         n.toLowerCase().includes(nodeFilter.trim().toLowerCase())
@@ -670,6 +732,36 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
 
           {showControlsPad && (
             <div className="p-2.5 rounded-2xl bg-[#0a1320]/95 backdrop-blur-md border border-[#233852] shadow-2xl space-y-2.5 w-60 text-[#eef4ff] text-xs animate-in fade-in zoom-in-95 duration-200">
+              {/* Interaction mode: 3D rotate vs 2D pan */}
+              <div className="grid grid-cols-2 gap-1">
+                <button
+                  type="button"
+                  onClick={() => setInteractionMode('rotate')}
+                  className={`py-1.5 px-2 rounded-lg border text-[11px] font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                    interactionMode === 'rotate'
+                      ? 'bg-sky-600 text-white border-sky-400'
+                      : 'bg-[#142338] text-[#b8c7da] border-[#2a4468] hover:text-white'
+                  }`}
+                  title="Mode rotation 3D (glisser pour tourner)"
+                >
+                  <RotateCw className="w-3 h-3" />
+                  <span>Rotation</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInteractionMode('pan')}
+                  className={`py-1.5 px-2 rounded-lg border text-[11px] font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                    interactionMode === 'pan'
+                      ? 'bg-sky-600 text-white border-sky-400'
+                      : 'bg-[#142338] text-[#b8c7da] border-[#2a4468] hover:text-white'
+                  }`}
+                  title="Mode déplacement 2D (glisser pour paner la vue)"
+                >
+                  <Move className="w-3 h-3" />
+                  <span>Déplacer 2D</span>
+                </button>
+              </div>
+
               {/* 1. Translation / Pan: Haut, Bas, Gauche, Droite */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-[11px] font-semibold text-[#8fc5ff]">
@@ -886,7 +978,7 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
-                    onClick={() => zoomCamera(0.8)}
+                    onClick={() => zoomCamera(0.9)}
                     className="p-1.5 rounded-lg bg-[#142338] hover:bg-[#1d3556] border border-[#2a4468] text-white flex items-center justify-center transition cursor-pointer"
                     title="Zoom avant (+)"
                   >
@@ -894,7 +986,7 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
                   </button>
                   <button
                     type="button"
-                    onClick={() => zoomCamera(1.25)}
+                    onClick={() => zoomCamera(1.1)}
                     className="p-1.5 rounded-lg bg-[#142338] hover:bg-[#1d3556] border border-[#2a4468] text-white flex items-center justify-center transition cursor-pointer"
                     title="Zoom arrière (-)"
                   >
@@ -914,7 +1006,7 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
 
               {/* Legend Help info */}
               <div className="text-[10px] text-[#71839b] leading-tight pt-0.5">
-                Souris : Clic gauche (Tourner), Clic droit (Déplacer), Molette (Zoom).
+                Souris : Clic gauche ({interactionMode === 'pan' ? 'Déplacer' : 'Tourner'}), Clic droit (Déplacer), Molette (Zoom doux).
               </div>
             </div>
           )}
@@ -938,9 +1030,12 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
                 <ChevronUp className="w-4 h-4 text-[#8fc5ff]" />
               </button>
 
-              {activeNodeName && (
-                <div className="min-h-[44px] px-3.5 py-2 rounded-xl bg-indigo-950/90 backdrop-blur-md border border-indigo-400/40 text-xs font-semibold text-[#eef4ff] flex items-center truncate max-w-[55%] shadow-lg">
-                  <span className="truncate">{activeNodeName}</span>
+              {activeNodeName && selectedBilingual && (
+                <div className="min-h-[44px] px-3.5 py-2 rounded-xl bg-indigo-950/90 backdrop-blur-md border border-indigo-400/40 text-xs font-semibold text-[#eef4ff] flex flex-col justify-center truncate max-w-[60%] shadow-lg">
+                  <span className="truncate">{selectedBilingual.en}</span>
+                  <span className="truncate text-[#8fc5ff] text-[11px]">
+                    {selectedBilingual.fr}
+                  </span>
                 </div>
               )}
             </div>
