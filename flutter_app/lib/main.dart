@@ -46,10 +46,10 @@ class AnatomyZApp extends StatelessWidget {
 
     return ValueListenableBuilder<ThemeScheduleMode>(
       valueListenable: authService.themePreferenceNotifier,
-      builder: (context, _, _) {
+      builder: (context, themePref, _) {
         return ValueListenableBuilder<AppLanguage>(
           valueListenable: authService.languageNotifier,
-          builder: (context, _, _) {
+          builder: (context, lang, _) {
             return MaterialApp(
               title: 'AnatomyZ',
               debugShowCheckedModeBanner: false,
