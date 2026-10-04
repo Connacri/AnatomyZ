@@ -1,4 +1,5 @@
 import React from 'react';
+import logoUrl from '../assets/images/anatomyz_icon_1791101112713.jpg';
 
 interface AnatomyZLogoProps {
   className?: string;
@@ -17,7 +18,7 @@ export const AnatomyZLogo: React.FC<AnatomyZLogoProps> = ({
       className={`relative shrink-0 overflow-hidden ${rounded} bg-[#DACBA8] shadow-xs ${className}`}
     >
       <img
-        src="/icon.png"
+        src={logoUrl}
         alt="Logo officiel AnatomyZ"
         className="w-full h-full object-cover block select-none pointer-events-none"
         loading="eager"

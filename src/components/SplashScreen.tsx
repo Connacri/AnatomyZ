@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AnatomyZLogo } from './AnatomyZLogo';
+import splashUrl from '../assets/images/anatomyz_splash_1791101122723.jpg';
 import { Sparkles, X } from 'lucide-react';
 
 interface SplashScreenProps {
@@ -49,8 +50,8 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
         <div className="relative mb-6">
           <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-3xl overflow-hidden shadow-2xl bg-[#DACBA8] flex items-center justify-center">
             <img
-              src="/icon.png"
-              alt="Logo officiel AnatomyZ"
+              src={splashUrl}
+              alt="Splash AnatomyZ"
               className="w-full h-full object-cover block"
             />
           </div>

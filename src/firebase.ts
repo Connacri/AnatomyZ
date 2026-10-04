@@ -702,7 +702,7 @@ export async function requestWebPushPermissionAndToken(
     let registration: ServiceWorkerRegistration | undefined = undefined;
     if ('serviceWorker' in navigator) {
       try {
-        registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        registration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
         await navigator.serviceWorker.ready;
       } catch (swErr) {
         console.warn('Impossible d’enregistrer le ServiceWorker FCM:', swErr);

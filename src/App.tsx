@@ -629,7 +629,7 @@ export function App() {
       try {
         new Notification(notif.title, {
           body: notif.body,
-          icon: '/icon.png',
+          icon: './icon.png',
         });
       } catch (e) {
         console.warn(e);
