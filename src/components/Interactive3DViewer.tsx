@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { EntityData } from '../types';
 import { AnatomyCatalogRepository } from '../data/repositories';
+import { useAppPreferences } from '../i18n';
 
 const catalogRepo = new AnatomyCatalogRepository();
 const structureNameLookup = new Map<string, { fr: string; en: string }>();
@@ -91,6 +92,7 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
   const [nodeFilter, setNodeFilter] = useState<string>('');
   const [activeNodeName, setActiveNodeName] = useState<string | null>(null);
   const [nodesTrayOpen, setNodesTrayOpen] = useState<boolean>(false);
+  const { lang, t } = useAppPreferences();
   const [showControlsPad, setShowControlsPad] = useState<boolean>(true);
   const [activePreset, setActivePreset] = useState<string>('front');
   const [interactionMode, setInteractionMode] = useState<'rotate' | 'pan'>(
@@ -715,6 +717,43 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
         </div>
       )}
 
+      {/* Top-Left Clinical Anatomical Orientation Gizmo */}
+      {!loading && !loadError && (
+        <div className="absolute top-3 left-3 z-20 pointer-events-auto flex items-center gap-2">
+          <div className="px-2.5 py-1.5 rounded-xl bg-[#1E242C]/90 backdrop-blur-md border border-[#323B46] shadow-lg flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[11px] font-bold text-[#DACBA9] tracking-wide">
+              {lang === 'en' ? '3D ATLAS' : 'ATLAS 3D'}
+            </span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#15191E] border border-[#323B46] text-[#FAF6F0] font-mono uppercase">
+              {activePreset === 'front'
+                ? lang === 'en'
+                  ? 'Anterior (Front)'
+                  : 'Antérieur (Face)'
+                : activePreset === 'back'
+                ? lang === 'en'
+                  ? 'Posterior (Back)'
+                  : 'Postérieur (Dos)'
+                : activePreset === 'left'
+                ? lang === 'en'
+                  ? 'Left Lateral'
+                  : 'Latéral Gauche'
+                : activePreset === 'right'
+                ? lang === 'en'
+                  ? 'Right Lateral'
+                  : 'Latéral Droit'
+                : activePreset === 'top'
+                ? lang === 'en'
+                  ? 'Superior (Cranial)'
+                  : 'Supérieur (Crânial)'
+                : lang === 'en'
+                ? 'Inferior (Caudal)'
+                : 'Inférieur (Caudal)'}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Floating 3D Navigation Controls Dock (Haut, Bas, Gauche, Droite, Tourner & Retourner dans tous les sens) */}
       {!loading && !loadError && (
         <div className="absolute top-3 right-3 z-20 flex flex-col items-end gap-2 pointer-events-auto">
@@ -722,291 +761,293 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
           <button
             type="button"
             onClick={() => setShowControlsPad((v) => !v)}
-            className="px-2.5 py-1.5 rounded-xl bg-[#0d1a2b]/90 backdrop-blur-md border border-[#2c4a70] text-xs font-semibold text-[#8fc5ff] hover:text-white hover:bg-[#152a45] shadow-lg flex items-center gap-1.5 transition cursor-pointer"
-            title="Afficher / Masquer la manette 3D"
+            className="min-h-[44px] px-3 py-1.5 rounded-xl bg-[#1E242C]/95 backdrop-blur-md border border-[#323B46] hover:border-[#DACBA9] text-xs font-semibold text-[#DACBA9] hover:text-[#FAF6F0] shadow-xl flex items-center gap-1.5 transition cursor-pointer"
+            title={lang === 'en' ? 'Toggle 3D Controls' : 'Afficher / Masquer la manette 3D'}
           >
-            <Compass className="w-4 h-4 text-sky-400" />
-            <span className="hidden sm:inline">Commandes 3D</span>
-            <span className="text-[10px] text-[#71839b]">{showControlsPad ? '▲' : '▼'}</span>
+            <Compass className="w-4 h-4 text-[#DACBA9]" />
+            <span className="hidden sm:inline">{lang === 'en' ? '3D Controls' : 'Commandes 3D'}</span>
+            <span className="text-[10px] text-[#8F9CAE]">{showControlsPad ? '▲' : '▼'}</span>
           </button>
 
           {showControlsPad && (
-            <div className="p-2.5 rounded-2xl bg-[#0a1320]/95 backdrop-blur-md border border-[#233852] shadow-2xl space-y-2.5 w-60 text-[#eef4ff] text-xs animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-3 rounded-2xl bg-[#1E242C]/95 backdrop-blur-md border border-[#323B46] shadow-2xl space-y-2.5 w-64 text-[#FAF6F0] text-xs animate-in fade-in zoom-in-95 duration-200">
               {/* Interaction mode: 3D rotate vs 2D pan */}
-              <div className="grid grid-cols-2 gap-1">
+              <div className="grid grid-cols-2 gap-1.5">
                 <button
                   type="button"
                   onClick={() => setInteractionMode('rotate')}
-                  className={`py-1.5 px-2 rounded-lg border text-[11px] font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                  className={`min-h-[40px] py-1.5 px-2 rounded-xl border text-[11px] font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer ${
                     interactionMode === 'rotate'
-                      ? 'bg-sky-600 text-white border-sky-400'
-                      : 'bg-[#142338] text-[#b8c7da] border-[#2a4468] hover:text-white'
+                      ? 'bg-[#DACBA9] text-[#15191E] border-[#DACBA9] shadow-sm'
+                      : 'bg-[#15191E] text-[#BAC3CE] border-[#323B46] hover:text-[#FAF6F0]'
                   }`}
-                  title="Mode rotation 3D (glisser pour tourner)"
+                  title={lang === 'en' ? '3D Rotation mode (drag to rotate)' : 'Mode rotation 3D (glisser pour tourner)'}
                 >
-                  <RotateCw className="w-3 h-3" />
-                  <span>Rotation</span>
+                  <RotateCw className="w-3.5 h-3.5" />
+                  <span>{lang === 'en' ? 'Rotate' : 'Rotation'}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setInteractionMode('pan')}
-                  className={`py-1.5 px-2 rounded-lg border text-[11px] font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                  className={`min-h-[40px] py-1.5 px-2 rounded-xl border text-[11px] font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer ${
                     interactionMode === 'pan'
-                      ? 'bg-sky-600 text-white border-sky-400'
-                      : 'bg-[#142338] text-[#b8c7da] border-[#2a4468] hover:text-white'
+                      ? 'bg-[#DACBA9] text-[#15191E] border-[#DACBA9] shadow-sm'
+                      : 'bg-[#15191E] text-[#BAC3CE] border-[#323B46] hover:text-[#FAF6F0]'
                   }`}
-                  title="Mode déplacement 2D (glisser pour paner la vue)"
+                  title={lang === 'en' ? '2D Pan mode (drag to pan view)' : 'Mode déplacement 2D (glisser pour paner la vue)'}
                 >
-                  <Move className="w-3 h-3" />
-                  <span>Déplacer 2D</span>
+                  <Move className="w-3.5 h-3.5" />
+                  <span>{lang === 'en' ? 'Pan 2D' : 'Déplacer 2D'}</span>
                 </button>
               </div>
 
               {/* 1. Translation / Pan: Haut, Bas, Gauche, Droite */}
               <div className="space-y-1">
-                <div className="flex items-center justify-between text-[11px] font-semibold text-[#8fc5ff]">
+                <div className="flex items-center justify-between text-[11px] font-semibold text-[#DACBA9]">
                   <span className="flex items-center gap-1">
-                    <Move className="w-3 h-3 text-sky-400" />
-                    <span>Déplacer (Pan)</span>
+                    <Move className="w-3 h-3 text-[#DACBA9]" />
+                    <span>{lang === 'en' ? 'Pan (Translate)' : 'Déplacer (Pan)'}</span>
                   </span>
-                  <span className="text-[10px] text-[#71839b]">Haut / Bas / G / D</span>
+                  <span className="text-[10px] text-[#8F9CAE]">H / B / G / D</span>
                 </div>
 
-                <div className="grid grid-cols-3 gap-1 w-28 mx-auto">
+                <div className="grid grid-cols-3 gap-1 w-32 mx-auto">
                   <div />
                   <button
                     type="button"
                     onClick={() => panCamera(0, 0.25)}
-                    className="p-1.5 rounded-lg bg-[#142338] hover:bg-[#1d3556] border border-[#2a4468] text-white flex items-center justify-center transition cursor-pointer active:scale-95"
-                    title="Déplacer vers le haut"
+                    className="min-h-[40px] p-2 rounded-xl bg-[#15191E] hover:bg-[#2A323D] border border-[#323B46] text-[#FAF6F0] flex items-center justify-center transition cursor-pointer active:scale-95"
+                    title={lang === 'en' ? 'Move Up' : 'Déplacer vers le haut'}
                   >
-                    <ArrowUp className="w-3.5 h-3.5 text-sky-300" />
+                    <ArrowUp className="w-4 h-4 text-[#DACBA9]" />
                   </button>
                   <div />
 
                   <button
                     type="button"
                     onClick={() => panCamera(-0.25, 0)}
-                    className="p-1.5 rounded-lg bg-[#142338] hover:bg-[#1d3556] border border-[#2a4468] text-white flex items-center justify-center transition cursor-pointer active:scale-95"
-                    title="Déplacer vers la gauche"
+                    className="min-h-[40px] p-2 rounded-xl bg-[#15191E] hover:bg-[#2A323D] border border-[#323B46] text-[#FAF6F0] flex items-center justify-center transition cursor-pointer active:scale-95"
+                    title={lang === 'en' ? 'Move Left' : 'Déplacer vers la gauche'}
                   >
-                    <ArrowLeft className="w-3.5 h-3.5 text-sky-300" />
+                    <ArrowLeft className="w-4 h-4 text-[#DACBA9]" />
                   </button>
                   <button
                     type="button"
                     onClick={resetView}
-                    className="p-1.5 rounded-lg bg-[#1a2f4c] hover:bg-[#23416b] border border-sky-500/40 text-sky-300 flex items-center justify-center transition cursor-pointer"
-                    title="Recentrer le modèle"
+                    className="min-h-[40px] p-2 rounded-xl bg-[#232C3A] hover:bg-[#2D3847] border border-[#DACBA9]/40 text-[#DACBA9] flex items-center justify-center transition cursor-pointer"
+                    title={lang === 'en' ? 'Recenter model' : 'Recentrer le modèle'}
                   >
-                    <RefreshCw className="w-3 h-3" />
+                    <RefreshCw className="w-3.5 h-3.5" />
                   </button>
                   <button
                     type="button"
                     onClick={() => panCamera(0.25, 0)}
-                    className="p-1.5 rounded-lg bg-[#142338] hover:bg-[#1d3556] border border-[#2a4468] text-white flex items-center justify-center transition cursor-pointer active:scale-95"
-                    title="Déplacer vers la droite"
+                    className="min-h-[40px] p-2 rounded-xl bg-[#15191E] hover:bg-[#2A323D] border border-[#323B46] text-[#FAF6F0] flex items-center justify-center transition cursor-pointer active:scale-95"
+                    title={lang === 'en' ? 'Move Right' : 'Déplacer vers la droite'}
                   >
-                    <ArrowRight className="w-3.5 h-3.5 text-sky-300" />
+                    <ArrowRight className="w-4 h-4 text-[#DACBA9]" />
                   </button>
 
                   <div />
                   <button
                     type="button"
                     onClick={() => panCamera(0, -0.25)}
-                    className="p-1.5 rounded-lg bg-[#142338] hover:bg-[#1d3556] border border-[#2a4468] text-white flex items-center justify-center transition cursor-pointer active:scale-95"
-                    title="Déplacer vers le bas"
+                    className="min-h-[40px] p-2 rounded-xl bg-[#15191E] hover:bg-[#2A323D] border border-[#323B46] text-[#FAF6F0] flex items-center justify-center transition cursor-pointer active:scale-95"
+                    title={lang === 'en' ? 'Move Down' : 'Déplacer vers le bas'}
                   >
-                    <ArrowDown className="w-3.5 h-3.5 text-sky-300" />
+                    <ArrowDown className="w-4 h-4 text-[#DACBA9]" />
                   </button>
                   <div />
                 </div>
               </div>
 
               {/* 2. Full 360 Rotation: Tourner et Retourner dans tous les sens */}
-              <div className="space-y-1.5 pt-1 border-t border-[#1d3148]">
-                <div className="flex items-center justify-between text-[11px] font-semibold text-[#8fc5ff]">
+              <div className="space-y-1.5 pt-1 border-t border-[#323B46]">
+                <div className="flex items-center justify-between text-[11px] font-semibold text-[#DACBA9]">
                   <span className="flex items-center gap-1">
-                    <RotateCw className="w-3 h-3 text-sky-400" />
-                    <span>Rotation &amp; Renversement</span>
+                    <RotateCw className="w-3 h-3 text-[#DACBA9]" />
+                    <span>{lang === 'en' ? 'Rotation & Flip' : 'Rotation & Renversement'}</span>
                   </span>
-                  <span className="text-[10px] text-[#71839b]">Tous sens</span>
+                  <span className="text-[10px] text-[#8F9CAE]">360°</span>
                 </div>
 
                 <div className="grid grid-cols-4 gap-1">
                   <button
                     type="button"
                     onClick={() => rotateCamera(-0.35, 0)}
-                    className="py-1 px-1.5 rounded-lg bg-[#142338] hover:bg-[#1d3556] border border-[#2a4468] text-[11px] font-medium text-[#b8c7da] hover:text-white flex items-center justify-center gap-1 transition cursor-pointer"
-                    title="Tourner vers la gauche (Azimuth -20°)"
+                    className="min-h-[36px] py-1 px-1 rounded-xl bg-[#15191E] hover:bg-[#2A323D] border border-[#323B46] text-[11px] font-medium text-[#BAC3CE] hover:text-[#FAF6F0] flex items-center justify-center gap-0.5 transition cursor-pointer"
+                    title={lang === 'en' ? 'Rotate Left' : 'Tourner vers la gauche'}
                   >
                     <RotateCcw className="w-3 h-3 text-amber-300" />
-                    <span>Gauche</span>
+                    <span>{lang === 'en' ? 'Left' : 'Gauche'}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => rotateCamera(0.35, 0)}
-                    className="py-1 px-1.5 rounded-lg bg-[#142338] hover:bg-[#1d3556] border border-[#2a4468] text-[11px] font-medium text-[#b8c7da] hover:text-white flex items-center justify-center gap-1 transition cursor-pointer"
-                    title="Tourner vers la droite (Azimuth +20°)"
+                    className="min-h-[36px] py-1 px-1 rounded-xl bg-[#15191E] hover:bg-[#2A323D] border border-[#323B46] text-[11px] font-medium text-[#BAC3CE] hover:text-[#FAF6F0] flex items-center justify-center gap-0.5 transition cursor-pointer"
+                    title={lang === 'en' ? 'Rotate Right' : 'Tourner vers la droite'}
                   >
                     <RotateCw className="w-3 h-3 text-amber-300" />
-                    <span>Droite</span>
+                    <span>{lang === 'en' ? 'Right' : 'Droite'}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => rotateCamera(0, -0.3)}
-                    className="py-1 px-1.5 rounded-lg bg-[#142338] hover:bg-[#1d3556] border border-[#2a4468] text-[11px] font-medium text-[#b8c7da] hover:text-white flex items-center justify-center gap-1 transition cursor-pointer"
-                    title="Basculer vers le haut"
+                    className="min-h-[36px] py-1 px-1 rounded-xl bg-[#15191E] hover:bg-[#2A323D] border border-[#323B46] text-[11px] font-medium text-[#BAC3CE] hover:text-[#FAF6F0] flex items-center justify-center gap-0.5 transition cursor-pointer"
+                    title={lang === 'en' ? 'Tilt Up' : 'Basculer vers le haut'}
                   >
                     <ArrowUp className="w-3 h-3 text-amber-300" />
-                    <span>Haut</span>
+                    <span>{lang === 'en' ? 'Up' : 'Haut'}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => rotateCamera(0, 0.3)}
-                    className="py-1 px-1.5 rounded-lg bg-[#142338] hover:bg-[#1d3556] border border-[#2a4468] text-[11px] font-medium text-[#b8c7da] hover:text-white flex items-center justify-center gap-1 transition cursor-pointer"
-                    title="Basculer vers le bas"
+                    className="min-h-[36px] py-1 px-1 rounded-xl bg-[#15191E] hover:bg-[#2A323D] border border-[#323B46] text-[11px] font-medium text-[#BAC3CE] hover:text-[#FAF6F0] flex items-center justify-center gap-0.5 transition cursor-pointer"
+                    title={lang === 'en' ? 'Tilt Down' : 'Basculer vers le bas'}
                   >
                     <ArrowDown className="w-3 h-3 text-amber-300" />
-                    <span>Bas</span>
+                    <span>{lang === 'en' ? 'Down' : 'Bas'}</span>
                   </button>
                 </div>
 
                 {/* Flip 180 buttons (Retourner dans tous les sens) */}
-                <div className="grid grid-cols-2 gap-1 pt-0.5">
+                <div className="grid grid-cols-2 gap-1.5 pt-0.5">
                   <button
                     type="button"
                     onClick={flip180}
-                    className="py-1.5 px-2 rounded-lg bg-[#172c46] hover:bg-[#203c61] border border-amber-400/40 text-[11px] font-semibold text-amber-200 flex items-center justify-center gap-1.5 transition cursor-pointer"
-                    title="Retourner à 180° (Inverser face / dos)"
+                    className="min-h-[38px] py-1.5 px-2 rounded-xl bg-[#232C3A] hover:bg-[#2E3A49] border border-amber-400/40 text-[11px] font-semibold text-amber-300 flex items-center justify-center gap-1.5 transition cursor-pointer"
+                    title={lang === 'en' ? 'Flip 180° (Invert Front/Back)' : 'Retourner à 180° (Inverser face / dos)'}
                   >
                     <FlipHorizontal className="w-3.5 h-3.5 text-amber-300" />
-                    <span>Retourner 180°</span>
+                    <span>{lang === 'en' ? 'Flip 180°' : 'Retourner 180°'}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={flipVertical}
-                    className="py-1.5 px-2 rounded-lg bg-[#172c46] hover:bg-[#203c61] border border-amber-400/40 text-[11px] font-semibold text-amber-200 flex items-center justify-center gap-1.5 transition cursor-pointer"
-                    title="Inverser haut / bas"
+                    className="min-h-[38px] py-1.5 px-2 rounded-xl bg-[#232C3A] hover:bg-[#2E3A49] border border-amber-400/40 text-[11px] font-semibold text-amber-300 flex items-center justify-center gap-1.5 transition cursor-pointer"
+                    title={lang === 'en' ? 'Invert Vertical' : 'Inverser haut / bas'}
                   >
                     <FlipVertical className="w-3.5 h-3.5 text-amber-300" />
-                    <span>Inverser Vert.</span>
+                    <span>{lang === 'en' ? 'Invert Vert.' : 'Inverser Vert.'}</span>
                   </button>
                 </div>
               </div>
 
               {/* 3. Anatomical View Presets */}
-              <div className="space-y-1 pt-1 border-t border-[#1d3148]">
-                <div className="text-[10px] font-semibold text-[#71839b] uppercase tracking-wider">
-                  Vues Anatomiques Fixes
+              <div className="space-y-1 pt-1 border-t border-[#323B46]">
+                <div className="text-[10px] font-semibold text-[#8F9CAE] uppercase tracking-wider">
+                  {lang === 'en' ? 'Clinical Anatomical Planes' : 'Vues Anatomiques Fixes'}
                 </div>
                 <div className="grid grid-cols-3 gap-1 text-[11px]">
                   <button
                     type="button"
                     onClick={() => setViewPreset('front')}
-                    className={`py-1 px-1.5 rounded-lg border text-center font-medium transition cursor-pointer ${
+                    className={`min-h-[34px] py-1 px-1.5 rounded-xl border text-center font-medium transition cursor-pointer ${
                       activePreset === 'front'
-                        ? 'bg-sky-600 text-white border-sky-400'
-                        : 'bg-[#142338] text-[#b8c7da] hover:text-white border-[#2a4468]'
+                        ? 'bg-[#DACBA9] text-[#15191E] border-[#DACBA9] font-bold shadow-xs'
+                        : 'bg-[#15191E] text-[#BAC3CE] hover:text-[#FAF6F0] border-[#323B46]'
                     }`}
                   >
-                    Face
+                    {lang === 'en' ? 'Anterior' : 'Face'}
                   </button>
                   <button
                     type="button"
                     onClick={() => setViewPreset('back')}
-                    className={`py-1 px-1.5 rounded-lg border text-center font-medium transition cursor-pointer ${
+                    className={`min-h-[34px] py-1 px-1.5 rounded-xl border text-center font-medium transition cursor-pointer ${
                       activePreset === 'back'
-                        ? 'bg-sky-600 text-white border-sky-400'
-                        : 'bg-[#142338] text-[#b8c7da] hover:text-white border-[#2a4468]'
+                        ? 'bg-[#DACBA9] text-[#15191E] border-[#DACBA9] font-bold shadow-xs'
+                        : 'bg-[#15191E] text-[#BAC3CE] hover:text-[#FAF6F0] border-[#323B46]'
                     }`}
                   >
-                    Dos
+                    {lang === 'en' ? 'Posterior' : 'Dos'}
                   </button>
                   <button
                     type="button"
                     onClick={() => setViewPreset('left')}
-                    className={`py-1 px-1.5 rounded-lg border text-center font-medium transition cursor-pointer ${
+                    className={`min-h-[34px] py-1 px-1.5 rounded-xl border text-center font-medium transition cursor-pointer ${
                       activePreset === 'left'
-                        ? 'bg-sky-600 text-white border-sky-400'
-                        : 'bg-[#142338] text-[#b8c7da] hover:text-white border-[#2a4468]'
+                        ? 'bg-[#DACBA9] text-[#15191E] border-[#DACBA9] font-bold shadow-xs'
+                        : 'bg-[#15191E] text-[#BAC3CE] hover:text-[#FAF6F0] border-[#323B46]'
                     }`}
                   >
-                    Profil G
+                    {lang === 'en' ? 'Left Lat.' : 'Profil G'}
                   </button>
                   <button
                     type="button"
                     onClick={() => setViewPreset('right')}
-                    className={`py-1 px-1.5 rounded-lg border text-center font-medium transition cursor-pointer ${
+                    className={`min-h-[34px] py-1 px-1.5 rounded-xl border text-center font-medium transition cursor-pointer ${
                       activePreset === 'right'
-                        ? 'bg-sky-600 text-white border-sky-400'
-                        : 'bg-[#142338] text-[#b8c7da] hover:text-white border-[#2a4468]'
+                        ? 'bg-[#DACBA9] text-[#15191E] border-[#DACBA9] font-bold shadow-xs'
+                        : 'bg-[#15191E] text-[#BAC3CE] hover:text-[#FAF6F0] border-[#323B46]'
                     }`}
                   >
-                    Profil D
+                    {lang === 'en' ? 'Right Lat.' : 'Profil D'}
                   </button>
                   <button
                     type="button"
                     onClick={() => setViewPreset('top')}
-                    className={`py-1 px-1.5 rounded-lg border text-center font-medium transition cursor-pointer ${
+                    className={`min-h-[34px] py-1 px-1.5 rounded-xl border text-center font-medium transition cursor-pointer ${
                       activePreset === 'top'
-                        ? 'bg-sky-600 text-white border-sky-400'
-                        : 'bg-[#142338] text-[#b8c7da] hover:text-white border-[#2a4468]'
+                        ? 'bg-[#DACBA9] text-[#15191E] border-[#DACBA9] font-bold shadow-xs'
+                        : 'bg-[#15191E] text-[#BAC3CE] hover:text-[#FAF6F0] border-[#323B46]'
                     }`}
                   >
-                    Dessus
+                    {lang === 'en' ? 'Superior' : 'Dessus'}
                   </button>
                   <button
                     type="button"
                     onClick={() => setViewPreset('bottom')}
-                    className={`py-1 px-1.5 rounded-lg border text-center font-medium transition cursor-pointer ${
+                    className={`min-h-[34px] py-1 px-1.5 rounded-xl border text-center font-medium transition cursor-pointer ${
                       activePreset === 'bottom'
-                        ? 'bg-sky-600 text-white border-sky-400'
-                        : 'bg-[#142338] text-[#b8c7da] hover:text-white border-[#2a4468]'
+                        ? 'bg-[#DACBA9] text-[#15191E] border-[#DACBA9] font-bold shadow-xs'
+                        : 'bg-[#15191E] text-[#BAC3CE] hover:text-[#FAF6F0] border-[#323B46]'
                     }`}
                   >
-                    Dessous
+                    {lang === 'en' ? 'Inferior' : 'Dessous'}
                   </button>
                 </div>
               </div>
 
               {/* 4. Zoom & Reset row */}
-              <div className="flex items-center justify-between gap-1 pt-1 border-t border-[#1d3148]">
+              <div className="flex items-center justify-between gap-1 pt-1 border-t border-[#323B46]">
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
-                    onClick={() => zoomCamera(0.9)}
-                    className="p-1.5 rounded-lg bg-[#142338] hover:bg-[#1d3556] border border-[#2a4468] text-white flex items-center justify-center transition cursor-pointer"
-                    title="Zoom avant (+)"
+                    onClick={() => zoomCamera(0.85)}
+                    className="min-h-[38px] min-w-[38px] p-2 rounded-xl bg-[#15191E] hover:bg-[#2A323D] border border-[#323B46] text-[#FAF6F0] flex items-center justify-center transition cursor-pointer"
+                    title={lang === 'en' ? 'Zoom in (+)' : 'Zoom avant (+)'}
                   >
-                    <ZoomIn className="w-3.5 h-3.5 text-sky-300" />
+                    <ZoomIn className="w-4 h-4 text-[#DACBA9]" />
                   </button>
                   <button
                     type="button"
-                    onClick={() => zoomCamera(1.1)}
-                    className="p-1.5 rounded-lg bg-[#142338] hover:bg-[#1d3556] border border-[#2a4468] text-white flex items-center justify-center transition cursor-pointer"
-                    title="Zoom arrière (-)"
+                    onClick={() => zoomCamera(1.18)}
+                    className="min-h-[38px] min-w-[38px] p-2 rounded-xl bg-[#15191E] hover:bg-[#2A323D] border border-[#323B46] text-[#FAF6F0] flex items-center justify-center transition cursor-pointer"
+                    title={lang === 'en' ? 'Zoom out (-)' : 'Zoom arrière (-)'}
                   >
-                    <ZoomOut className="w-3.5 h-3.5 text-sky-300" />
+                    <ZoomOut className="w-4 h-4 text-[#DACBA9]" />
                   </button>
                 </div>
 
                 <button
                   type="button"
                   onClick={resetView}
-                  className="py-1 px-2.5 rounded-lg bg-[#142338] hover:bg-[#1d3556] border border-[#2a4468] text-[11px] font-semibold text-[#8fc5ff] hover:text-white transition cursor-pointer inline-flex items-center gap-1"
+                  className="min-h-[38px] py-1.5 px-3 rounded-xl bg-[#15191E] hover:bg-[#2A323D] border border-[#323B46] hover:border-[#DACBA9] text-[11px] font-semibold text-[#DACBA9] hover:text-[#FAF6F0] transition cursor-pointer inline-flex items-center gap-1.5 shadow-sm"
                 >
-                  <RefreshCw className="w-3 h-3" />
-                  <span>Vue Initiale</span>
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>{lang === 'en' ? 'Reset View' : 'Vue Initiale'}</span>
                 </button>
               </div>
 
               {/* Legend Help info */}
-              <div className="text-[10px] text-[#71839b] leading-tight pt-0.5">
-                Souris : Clic gauche ({interactionMode === 'pan' ? 'Déplacer' : 'Tourner'}), Clic droit (Déplacer), Molette (Zoom doux).
+              <div className="text-[10px] text-[#8F9CAE] leading-tight pt-0.5">
+                {lang === 'en'
+                  ? 'Mouse / Touch: Drag to rotate, 2 fingers to pan & pinch zoom.'
+                  : 'Souris / Tactile : Glisser pour tourner, 2 doigts pour déplacer & zoomer.'}
               </div>
             </div>
           )}
@@ -1015,65 +1056,73 @@ export const Interactive3DViewer: React.FC<Interactive3DViewerProps> = ({
 
       {/* Collapsible mobile-friendly 3D node explorer HUD */}
       {!loading && !loadError && availableNodes.length > 0 && (
-        <div className="absolute bottom-2.5 left-2.5 right-2.5 z-10 pointer-events-auto">
+        <div className="absolute bottom-3 left-3 right-3 z-10 pointer-events-auto">
           {!nodesTrayOpen ? (
             <div className="flex items-center justify-between gap-2">
               <button
                 type="button"
                 onClick={() => setNodesTrayOpen(true)}
-                className="min-h-[44px] px-3.5 py-2 rounded-xl bg-[#0d1a2b]/90 backdrop-blur-md border border-[#2c4a70] text-xs font-semibold text-[#eef4ff] inline-flex items-center gap-2 shadow-lg cursor-pointer"
+                className="min-h-[46px] px-4 py-2.5 rounded-2xl bg-[#1E242C]/95 backdrop-blur-md border border-[#323B46] text-xs font-semibold text-[#FAF6F0] hover:border-[#DACBA9] inline-flex items-center gap-2.5 shadow-xl cursor-pointer transition"
               >
-                <Layers className="w-4 h-4 text-[#8fc5ff]" />
+                <Layers className="w-4 h-4 text-[#DACBA9]" />
                 <span className="tabular-nums">
-                  Structures du modèle ({availableNodes.length})
+                  {lang === 'en'
+                    ? `3D Structures (${availableNodes.length})`
+                    : `Structures du modèle (${availableNodes.length})`}
                 </span>
-                <ChevronUp className="w-4 h-4 text-[#8fc5ff]" />
+                <ChevronUp className="w-4 h-4 text-[#BAC3CE]" />
               </button>
 
               {activeNodeName && selectedBilingual && (
-                <div className="min-h-[44px] px-3.5 py-2 rounded-xl bg-indigo-950/90 backdrop-blur-md border border-indigo-400/40 text-xs font-semibold text-[#eef4ff] flex flex-col justify-center truncate max-w-[60%] shadow-lg">
-                  <span className="truncate">{selectedBilingual.en}</span>
-                  <span className="truncate text-[#8fc5ff] text-[11px]">
-                    {selectedBilingual.fr}
+                <div className="min-h-[46px] px-4 py-2 rounded-2xl bg-[#1E242C]/95 backdrop-blur-md border border-[#DACBA9]/60 text-xs font-semibold text-[#FAF6F0] flex flex-col justify-center truncate max-w-[60%] shadow-xl">
+                  <span className="truncate text-[#DACBA9] font-bold">
+                    {lang === 'en' ? selectedBilingual.en : selectedBilingual.fr}
+                  </span>
+                  <span className="truncate text-[#BAC3CE] text-[11px]">
+                    {lang === 'en' ? selectedBilingual.fr : selectedBilingual.en}
                   </span>
                 </div>
               )}
             </div>
           ) : (
-            <div className="p-3 rounded-2xl bg-[#0d1a2b]/95 backdrop-blur-md border border-[#2c4a70] shadow-2xl space-y-2.5">
+            <div className="p-3.5 rounded-2xl bg-[#1E242C]/95 backdrop-blur-md border border-[#323B46] shadow-2xl space-y-3">
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
-                  <Search className="w-3.5 h-3.5 text-[#8fc5ff] absolute left-3 top-3" />
+                  <Search className="w-4 h-4 text-[#DACBA9] absolute left-3.5 top-3" />
                   <input
                     type="text"
                     value={nodeFilter}
                     onChange={(e) => setNodeFilter(e.target.value)}
-                    placeholder={`Filtrer parmi ${availableNodes.length} structures 3D…`}
-                    className="w-full min-h-[38px] pl-8 pr-3 py-1.5 rounded-xl bg-[#08111f] border border-[#203651] text-xs text-[#eef4ff] placeholder-[#71839b] focus:outline-hidden focus:border-[#8fc5ff]"
+                    placeholder={
+                      lang === 'en'
+                        ? `Filter among ${availableNodes.length} 3D structures…`
+                        : `Filtrer parmi ${availableNodes.length} structures 3D…`
+                    }
+                    className="w-full min-h-[42px] pl-10 pr-3 py-2 rounded-xl bg-[#15191E] border border-[#323B46] text-xs text-[#FAF6F0] placeholder-[#8F9CAE] focus:outline-hidden focus:border-[#DACBA9]"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={() => setNodesTrayOpen(false)}
-                  className="min-h-[38px] min-w-[38px] px-2.5 rounded-xl bg-[#13253d] text-[#b8c7da] hover:text-white inline-flex items-center justify-center cursor-pointer"
-                  title="Réduire la liste"
+                  className="min-h-[42px] min-w-[42px] px-2.5 rounded-xl bg-[#15191E] text-[#BAC3CE] hover:text-[#FAF6F0] hover:bg-[#2A323D] border border-[#323B46] inline-flex items-center justify-center cursor-pointer transition"
+                  title={lang === 'en' ? 'Collapse list' : 'Réduire la liste'}
                 >
                   <ChevronDown className="w-4 h-4" />
                 </button>
               </div>
 
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-                {filteredNodes.slice(0, 35).map((nodeName) => {
+                {filteredNodes.slice(0, 40).map((nodeName) => {
                   const isSelected = activeNodeName === nodeName;
                   return (
                     <button
                       key={nodeName}
                       type="button"
                       onClick={() => selectNode(nodeName, true)}
-                      className={`min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap shrink-0 transition cursor-pointer ${
+                      className={`min-h-[40px] px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0 transition cursor-pointer ${
                         isSelected
-                          ? 'bg-indigo-600 text-white shadow-xs'
-                          : 'bg-[#13253d] text-[#b8c7da] hover:bg-[#1c3454] hover:text-white'
+                          ? 'bg-[#DACBA9] text-[#15191E] shadow-sm'
+                          : 'bg-[#15191E] text-[#BAC3CE] hover:bg-[#2A323D] hover:text-[#FAF6F0] border border-[#323B46]'
                       }`}
                     >
                       {nodeName}

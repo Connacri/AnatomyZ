@@ -33,6 +33,7 @@ import {
   Moon,
   Clock3,
   Globe,
+  Palette,
 } from 'lucide-react';
 import { useAppPreferences, AppLanguage, ThemePreference } from './i18n';
 import {
@@ -83,6 +84,8 @@ import { FcmNotificationsModal } from './components/FcmNotificationsModal';
 import { UserProfileModal } from './components/UserProfileModal';
 import { StudentWorkspace } from './components/StudentWorkspace';
 import { ProfessorWorkspace } from './components/ProfessorWorkspace';
+import { GlobalSearchModal } from './components/GlobalSearchModal';
+import { UxColorPsychologyModal } from './components/UxColorPsychologyModal';
 import {
   Interactive3DControllerHandle,
   Interactive3DViewer,
@@ -143,6 +146,7 @@ function NewUserRoleModal({
   onSelectRole,
   loading,
 }: NewUserRoleModalProps) {
+  const { t, lang } = useAppPreferences();
   const [selectedRole, setSelectedRole] = useState<'student' | 'professor' | 'admin'>('student');
   const isSuper = isSuperAdminEmail(user.email);
 
@@ -154,10 +158,10 @@ function NewUserRoleModal({
             <AnatomyZLogo className="w-10 h-10" />
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-[#F5F7FA]">
-            Bienvenue sur AnatomyZ
+            {t('Bienvenue sur AnatomyZ')}
           </h2>
           <p className="text-xs sm:text-sm text-[#8F9CAE]">
-            Bonjour <strong className="text-[#E5DCD0]">{user.displayName || user.email}</strong>. Pour configurer votre profil, veuillez sélectionner votre statut universitaire :
+            {lang === 'en' ? 'Welcome ' : 'Bonjour '}<strong className="text-[#E5DCD0]">{user.displayName || user.email}</strong>. {t('Pour configurer votre profil, veuillez sélectionner votre statut universitaire :')}
           </p>
         </div>
 
@@ -176,11 +180,11 @@ function NewUserRoleModal({
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-bold text-sm text-[#F5F7FA]">Étudiant en médecine</span>
-                <span className="text-[10px] text-emerald-400 font-semibold">Immédiat</span>
+                <span className="font-bold text-sm text-[#F5F7FA]">{t('Étudiant en médecine')}</span>
+                <span className="text-[10px] text-emerald-400 font-semibold">{t('Immédiat')}</span>
               </div>
               <p className="text-xs text-[#8F9CAE] mt-1 leading-relaxed">
-                Validation automatique. Accès immédiat à l'Atlas 3D, aux examens et à l'enregistrement des notes.
+                {t('Validation automatique. Accès immédiat à l\'Atlas 3D, aux examens et à l\'enregistrement des notes.')}
               </p>
             </div>
           </button>
@@ -199,11 +203,11 @@ function NewUserRoleModal({
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-bold text-sm text-[#F5F7FA]">Enseignant / Professeur</span>
-                <span className="text-[10px] text-amber-300 font-semibold">Sur validation</span>
+                <span className="font-bold text-sm text-[#F5F7FA]">{t('Enseignant / Professeur')}</span>
+                <span className="text-[10px] text-amber-300 font-semibold">{t('Sur validation')}</span>
               </div>
               <p className="text-xs text-[#8F9CAE] mt-1 leading-relaxed">
-                Concevoir des examens et gérer les cohortes. Soumis à validation par l'administration (forslog@gmail.com).
+                {t('Concevoir des examens et gérer les cohortes. Soumis à validation par l\'administration (forslog@gmail.com).')}
               </p>
             </div>
           </button>
@@ -211,14 +215,14 @@ function NewUserRoleModal({
 
         {selectedRole === 'professor' && !isSuper && (
           <div className="p-3 rounded-xl bg-[#1D2530] border border-amber-500/30 text-xs text-amber-200/90 leading-relaxed">
-            ℹ️ <strong className="text-amber-200">Validation requise : </strong>
-            Votre demande pour le rôle Professeur sera transmise à l'administrateur (forslog@gmail.com). Vous pourrez explorer l'Atlas 3D ou utiliser le mode Étudiant en attendant la validation.
+            ℹ️ <strong className="text-amber-200">{t('Validation requise :')} </strong>
+            {t('Votre demande pour le rôle Professeur sera transmise à l\'administrateur (forslog@gmail.com). Vous pourrez explorer l\'Atlas 3D ou utiliser le mode Étudiant en attendant la validation.')}
           </div>
         )}
 
         {isSuper && (
           <div className="p-3.5 rounded-xl bg-amber-950/30 border border-amber-500/40 flex items-center justify-between text-xs text-amber-200">
-            <span>Privilège super-administrateur reconnu (forslog@gmail.com)</span>
+            <span>{t('Privilège super-administrateur reconnu (forslog@gmail.com)')}</span>
             <button
               type="button"
               onClick={() => setSelectedRole('admin')}
@@ -228,7 +232,7 @@ function NewUserRoleModal({
                   : 'bg-amber-900/50 text-amber-300'
               }`}
             >
-              Mode Admin
+              {t('Mode Admin')}
             </button>
           </div>
         )}
@@ -242,7 +246,7 @@ function NewUserRoleModal({
           {loading ? (
             <div className="w-4 h-4 border-2 border-[#0F1318] border-t-transparent rounded-full animate-spin" />
           ) : (
-            <span>Confirmer et accéder</span>
+            <span>{t('Confirmer et accéder')}</span>
           )}
         </button>
       </div>
@@ -263,6 +267,8 @@ function TopNavBar({
   onGoHome,
   onOpenAtlas,
   onOpenSplash,
+  onOpenSearch,
+  onOpenUxColorModal,
 }: {
   currentUser: FirebaseUser | null;
   authLoading: boolean;
@@ -276,6 +282,8 @@ function TopNavBar({
   onGoHome: () => void;
   onOpenAtlas: () => void;
   onOpenSplash: () => void;
+  onOpenSearch?: () => void;
+  onOpenUxColorModal?: () => void;
 }) {
   const {
     lang,
@@ -312,7 +320,48 @@ function TopNavBar({
         </span>
       </div>
 
+      {/* Jakob's Law: Standard Top Search Bar (seen on Google, Amazon, YouTube) */}
+      {onOpenSearch && (
+        <button
+          type="button"
+          onClick={onOpenSearch}
+          className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-[#323B46] bg-[#15191E] hover:border-[#DACBA9] text-[#BAC3CE] hover:text-[#FAF6F0] text-xs transition cursor-pointer max-w-xs w-full"
+          title={t('quickSearchTooltip')}
+        >
+          <Search className="w-3.5 h-3.5 text-[#DACBA9] shrink-0" />
+          <span className="flex-1 text-left truncate">{t('searchPlaceholder')}</span>
+          <kbd className="px-1.5 py-0.5 rounded bg-[#1E242C] border border-[#323B46] text-[10px] font-mono text-[#8F9CAE]">
+            ⌘K
+          </kbd>
+        </button>
+      )}
+
       <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* Mobile Search Button */}
+        {onOpenSearch && (
+          <button
+            type="button"
+            onClick={onOpenSearch}
+            className="md:hidden p-2 rounded-xl border border-[#455160] bg-[#15191E] hover:border-[#DACBA9] text-[#DACBA9] transition cursor-pointer"
+            title={t('quickSearchTooltip')}
+          >
+            <Search className="w-4 h-4" />
+          </button>
+        )}
+
+        {/* Color Psychology & UX Laws Modal trigger */}
+        {onOpenUxColorModal && (
+          <button
+            type="button"
+            onClick={onOpenUxColorModal}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-[#455160] bg-[#15191E] hover:border-[#DACBA9] text-xs font-semibold text-[#DACBA9] transition cursor-pointer"
+            title={t('uxColorGuide')}
+          >
+            <Palette className="w-3.5 h-3.5 text-[#DACBA9]" />
+            <span className="hidden xl:inline">{t('uxColorGuide')}</span>
+          </button>
+        )}
+
         {/* Multilingual Selector FR / EN */}
         <div
           className="inline-flex items-center rounded-xl border border-[#455160] bg-[#15191E] p-0.5"
@@ -459,6 +508,7 @@ function userRoleLabel(role?: AnatomyRole): string {
 }
 
 export function App() {
+  const { lang, setLang, t, themePreference, setThemePreference, resolvedTheme } = useAppPreferences();
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [userProfile, setUserProfile] = useState<UserRecord | null>(null);
   const [needsRoleSelection, setNeedsRoleSelection] = useState<boolean>(false);
@@ -479,6 +529,22 @@ export function App() {
     title: string;
     body: string;
   } | null>(null);
+
+  // Global Search & Color Psychology UX modals
+  const [searchModalOpen, setSearchModalOpen] = useState<boolean>(false);
+  const [uxModalOpen, setUxModalOpen] = useState<boolean>(false);
+
+  // Keyboard shortcut Cmd+K / Ctrl+K (Jakob's Law)
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchModalOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
 
   const isAdmin =
     userProfile?.role === 'admin' || isSuperAdminEmail(currentUser?.email);
@@ -543,9 +609,13 @@ export function App() {
         'Nouveau message push synchronisé.';
       setActiveNotificationToast({ title, body });
       setTimeout(() => setActiveNotificationToast(null), 6000);
-    }).then((unsub) => {
-      if (unsub) unsubMessaging = unsub;
-    });
+    })
+      .then((unsub) => {
+        if (unsub) unsubMessaging = unsub;
+      })
+      .catch((err) => {
+        console.warn('Foreground messaging unavailable:', err);
+      });
 
     return () => {
       if (unsubMessaging) unsubMessaging();
@@ -762,7 +832,7 @@ export function App() {
     activeRole !== undefined && currentScreen.name !== 'student_exam';
 
   return (
-    <div className="min-h-screen bg-[#15191E] text-[#FAF6F0] flex flex-col">
+    <div key={lang} className="min-h-screen bg-[#15191E] text-[#FAF6F0] flex flex-col">
       {showSplash && (
         <SplashScreen onDismiss={() => setShowSplash(false)} autoClose={false} />
       )}
@@ -777,14 +847,14 @@ export function App() {
 
       {/* App download banner */}
       <div className="bg-gradient-to-r from-[#DACBA9] via-[#ECE3D9] to-[#DACBA9] text-[#15191E] px-4 py-2 text-xs sm:text-sm font-semibold flex flex-wrap items-center justify-center gap-2 text-center">
-        <span>📱 AnatomyZ est aussi disponible sur Android</span>
+        <span>📱 {lang === 'en' ? 'AnatomyZ is also available on Android' : 'AnatomyZ est aussi disponible sur Android'}</span>
         <a
           href="https://github.com/Connacri/AnatomyZ/releases/latest/download/AnatomyZ-release.apk"
           target="_blank"
           rel="noreferrer"
           className="underline underline-offset-2 font-bold hover:opacity-80"
         >
-          Télécharger l'application (APK)
+          {lang === 'en' ? 'Download App (APK)' : "Télécharger l'application (APK)"}
         </a>
       </div>
 
@@ -801,6 +871,50 @@ export function App() {
         onGoHome={() => setHistoryStack([{ name: 'home' }])}
         onOpenAtlas={() => pushScreen({ name: 'anatomy_home', role: activeRole })}
         onOpenSplash={() => setShowSplash(true)}
+        onOpenSearch={() => setSearchModalOpen(true)}
+        onOpenUxColorModal={() => setUxModalOpen(true)}
+      />
+
+      {/* Global Search Modal (Jakob's Law) */}
+      <GlobalSearchModal
+        isOpen={searchModalOpen}
+        onClose={() => setSearchModalOpen(false)}
+        onSelectSystem={(systemId) =>
+          pushScreen({
+            name: 'anatomy_home',
+            role: activeRole,
+            initialSystem: systemId,
+          })
+        }
+        onSelectStructure={(structure) =>
+          pushScreen({
+            name: 'anatomy_home',
+            role: activeRole,
+            initialSystem: structure.system,
+          })
+        }
+        onSelectExam={(exam) =>
+          pushScreen({
+            name: 'student_exam',
+            role: activeRole || AnatomyRole.Student,
+            exam,
+          })
+        }
+        onOpenUxModal={() => setUxModalOpen(true)}
+        exams={AnatomyExamRepository.instance.exams}
+      />
+
+      {/* Color Psychology & UX Laws Modal (PaletteVault + Jakob + Fitts) */}
+      <UxColorPsychologyModal
+        isOpen={uxModalOpen}
+        onClose={() => setUxModalOpen(false)}
+        onSelectSystem={(systemId) =>
+          pushScreen({
+            name: 'anatomy_home',
+            role: activeRole,
+            initialSystem: systemId,
+          })
+        }
       />
 
       {/* Push Notification In-App Toast */}
@@ -957,66 +1071,28 @@ export function App() {
         )}
       </div>
 
-      {/* Mobile Bottom Navigation (Only shown on mobile inside a Role workspace) */}
-      {showMobileBottomNav && activeRole && (
+      {/* Mobile Bottom Navigation (Jakob's Law + Fitts's Law: 5 standard tabs in thumb zone) */}
+      {currentScreen.name !== 'student_exam' && (
         <nav
           aria-label="Navigation mobile"
-          className={`fixed bottom-0 left-0 right-0 z-30 md:hidden bg-[#1E242C]/95 backdrop-blur-md border-t border-[#323B46] grid ${
-            activeRole === AnatomyRole.Professor &&
-            (isAdmin || (userProfile?.role === 'professor' && userProfile?.status === 'approved'))
-              ? 'grid-cols-3'
-              : 'grid-cols-2'
-          } items-center h-16 px-2`}
+          className="fixed bottom-0 left-0 right-0 z-30 md:hidden bg-[#1E242C]/95 backdrop-blur-md border-t border-[#323B46] grid grid-cols-5 items-center h-16 px-1 shadow-2xl"
         >
           <button
             type="button"
-            onClick={() =>
-              replaceTopScreen({ name: 'academic_dashboard', role: activeRole })
-            }
+            onClick={() => setHistoryStack([{ name: 'home' }])}
             className={`min-h-[48px] flex flex-col items-center justify-center rounded-xl transition cursor-pointer ${
-              currentScreen.name === 'academic_dashboard'
+              currentScreen.name === 'home'
                 ? 'text-[#DACBA9]'
                 : 'text-[#BAC3CE] hover:text-[#FAF6F0]'
             }`}
           >
-            <Layers className="w-5 h-5" />
-            <span className="text-[11px] font-medium mt-1 whitespace-nowrap">
-              {activeRole === AnatomyRole.Professor
-                ? 'Espace Professeur'
-                : 'Espace Étudiant'}
-            </span>
+            <AnatomyZLogo className="w-5 h-5 rounded-md" />
+            <span className="text-[10px] font-medium mt-1 truncate">{t('home')}</span>
           </button>
-
-          {activeRole === AnatomyRole.Professor &&
-            (isAdmin ||
-              (userProfile?.role === 'professor' &&
-                userProfile?.status === 'approved')) && (
-              <button
-                type="button"
-                onClick={() =>
-                  replaceTopScreen({
-                    name: 'professor_exam_editor',
-                    role: activeRole,
-                  })
-                }
-                className={`min-h-[48px] flex flex-col items-center justify-center rounded-xl transition cursor-pointer ${
-                  currentScreen.name === 'professor_exam_editor'
-                    ? 'text-[#DACBA9]'
-                    : 'text-[#BAC3CE] hover:text-[#FAF6F0]'
-                }`}
-              >
-                <FilePlus className="w-5 h-5" />
-                <span className="text-[11px] font-medium mt-1 whitespace-nowrap">
-                  Créer un examen
-                </span>
-              </button>
-            )}
 
           <button
             type="button"
-            onClick={() =>
-              replaceTopScreen({ name: 'anatomy_home', role: activeRole })
-            }
+            onClick={() => pushScreen({ name: 'anatomy_home', role: activeRole })}
             className={`min-h-[48px] flex flex-col items-center justify-center rounded-xl transition cursor-pointer ${
               currentScreen.name === 'anatomy_home'
                 ? 'text-[#DACBA9]'
@@ -1024,8 +1100,51 @@ export function App() {
             }`}
           >
             <Box className="w-5 h-5" />
-            <span className="text-[11px] font-medium mt-1 whitespace-nowrap">
-              Atlas 3D
+            <span className="text-[10px] font-medium mt-1 truncate">{t('atlas3d')}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setSearchModalOpen(true)}
+            className="min-h-[48px] flex flex-col items-center justify-center rounded-xl text-[#BAC3CE] hover:text-[#DACBA9] transition cursor-pointer"
+          >
+            <Search className="w-5 h-5" />
+            <span className="text-[10px] font-medium mt-1 truncate">{t('rechercher')}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (activeRole) {
+                replaceTopScreen({ name: 'academic_dashboard', role: activeRole });
+              } else {
+                pushScreen({ name: 'academic_dashboard', role: AnatomyRole.Student });
+              }
+            }}
+            className={`min-h-[48px] flex flex-col items-center justify-center rounded-xl transition cursor-pointer ${
+              currentScreen.name === 'academic_dashboard'
+                ? 'text-[#DACBA9]'
+                : 'text-[#BAC3CE] hover:text-[#FAF6F0]'
+            }`}
+          >
+            <GraduationCap className="w-5 h-5" />
+            <span className="text-[10px] font-medium mt-1 truncate">{t('exams')}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (currentUser) {
+                setProfileModalOpen(true);
+              } else {
+                handleGoogleSignIn();
+              }
+            }}
+            className="min-h-[48px] flex flex-col items-center justify-center rounded-xl text-[#BAC3CE] hover:text-[#FAF6F0] transition cursor-pointer"
+          >
+            <User className="w-5 h-5" />
+            <span className="text-[10px] font-medium mt-1 truncate">
+              {currentUser ? t('profile') : t('signInGoogle')}
             </span>
           </button>
         </nav>
@@ -1338,30 +1457,30 @@ function HomeScreen({
         {/* 6. Knowledge Architecture Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-[#323B46]">
           <section className="p-5 border border-[#323B46] rounded-2xl bg-[#1E242C] space-y-1.5">
-            <h3 className="text-sm font-bold text-[#FAF6F0]">🧠 Knowledge Graph</h3>
+            <h3 className="text-sm font-bold text-[#FAF6F0]">🧠 {t('knowledgeGraphCard')}</h3>
             <p className="text-xs leading-relaxed text-[#BAC3CE]">
-              Structures, synonymes et relations ontologiques FMA/UBERON.
+              {t('knowledgeGraphDesc')}
             </p>
           </section>
 
           <section className="p-5 border border-[#323B46] rounded-2xl bg-[#1E242C] space-y-1.5">
-            <h3 className="text-sm font-bold text-[#FAF6F0]">🦴 3D Anatomy</h3>
+            <h3 className="text-sm font-bold text-[#FAF6F0]">🦴 {t('threeDAnatomyCard')}</h3>
             <p className="text-xs leading-relaxed text-[#BAC3CE]">
-              Modèles 3D interactifs, dissection par couches et repérage.
+              {t('threeDAnatomyDesc')}
             </p>
           </section>
 
           <section className="p-5 border border-[#323B46] rounded-2xl bg-[#1E242C] space-y-1.5">
-            <h3 className="text-sm font-bold text-[#FAF6F0]">🔗 Mapping Engine</h3>
+            <h3 className="text-sm font-bold text-[#FAF6F0]">🔗 {t('mappingEngineCard')}</h3>
             <p className="text-xs leading-relaxed text-[#BAC3CE]">
-              Correspondances exactes, xrefs et mappings certifiés.
+              {t('mappingEngineDesc')}
             </p>
           </section>
 
           <section className="p-5 border border-[#323B46] rounded-2xl bg-[#1E242C] space-y-1.5">
-            <h3 className="text-sm font-bold text-[#FAF6F0]">🎓 Éducation Médicale</h3>
+            <h3 className="text-sm font-bold text-[#FAF6F0]">🎓 {t('medicalEducationCard')}</h3>
             <p className="text-xs leading-relaxed text-[#BAC3CE]">
-              Examens cliniques, QCM, repérage 3D et suivi des promotions.
+              {t('medicalEducationDesc')}
             </p>
           </section>
         </div>
@@ -2696,6 +2815,7 @@ function StudentExamScreen({
   currentUser?: FirebaseUser | null;
   onFinish: () => void;
 }) {
+  const { t } = useAppPreferences();
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [remainingSeconds, setRemainingSeconds] = useState(
     exam.durationMinutes * 60
@@ -2866,6 +2986,39 @@ function StudentExamScreen({
             />
           </div>
         </div>
+
+        {/* Gestalt Principle of Closure: Connected Step Indicator */}
+        <div className="flex items-center justify-between gap-1 overflow-x-auto py-1 px-1 scrollbar-none">
+          {exam.questions.map((q, idx) => {
+            const isAnswered = answers[q.id] !== undefined && answers[q.id] !== '';
+            const isCurrent = idx === currentIndex;
+            return (
+              <React.Fragment key={q.id}>
+                <button
+                  type="button"
+                  onClick={() => setCurrentIndex(idx)}
+                  className={`min-h-[34px] min-w-[34px] rounded-full flex items-center justify-center text-xs font-bold transition shrink-0 cursor-pointer ${
+                    isCurrent
+                      ? 'bg-[#DACBA9] text-[#15191E] ring-2 ring-[#DACBA9]/40 shadow-sm'
+                      : isAnswered
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                      : 'bg-[#15191E] text-[#8F9CAE] border border-[#323B46]'
+                  }`}
+                  title={`Question ${idx + 1}`}
+                >
+                  {isAnswered && !isCurrent ? '✓' : idx + 1}
+                </button>
+                {idx < exam.questions.length - 1 && (
+                  <div
+                    className={`flex-1 min-w-[10px] h-0.5 rounded transition ${
+                      isAnswered ? 'bg-emerald-500/50' : 'bg-[#323B46]'
+                    }`}
+                  />
+                )}
+              </React.Fragment>
+            );
+          })}
+        </div>
       </header>
 
       <main className="max-w-3xl w-full mx-auto p-4 sm:p-6 space-y-4">
@@ -2897,8 +3050,8 @@ function StudentExamScreen({
                     key={opt}
                     className={`min-h-[48px] flex items-center gap-3 p-3.5 rounded-xl border transition cursor-pointer ${
                       checked
-                        ? 'border-indigo-500 bg-indigo-600/20 text-white'
-                        : 'border-[#203651] bg-[#08111f] hover:border-[#2c4a70]'
+                        ? 'border-[#DACBA9] bg-[#DACBA9]/15 text-[#FAF6F0] shadow-sm'
+                        : 'border-[#203651] bg-[#08111f] hover:border-[#2c4a70] text-[#BAC3CE]'
                     }`}
                   >
                     <input
@@ -2909,7 +3062,7 @@ function StudentExamScreen({
                       onChange={() =>
                         setAnswers((prev) => ({ ...prev, [question.id]: opt }))
                       }
-                      className="accent-indigo-500 w-4 h-4"
+                      className="accent-[#DACBA9] w-4 h-4"
                     />
                     <span className="text-sm font-medium">{opt}</span>
                   </label>
@@ -2929,7 +3082,7 @@ function StudentExamScreen({
                 }))
               }
               placeholder="Votre réponse…"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#08111f] border border-[#203651] text-sm"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-[#08111f] border border-[#203651] text-sm text-[#FAF6F0]"
             />
           )}
 
@@ -2972,7 +3125,18 @@ function StudentExamScreen({
             </div>
           )}
 
-          <div className="pt-2">
+          {/* Fitts's Law: Generous 48px touch targets for navigation within thumb reach */}
+          <div className="pt-2 flex items-center gap-3">
+            {currentIndex > 0 && (
+              <button
+                type="button"
+                onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
+                className="min-h-[48px] px-5 py-3 rounded-xl border border-[#323B46] bg-[#15191E] hover:bg-[#232C3A] text-[#FAF6F0] font-semibold text-xs transition cursor-pointer"
+              >
+                {t('questionPrev')}
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => {
@@ -2982,24 +3146,24 @@ function StudentExamScreen({
                   handleSubmit();
                 }
               }}
-              className="w-full min-h-[48px] py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition cursor-pointer"
+              className="flex-1 min-h-[48px] py-3 rounded-xl bg-[#DACBA9] hover:bg-[#ECE3D9] text-[#15191E] font-bold text-xs shadow-md transition cursor-pointer"
             >
               {currentIndex + 1 < exam.questions.length
-                ? 'Question suivante'
-                : 'Terminer l’examen'}
+                ? t('questionNext')
+                : t('finishExam')}
             </button>
           </div>
         </div>
       </main>
 
       {submittedResult && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-[#0d1a2b] border border-[#2c4a70] rounded-2xl max-w-md w-full p-6 text-center space-y-4">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
+          <div className="bg-[#1E242C] border border-[#323B46] rounded-2xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl">
             <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto" />
-            <h3 className="text-2xl font-bold">Examen terminé</h3>
-            <p className="text-lg text-[#8fc5ff] font-semibold tabular-nums">
-              Résultat : {submittedResult.earned} / {submittedResult.total}{' '}
-              points
+            <h3 className="text-2xl font-bold text-[#FAF6F0]">{t('examFinished')}</h3>
+            <p className="text-lg text-[#DACBA9] font-semibold tabular-nums">
+              {t('scoreResult')} : {submittedResult.earned} / {submittedResult.total}{' '}
+              {t('points')}
             </p>
             {currentUser ? (
               <div className="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-xs text-emerald-300 flex items-center justify-center gap-2">
@@ -3007,16 +3171,16 @@ function StudentExamScreen({
                 <span>Résultat enregistré et synchronisé avec Firestore ({currentUser.email})</span>
               </div>
             ) : (
-              <div className="p-2.5 rounded-xl bg-[#08111f] border border-[#203651] text-xs text-[#b8c7da]">
+              <div className="p-2.5 rounded-xl bg-[#15191E] border border-[#323B46] text-xs text-[#BAC3CE]">
                 Résultat enregistré localement. Connectez-vous avec Google pour l’associer à votre profil universitaire.
               </div>
             )}
             <button
               type="button"
               onClick={onFinish}
-              className="w-full min-h-[48px] py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold cursor-pointer"
+              className="w-full min-h-[48px] py-2.5 rounded-xl bg-[#DACBA9] hover:bg-[#ECE3D9] text-[#15191E] font-bold cursor-pointer transition shadow-md"
             >
-              Retour à mon espace
+              {t('returnToWorkspace')}
             </button>
           </div>
         </div>
